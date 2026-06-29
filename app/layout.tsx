@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Hind_Siliguri, Inter } from 'next/font/google';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { AuthProvider } from '@/context/AuthContext';
+import AuthModal from '@/components/ui/AuthModal';
 import './globals.css';
 
 const hindSiliguri = Hind_Siliguri({
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           <LanguageProvider>
             {children}
+            <AuthModal />
           </LanguageProvider>
         </AuthProvider>
       </body>

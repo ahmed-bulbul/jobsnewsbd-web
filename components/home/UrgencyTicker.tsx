@@ -43,7 +43,7 @@ export default function UrgencyTicker({ posts }: Props) {
                   className="text-sm font-medium text-white hover:underline flex items-center gap-2"
                 >
                   <span className="bg-white/20 rounded-full px-2 py-0.5 text-xs font-bold">
-                    {lang === 'bn' ? `${toBanglaDigits(days)} দিন` : `${days}d`}
+                    {t(`${toBanglaDigits(days)} দিন`, `${days}d`)}
                   </span>
                   {title}
                 </Link>

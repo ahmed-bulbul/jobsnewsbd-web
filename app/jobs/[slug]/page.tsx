@@ -6,6 +6,7 @@ import DeadlineCountdown from '@/components/ui/DeadlineCountdown';
 import StatusBadge from '@/components/ui/StatusBadge';
 import CopyLinkButton from '@/components/ui/CopyLinkButton';
 import PdfViewerDynamic from '@/components/ui/PdfViewerDynamic';
+import T from '@/components/ui/T';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
@@ -43,6 +44,13 @@ export default async function JobDetailPage({ params }: Props) {
   };
   const gradientClass = TYPE_BORDER[categoryType?.slug ?? ''] ?? 'from-gray-800 to-gray-600';
 
+  const infoCards = [
+    { icon: '📍', bn: 'জেলা', en: 'District', value: post.district },
+    { icon: '🎓', bn: 'যোগ্যতা', en: 'Qualification', value: post.qualification },
+    { icon: '📁', bn: 'বিভাগ', en: 'Category', value: post.category.name },
+    { icon: '📅', bn: 'প্রকাশের তারিখ', en: 'Published Date', value: post.publishedAt ? new Date(post.publishedAt).toLocaleDateString('bn-BD') : null },
+  ].filter((item) => item.value);
+
   return (
     <>
       <Header />
@@ -51,7 +59,7 @@ export default async function JobDetailPage({ params }: Props) {
         <div className={`bg-gradient-to-br ${gradientClass} text-white`}>
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
             <Link href="/jobs" className="inline-flex items-center gap-1.5 text-white/70 hover:text-white text-xs mb-3 transition-colors">
-              ← বিজ্ঞপ্তি তালিকায় ফিরুন
+              <T bn="← বিজ্ঞপ্তি তালিকায় ফিরুন" en="← Back to listings" />
             </Link>
 
             <div className="flex flex-wrap gap-1.5 mb-2">
@@ -88,15 +96,10 @@ export default async function JobDetailPage({ params }: Props) {
 
               {/* Key info cards */}
               <div className="grid grid-cols-2 gap-4">
-                {[
-                  { icon: '📍', label: 'জেলা / District', value: post.district },
-                  { icon: '🎓', label: 'যোগ্যতা / Qualification', value: post.qualification },
-                  { icon: '📁', label: 'বিভাগ / Category', value: post.category.name },
-                  { icon: '📅', label: 'প্রকাশের তারিখ', value: post.publishedAt ? new Date(post.publishedAt).toLocaleDateString('bn-BD') : null },
-                ].filter((item) => item.value).map((item) => (
-                  <div key={item.label} className="card p-4 flex flex-col gap-1">
+                {infoCards.map((item) => (
+                  <div key={item.en} className="card p-4 flex flex-col gap-1">
                     <span className="text-xl">{item.icon}</span>
-                    <span className="text-xs text-warm-muted">{item.label}</span>
+                    <span className="text-xs text-warm-muted"><T bn={item.bn} en={item.en} /></span>
                     <span className="text-sm font-semibold text-gray-900">{item.value}</span>
                   </div>
                 ))}
@@ -105,7 +108,7 @@ export default async function JobDetailPage({ params }: Props) {
               {/* Description */}
               {post.description && (
                 <div className="card p-6">
-                  <h2 className="font-bold text-gray-900 mb-4 text-lg">বিজ্ঞপ্তির বিবরণ</h2>
+                  <h2 className="font-bold text-gray-900 mb-4 text-lg"><T bn="বিজ্ঞপ্তির বিবরণ" en="Job Description" /></h2>
                   <div
                     className="prose prose-sm max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap"
                     dangerouslySetInnerHTML={{ __html: post.description }}
@@ -116,7 +119,7 @@ export default async function JobDetailPage({ params }: Props) {
               {/* Images */}
               {post.images.length > 0 && (
                 <div className="card p-6">
-                  <h2 className="font-bold text-gray-900 mb-4 text-lg">বিজ্ঞপ্তির ছবি</h2>
+                  <h2 className="font-bold text-gray-900 mb-4 text-lg"><T bn="বিজ্ঞপ্তির ছবি" en="Circular Images" /></h2>
                   <div className="grid grid-cols-1 gap-4">
                     {post.images.map((img) => (
                       <div key={img.id} className="relative w-full rounded-xl overflow-hidden border border-warm-border" style={{ minHeight: 300 }}>
@@ -143,10 +146,10 @@ export default async function JobDetailPage({ params }: Props) {
 
               {/* Application dates card */}
               <div className="card p-5 space-y-4">
-                <h3 className="font-bold text-gray-900">আবেদনের সময়সীমা</h3>
+                <h3 className="font-bold text-gray-900"><T bn="আবেদনের সময়সীমা" en="Application Deadline" /></h3>
                 {post.applicationStart && (
                   <div>
-                    <p className="text-xs text-warm-muted mb-1">আবেদন শুরু</p>
+                    <p className="text-xs text-warm-muted mb-1"><T bn="আবেদন শুরু" en="Application Start" /></p>
                     <p className="text-sm font-semibold text-gray-800">
                       {new Date(post.applicationStart).toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </p>
@@ -154,7 +157,7 @@ export default async function JobDetailPage({ params }: Props) {
                 )}
                 {post.applicationEnd && (
                   <div>
-                    <p className="text-xs text-warm-muted mb-1">আবেদনের শেষ তারিখ</p>
+                    <p className="text-xs text-warm-muted mb-1"><T bn="আবেদনের শেষ তারিখ" en="Application End Date" /></p>
                     <p className="text-sm font-bold text-red-700">
                       {new Date(post.applicationEnd).toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </p>
@@ -170,7 +173,7 @@ export default async function JobDetailPage({ params }: Props) {
                   rel="noopener noreferrer"
                   className="btn-primary w-full justify-center py-3 text-base"
                 >
-                  অনলাইনে আবেদন করুন →
+                  <T bn="অনলাইনে আবেদন করুন →" en="Apply Online →" />
                 </a>
               )}
 
@@ -183,7 +186,7 @@ export default async function JobDetailPage({ params }: Props) {
         {/* PDF Circular — full width below the 3-col grid */}
         {post.circularPdfUrl && (
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
-            <h2 className="font-bold text-gray-900 text-lg mb-3">মূল বিজ্ঞপ্তি (PDF)</h2>
+            <h2 className="font-bold text-gray-900 text-lg mb-3"><T bn="মূল বিজ্ঞপ্তি (PDF)" en="Official Circular (PDF)" /></h2>
             <PdfViewerDynamic url={post.circularPdfUrl} />
           </div>
         )}

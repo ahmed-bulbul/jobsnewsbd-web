@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { login } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function LoginPage() {
   const router = useRouter();
   const { login: authLogin } = useAuth();
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -21,7 +23,6 @@ export default function LoginPage() {
     try {
       const result = await login(email, password);
       if (result.role === 'ADMIN') {
-        // Admin users should use the admin login panel
         localStorage.setItem('admin_token', result.token);
         router.push('/admin/dashboard');
         return;
@@ -29,7 +30,7 @@ export default function LoginPage() {
       authLogin({ token: result.token, userId: result.userId, name: result.name ?? '', email: result.email, role: result.role });
       router.push('/');
     } catch (err: unknown) {
-      setError((err as Error).message ?? 'লগইন ব্যর্থ হয়েছে');
+      setError((err as Error).message ?? t('লগইন ব্যর্থ হয়েছে', 'Login failed'));
     } finally {
       setSubmitting(false);
     }
@@ -47,8 +48,8 @@ export default function LoginPage() {
               <span className="block text-xs text-warm-muted font-sans">Jobs News BD</span>
             </div>
           </Link>
-          <h1 className="mt-6 text-2xl font-bold text-gray-900">আপনার অ্যাকাউন্টে প্রবেশ করুন</h1>
-          <p className="mt-1 text-sm text-warm-muted">সেরা চাকরির বিজ্ঞপ্তি পেতে লগইন করুন</p>
+          <h1 className="mt-6 text-2xl font-bold text-gray-900">{t('আপনার অ্যাকাউন্টে প্রবেশ করুন', 'Sign in to your account')}</h1>
+          <p className="mt-1 text-sm text-warm-muted">{t('সেরা চাকরির বিজ্ঞপ্তি পেতে লগইন করুন', 'Log in to see the best job circulars')}</p>
         </div>
 
         <div className="card p-8">
@@ -58,14 +59,14 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="label">ইমেইল ঠিকানা</label>
+              <label className="label">{t('ইমেইল ঠিকানা', 'Email address')}</label>
               <input
                 type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                 required className="input" placeholder="example@gmail.com" autoComplete="email"
               />
             </div>
             <div>
-              <label className="label">পাসওয়ার্ড</label>
+              <label className="label">{t('পাসওয়ার্ড', 'Password')}</label>
               <input
                 type="password" value={password} onChange={(e) => setPassword(e.target.value)}
                 required className="input" placeholder="••••••••" autoComplete="current-password"
@@ -73,13 +74,13 @@ export default function LoginPage() {
             </div>
 
             <button type="submit" disabled={submitting} className="btn-primary w-full justify-center py-3 mt-2">
-              {submitting ? 'লগইন হচ্ছে...' : 'লগইন করুন'}
+              {submitting ? t('লগইন হচ্ছে...', 'Signing in...') : t('লগইন করুন', 'Login')}
             </button>
           </form>
 
           <p className="mt-5 text-center text-sm text-warm-muted">
-            অ্যাকাউন্ট নেই?{' '}
-            <Link href="/register" className="text-primary font-medium hover:underline">নিবন্ধন করুন</Link>
+            {t('অ্যাকাউন্ট নেই?', "Don't have an account?")}{' '}
+            <Link href="/register" className="text-primary font-medium hover:underline">{t('নিবন্ধন করুন', 'Register')}</Link>
           </p>
         </div>
       </div>

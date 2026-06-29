@@ -16,7 +16,7 @@ interface TimeLeft {
 }
 
 export default function DeadlineCountdown({ endDate }: Props) {
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
 
   useEffect(() => {
@@ -38,16 +38,16 @@ export default function DeadlineCountdown({ endDate }: Props) {
   if (!timeLeft) {
     return (
       <div className="inline-flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-2 text-sm font-medium">
-        🚫 {lang === 'bn' ? 'আবেদনের সময় শেষ হয়ে গেছে' : 'Application deadline has passed'}
+        🚫 {t('আবেদনের সময় শেষ হয়ে গেছে', 'Application deadline has passed')}
       </div>
     );
   }
 
   const units = [
-    { value: timeLeft.days,    label: lang === 'bn' ? 'দিন' : 'Days' },
-    { value: timeLeft.hours,   label: lang === 'bn' ? 'ঘণ্টা' : 'Hrs' },
-    { value: timeLeft.minutes, label: lang === 'bn' ? 'মিনিট' : 'Min' },
-    { value: timeLeft.seconds, label: lang === 'bn' ? 'সেকেন্ড' : 'Sec' },
+    { value: timeLeft.days,    label: t('দিন', 'Days') },
+    { value: timeLeft.hours,   label: t('ঘণ্টা', 'Hrs') },
+    { value: timeLeft.minutes, label: t('মিনিট', 'Min') },
+    { value: timeLeft.seconds, label: t('সেকেন্ড', 'Sec') },
   ];
 
   const isUrgent = timeLeft.days <= 3;
@@ -56,7 +56,7 @@ export default function DeadlineCountdown({ endDate }: Props) {
     <div className={`rounded-2xl p-4 border ${isUrgent ? 'bg-red-50 border-red-200' : 'bg-cream border-warm-border'}`}>
       <p className={`text-xs font-semibold mb-3 ${isUrgent ? 'text-red-700' : 'text-gray-600'}`}>
         {isUrgent && <span className="animate-pulse mr-1">⚡</span>}
-        {lang === 'bn' ? 'আবেদনের বাকি সময়' : 'Time Remaining to Apply'}
+        {t('আবেদনের বাকি সময়', 'Time Remaining to Apply')}
       </p>
       <div className="flex gap-3">
         {units.map((u) => (

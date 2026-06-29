@@ -14,18 +14,28 @@ interface AuthContextValue {
   user: AuthUser | null;
   login: (u: AuthUser) => void;
   logout: () => void;
+  openModal: (view?: 'login' | 'register') => void;
+  closeModal: () => void;
+  modalOpen: boolean;
+  modalInitialView: 'login' | 'register';
 }
 
 const AuthContext = createContext<AuthContextValue>({
   user: null,
   login: () => {},
   logout: () => {},
+  openModal: () => {},
+  closeModal: () => {},
+  modalOpen: false,
+  modalInitialView: 'login',
 });
 
 const STORAGE_KEY = 'user_auth';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalInitialView, setModalInitialView] = useState<'login' | 'register'>('login');
 
   useEffect(() => {
     try {
@@ -46,7 +56,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(STORAGE_KEY);
   };
 
-  return <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>;
+  const openModal = (view: 'login' | 'register' = 'login') => {
+    setModalInitialView(view);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => setModalOpen(false);
+
+  return (
+    <AuthContext.Provider value={{ user, login, logout, openModal, closeModal, modalOpen, modalInitialView }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export const useAuth = () => useContext(AuthContext);

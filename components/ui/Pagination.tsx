@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function Pagination({ page, totalPages, onPageChange }: Props) {
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   if (totalPages <= 1) return null;
 
   const pages = Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
@@ -27,7 +27,7 @@ export default function Pagination({ page, totalPages, onPageChange }: Props) {
         disabled={page === 0}
         className="px-3 py-2 rounded-lg border border-warm-border text-sm text-gray-600 hover:bg-cream disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
-        {lang === 'bn' ? '← আগে' : '← Prev'}
+        {t('← আগে', '← Prev')}
       </button>
 
       {pages.map((p) => (
@@ -49,7 +49,7 @@ export default function Pagination({ page, totalPages, onPageChange }: Props) {
         disabled={page >= totalPages - 1}
         className="px-3 py-2 rounded-lg border border-warm-border text-sm text-gray-600 hover:bg-cream disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
-        {lang === 'bn' ? 'পরে →' : 'Next →'}
+        {t('পরে →', 'Next →')}
       </button>
     </nav>
   );

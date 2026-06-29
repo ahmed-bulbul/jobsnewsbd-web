@@ -8,7 +8,7 @@ import { useState, useRef, useEffect } from 'react';
 
 export default function Header() {
   const { lang, setLang, t } = useLanguage();
-  const { user, logout } = useAuth();
+  const { user, logout, openModal } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -113,7 +113,7 @@ export default function Header() {
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                     >
-                      লগআউট করুন
+                      {t('লগআউট করুন', 'Logout')}
                     </button>
                   </div>
                 )}
@@ -121,12 +121,12 @@ export default function Header() {
             ) : (
               /* Guest: login + register */
               <div className="flex items-center gap-2">
-                <Link href="/login" className="btn-outline text-sm px-4 py-2">
+                <button onClick={() => openModal('login')} className="btn-outline text-sm px-4 py-2">
                   {t('লগইন', 'Login')}
-                </Link>
-                <Link href="/register" className="btn-primary text-sm px-4 py-2">
+                </button>
+                <button onClick={() => openModal('register')} className="btn-primary text-sm px-4 py-2">
                   {t('নিবন্ধন', 'Register')}
-                </Link>
+                </button>
               </div>
             )}
           </div>

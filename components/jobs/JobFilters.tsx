@@ -22,7 +22,7 @@ export default function JobFilters({
   onReset,
   totalElements,
 }: Props) {
-  const { lang, t } = useLanguage();
+  const { t } = useLanguage();
 
   const filteredCategories = filters.categoryId
     ? categories
@@ -48,9 +48,7 @@ export default function JobFilters({
       </div>
 
       <div className="text-xs text-warm-muted font-medium pb-3 border-b border-warm-border">
-        {lang === 'bn'
-          ? `${totalElements} টি চাকরি পাওয়া গেছে`
-          : `${totalElements} jobs found`}
+        {t(`${totalElements} টি চাকরি পাওয়া গেছে`, `${totalElements} jobs found`)}
       </div>
 
       {/* Category Type */}

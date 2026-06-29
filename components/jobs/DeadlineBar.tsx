@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function DeadlineBar({ applicationStart, applicationEnd, status }: Props) {
-  const { lang } = useLanguage();
+  const { t, lang } = useLanguage();
   const progress = getDeadlineProgress(applicationStart, applicationEnd);
   const days = getDaysRemaining(applicationEnd);
   const isEndingSoon = days > 0 && days <= 3;
@@ -25,10 +25,10 @@ export default function DeadlineBar({ applicationStart, applicationEnd, status }
     : 'bg-accent';
 
   const daysText = isClosed
-    ? (lang === 'bn' ? 'সময় শেষ' : 'Deadline passed')
+    ? t('সময় শেষ', 'Deadline passed')
     : isEndingSoon
-    ? (lang === 'bn' ? `মাত্র ${toBanglaDigits(days)} দিন বাকি!` : `Only ${days} days left!`)
-    : (lang === 'bn' ? `${toBanglaDigits(days)} দিন বাকি` : `${days} days left`);
+    ? t(`মাত্র ${toBanglaDigits(days)} দিন বাকি!`, `Only ${days} days left!`)
+    : t(`${toBanglaDigits(days)} দিন বাকি`, `${days} days left`);
 
   return (
     <div className="mb-3">

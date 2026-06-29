@@ -5,12 +5,14 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { verifyOtp, resendOtp } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 function VerifyOtpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email') ?? '';
   const { login } = useAuth();
+  const { lang, t } = useLanguage();
 
   const [digits, setDigits] = useState(['', '', '', '', '', '']);
   const [submitting, setSubmitting] = useState(false);
@@ -25,11 +27,10 @@ function VerifyOtpForm() {
     inputs.current[0]?.focus();
   }, [email, router]);
 
-  // countdown for resend button
   useEffect(() => {
     if (countdown <= 0) return;
-    const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
   }, [countdown]);
 
   const handleChange = (i: number, val: string) => {
@@ -55,7 +56,7 @@ function VerifyOtpForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const otp = digits.join('');
-    if (otp.length < 6) { setError('৬ সংখ্যার কোড দিন'); return; }
+    if (otp.length < 6) { setError(t('৬ সংখ্যার কোড দিন', 'Please enter the 6-digit code')); return; }
     setSubmitting(true);
     setError('');
     try {
@@ -63,7 +64,7 @@ function VerifyOtpForm() {
       login({ token: result.token, userId: result.userId, name: result.name ?? '', email: result.email, role: result.role });
       router.push('/');
     } catch (err: unknown) {
-      setError((err as Error).message ?? 'যাচাই ব্যর্থ হয়েছে');
+      setError((err as Error).message ?? t('যাচাই ব্যর্থ হয়েছে', 'Verification failed'));
       setDigits(['', '', '', '', '', '']);
       inputs.current[0]?.focus();
     } finally {
@@ -80,7 +81,7 @@ function VerifyOtpForm() {
       setResendMsg(res.message);
       setCountdown(60);
     } catch (err: unknown) {
-      setError((err as Error).message ?? 'পুনরায় পাঠানো ব্যর্থ হয়েছে');
+      setError((err as Error).message ?? t('পুনরায় পাঠানো ব্যর্থ হয়েছে', 'Resend failed'));
     } finally {
       setResending(false);
     }
@@ -101,9 +102,13 @@ function VerifyOtpForm() {
           <div className="mt-6 w-16 h-16 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-3xl">✉️</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">ইমেইল যাচাই করুন</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('ইমেইল যাচাই করুন', 'Verify your email')}</h1>
           <p className="mt-2 text-sm text-warm-muted">
-            <span className="font-medium text-gray-700">{email}</span>-এ ৬ সংখ্যার কোড পাঠানো হয়েছে
+            {lang === 'bn' ? (
+              <><span className="font-medium text-gray-700">{email}</span>-এ ৬ সংখ্যার কোড পাঠানো হয়েছে</>
+            ) : (
+              <>A 6-digit code was sent to <span className="font-medium text-gray-700">{email}</span></>
+            )}
           </p>
         </div>
 
@@ -116,7 +121,6 @@ function VerifyOtpForm() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* OTP boxes */}
             <div className="flex gap-2 justify-center" onPaste={handlePaste}>
               {digits.map((d, i) => (
                 <input
@@ -134,14 +138,14 @@ function VerifyOtpForm() {
             </div>
 
             <button type="submit" disabled={submitting} className="btn-primary w-full justify-center py-3">
-              {submitting ? 'যাচাই হচ্ছে...' : 'যাচাই করুন'}
+              {submitting ? t('যাচাই হচ্ছে...', 'Verifying...') : t('যাচাই করুন', 'Verify')}
             </button>
           </form>
 
           <div className="mt-5 text-center">
             {countdown > 0 ? (
               <p className="text-sm text-warm-muted">
-                পুনরায় পাঠান ({countdown}s)
+                {t(`পুনরায় পাঠান (${countdown}s)`, `Resend code (${countdown}s)`)}
               </p>
             ) : (
               <button
@@ -149,13 +153,13 @@ function VerifyOtpForm() {
                 disabled={resending}
                 className="text-sm text-primary font-medium hover:underline disabled:opacity-50"
               >
-                {resending ? 'পাঠানো হচ্ছে...' : 'কোড পাননি? পুনরায় পাঠান'}
+                {resending ? t('পাঠানো হচ্ছে...', 'Sending...') : t('কোড পাননি? পুনরায় পাঠান', "Didn't receive the code? Resend")}
               </button>
             )}
           </div>
 
           <p className="mt-4 text-center text-sm text-warm-muted">
-            <Link href="/register" className="text-primary hover:underline">← নিবন্ধনে ফিরুন</Link>
+            <Link href="/register" className="text-primary hover:underline">{t('← নিবন্ধনে ফিরুন', '← Back to register')}</Link>
           </p>
         </div>
       </div>

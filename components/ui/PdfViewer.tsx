@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
+import { useLanguage } from '@/context/LanguageContext';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function PdfViewer({ url }: Props) {
+  const { lang, t } = useLanguage();
   const [numPages, setNumPages]     = useState<number>(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [zoom, setZoom]             = useState(1.0);
@@ -83,7 +85,7 @@ export default function PdfViewer({ url }: Props) {
     <div className="card overflow-hidden" ref={containerRef}>
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-2 px-4 py-3 bg-primary-900 text-white flex-wrap">
-        <span className="text-sm font-semibold">📄 বিজ্ঞপ্তি (PDF)</span>
+        <span className="text-sm font-semibold">{t('📄 বিজ্ঞপ্তি (PDF)', '📄 Circular (PDF)')}</span>
 
         {!loading && (
           <div className="flex items-center gap-2 text-sm">
@@ -92,7 +94,7 @@ export default function PdfViewer({ url }: Props) {
               ←
             </button>
             <span className="min-w-[90px] text-center">
-              পৃষ্ঠা {toBn(currentPage)} / {toBn(numPages)}
+              {t(`পৃষ্ঠা ${toBn(currentPage)} / ${toBn(numPages)}`, `Page ${currentPage} / ${numPages}`)}
             </span>
             <button onClick={next} disabled={currentPage >= numPages}
               className="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 disabled:opacity-40 transition-colors">
@@ -103,17 +105,17 @@ export default function PdfViewer({ url }: Props) {
 
         <div className="flex items-center gap-1.5">
           <button onClick={zoomOut}
-            className="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors text-sm" title="জুম আউট">
+            className="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors text-sm" title={t('জুম আউট', 'Zoom out')}>
             −
           </button>
           <span className="text-xs min-w-[42px] text-center">{Math.round(zoom * 100)}%</span>
           <button onClick={zoomIn}
-            className="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors text-sm" title="জুম ইন">
+            className="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors text-sm" title={t('জুম ইন', 'Zoom in')}>
             +
           </button>
           <a href={url} download
             className="ml-2 px-3 py-1 rounded bg-accent hover:bg-accent-dark text-white text-xs font-medium transition-colors">
-            ⬇ ডাউনলোড
+            {t('⬇ ডাউনলোড', '⬇ Download')}
           </a>
         </div>
       </div>
@@ -126,7 +128,7 @@ export default function PdfViewer({ url }: Props) {
       >
         {loading && (
           <div className="flex items-center justify-center min-h-[400px] text-gray-500 text-sm animate-pulse">
-            PDF লোড হচ্ছে...
+            {t('PDF লোড হচ্ছে...', 'Loading PDF...')}
           </div>
         )}
 
@@ -167,7 +169,7 @@ export default function PdfViewer({ url }: Props) {
                   : 'bg-gray-100 text-gray-600 hover:bg-primary-50 hover:text-primary'
               }`}
             >
-              {toBn(p)}
+              {lang === 'bn' ? toBn(p) : p}
             </button>
           ))}
         </div>

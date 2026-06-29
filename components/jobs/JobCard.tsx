@@ -20,7 +20,7 @@ const LEFT_BORDER: Record<string, string> = {
 };
 
 export default function JobCard({ post, categoryTypeSlug }: Props) {
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const borderColor = LEFT_BORDER[categoryTypeSlug ?? ''] ?? 'border-l-warm-muted';
   const title = (lang === 'bn' && post.titleBn) ? post.titleBn : post.titleEn;
   const days = getDaysRemaining(post.applicationEnd);
@@ -44,7 +44,7 @@ export default function JobCard({ post, categoryTypeSlug }: Props) {
           )}
           {isEndingSoon && (
             <span className="ml-auto text-xs font-bold text-red-600 animate-pulse flex items-center gap-1">
-              ⚡ {lang === 'bn' ? 'শেষ হচ্ছে' : 'Ending soon'}
+              ⚡ {t('শেষ হচ্ছে', 'Ending soon')}
             </span>
           )}
         </div>
@@ -87,7 +87,7 @@ export default function JobCard({ post, categoryTypeSlug }: Props) {
           <div className="pt-3 border-t border-warm-border">
             <p className="text-xs text-gray-500">
               <span className="font-medium text-gray-700">
-                {lang === 'bn' ? 'শেষ তারিখ: ' : 'Deadline: '}
+                {t('শেষ তারিখ: ', 'Deadline: ')}
               </span>
               {lang === 'bn'
                 ? formatBanglaDate(post.applicationEnd)
