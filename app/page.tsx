@@ -4,7 +4,7 @@ import Footer from '@/components/layout/Footer';
 import HeroSearch from '@/components/home/HeroSearch';
 import CategoryPills from '@/components/home/CategoryPills';
 import UrgencyTicker from '@/components/home/UrgencyTicker';
-import JobCard from '@/components/jobs/JobCard';
+import InfiniteJobList from '@/components/home/InfiniteJobList';
 import T from '@/components/ui/T';
 import type { Category, CategoryType } from '@/lib/types';
 import Link from 'next/link';
@@ -18,12 +18,12 @@ export default async function HomePage() {
     getPosts({ size: 9 }).catch(() => ({ content: [], totalElements: 0, totalPages: 0, page: 0, size: 9, last: true })),
   ]);
 
-  const catTypeMap = new Map(
-    categories.map((c) => {
-      const ct = categoryTypes.find((t) => t.id === c.categoryTypeId);
-      return [c.id, ct?.slug ?? ''];
-    }),
-  );
+  // category name → category type slug (for JobCard border color)
+  const nameToTypeSlug: Record<string, string> = {};
+  categories.forEach((c) => {
+    const ct = categoryTypes.find((t) => t.id === c.categoryTypeId);
+    if (ct) nameToTypeSlug[c.name] = ct.slug;
+  });
 
   return (
     <>
@@ -38,8 +38,8 @@ export default async function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 grid grid-cols-3 divide-x divide-primary-700">
             {[
               { bn: 'মোট বিজ্ঞপ্তি', en: 'Total Circulars', value: latestPosts.totalElements },
-              { bn: 'বিভাগ', en: 'Categories', value: categories.length },
-              { bn: 'ধরন', en: 'Job Types', value: categoryTypes.length },
+              { bn: 'বিভাগ',         en: 'Categories',      value: categories.length },
+              { bn: 'ধরন',           en: 'Job Types',       value: categoryTypes.length },
             ].map((s) => (
               <div key={s.bn} className="text-center px-4">
                 <div className="text-2xl font-bold text-accent">{s.value}+</div>
@@ -52,7 +52,7 @@ export default async function HomePage() {
         {/* Categories */}
         <CategoryPills categoryTypes={categoryTypes} categories={categories} />
 
-        {/* Latest jobs */}
+        {/* Job listing with infinite scroll */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
           <div className="flex items-center justify-between mb-6">
             <h2 className="section-title">
@@ -60,28 +60,16 @@ export default async function HomePage() {
               <T bn="সর্বশেষ চাকরির বিজ্ঞপ্তি" en="Latest Job Circulars" />
             </h2>
             <Link href="/jobs" className="text-sm text-primary-600 hover:text-primary font-medium hover:underline">
-              <T bn="সব দেখুন →" en="View all →" />
+              <T bn="ফিল্টার করুন →" en="Filter jobs →" />
             </Link>
           </div>
 
-          {latestPosts.content.length === 0 ? (
-            <div className="text-center py-16 text-warm-muted">
-              <div className="text-5xl mb-4">📋</div>
-              <p><T bn="এখনো কোনো বিজ্ঞপ্তি নেই" en="No circulars yet" /></p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {latestPosts.content.map((post) => (
-                <JobCard
-                  key={post.id}
-                  post={post}
-                  categoryTypeSlug={catTypeMap.get(
-                    categories.find((c) => c.name === post.categoryName)?.id ?? 0,
-                  )}
-                />
-              ))}
-            </div>
-          )}
+          <InfiniteJobList
+            initialPosts={latestPosts.content}
+            initialLast={latestPosts.last}
+            initialPage={latestPosts.page}
+            nameToTypeSlug={nameToTypeSlug}
+          />
         </section>
       </main>
       <Footer />
