@@ -17,37 +17,33 @@ export default function HeroSearch() {
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-primary-900 via-primary-700 to-primary-500 text-white">
-      {/* Decorative circles */}
-      <div className="absolute -top-16 -right-16 w-64 h-64 bg-white/5 rounded-full" />
-      <div className="absolute -bottom-20 -left-10 w-48 h-48 bg-accent/10 rounded-full" />
+      {/* Decorative circles — smaller, less intrusive */}
+      <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full" />
+      <div className="absolute -bottom-10 -left-6 w-32 h-32 bg-accent/10 rounded-full" />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
-        <div className="max-w-2xl">
-          {/* Eyebrow */}
-          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-sm mb-6">
-            <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-            {t('প্রতিদিন নতুন বিজ্ঞপ্তি আপডেট হচ্ছে', 'Updated daily with new circulars')}
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-7 lg:py-9">
+        {/* Single row: headline left, search right on desktop */}
+        <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-10">
+
+          {/* Left: title + pulse badge */}
+          <div className="shrink-0">
+            <div className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-full px-3 py-1 text-xs mb-2">
+              <span className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
+              {t('প্রতিদিন আপডেট', 'Updated daily')}
+            </div>
+            <h1 className="text-2xl lg:text-3xl font-bold leading-snug">
+              {lang === 'bn' ? (
+                <>আজকের সেরা <span className="text-accent">চাকরির বিজ্ঞপ্তি</span></>
+              ) : (
+                <>Today&apos;s Best <span className="text-accent">Job Circulars</span></>
+              )}
+            </h1>
           </div>
 
-          {/* Headline */}
-          <h1 className="text-4xl lg:text-5xl font-bold leading-tight mb-4">
-            {lang === 'bn' ? (
-              <>আজকের সেরা<br /><span className="text-accent">চাকরির বিজ্ঞপ্তি</span></>
-            ) : (
-              <>Today&apos;s Best<br /><span className="text-accent">Job Circulars</span></>
-            )}
-          </h1>
-          <p className="text-primary-100 text-lg mb-8">
-            {t(
-              'সরকারি, ব্যাংক, এনজিও ও বেসরকারি — সব চাকরির বিজ্ঞপ্তি এক জায়গায়।',
-              'Government, Bank, NGO & Private — all job circulars in one place.',
-            )}
-          </p>
-
-          {/* Search */}
-          <form onSubmit={handleSearch} className="flex gap-3">
+          {/* Right: search bar — fills remaining space */}
+          <form onSubmit={handleSearch} className="flex gap-2 flex-1">
             <div className="flex-1 relative">
-              <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input
@@ -55,10 +51,10 @@ export default function HeroSearch() {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder={t('পদের নাম বা প্রতিষ্ঠান খুঁজুন...', 'Search by post or organization...')}
-                className="w-full pl-11 pr-4 py-4 rounded-xl text-gray-900 text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-accent shadow-lg"
+                className="w-full pl-10 pr-4 py-3 rounded-xl text-gray-900 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-accent shadow-md"
               />
             </div>
-            <button type="submit" className="px-6 py-4 bg-accent hover:bg-accent-dark text-white font-semibold rounded-xl transition-colors shadow-lg whitespace-nowrap">
+            <button type="submit" className="px-5 py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-xl transition-colors shadow-md whitespace-nowrap text-sm">
               {t('খুঁজুন', 'Search')}
             </button>
           </form>

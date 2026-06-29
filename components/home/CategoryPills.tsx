@@ -28,7 +28,7 @@ export default function CategoryPills({ categoryTypes, categories }: Props) {
       </h2>
 
       {/* Category type cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
         {categoryTypes.map((ct) => {
           const colorClass = TYPE_COLORS[ct.slug] ?? 'border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100';
           const count = categories.filter((c) => c.categoryTypeId === ct.id).length;
@@ -36,13 +36,15 @@ export default function CategoryPills({ categoryTypes, categories }: Props) {
             <Link
               key={ct.id}
               href={`/jobs?categoryTypeId=${ct.id}`}
-              className={`flex flex-col items-center gap-2 p-5 rounded-2xl border-2 transition-all duration-200 shadow-sm hover:shadow-md active:scale-[0.98] ${colorClass}`}
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border-2 transition-all duration-200 hover:shadow-sm active:scale-[0.98] ${colorClass}`}
             >
-              <span className="text-3xl">{categoryTypeEmoji(ct.slug)}</span>
-              <span className="font-semibold text-sm text-center">{ct.name}</span>
-              {count > 0 && (
-                <span className="text-xs opacity-70">{count} {t('বিভাগ', 'categories')}</span>
-              )}
+              <span className="text-xl shrink-0">{categoryTypeEmoji(ct.slug)}</span>
+              <div className="min-w-0">
+                <p className="font-semibold text-sm leading-tight">{ct.name}</p>
+                {count > 0 && (
+                  <p className="text-xs opacity-60 leading-tight">{count} {t('বিভাগ', 'categories')}</p>
+                )}
+              </div>
             </Link>
           );
         })}

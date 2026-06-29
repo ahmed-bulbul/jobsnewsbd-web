@@ -49,12 +49,12 @@ export default async function JobDetailPage({ params }: Props) {
       <main>
         {/* Hero banner */}
         <div className={`bg-gradient-to-br ${gradientClass} text-white`}>
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <Link href="/jobs" className="inline-flex items-center gap-1.5 text-white/70 hover:text-white text-sm mb-6 transition-colors">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+            <Link href="/jobs" className="inline-flex items-center gap-1.5 text-white/70 hover:text-white text-xs mb-3 transition-colors">
               ← বিজ্ঞপ্তি তালিকায় ফিরুন
             </Link>
 
-            <div className="flex flex-wrap gap-2 mb-4">
+            <div className="flex flex-wrap gap-1.5 mb-2">
               <StatusBadge status={post.status} />
               {post.postType && (
                 <span className="bg-white/20 text-white text-xs px-2.5 py-0.5 rounded-full font-medium">
@@ -68,15 +68,15 @@ export default async function JobDetailPage({ params }: Props) {
               )}
             </div>
 
-            <h1 className="text-2xl lg:text-3xl font-bold leading-snug mb-2">
+            <h1 className="text-xl lg:text-2xl font-bold leading-snug mb-1">
               {post.titleBn ?? post.titleEn}
             </h1>
             {post.titleBn && post.titleEn !== post.titleBn && (
-              <p className="text-white/80 font-sans text-lg">{post.titleEn}</p>
+              <p className="text-white/75 font-sans text-sm">{post.titleEn}</p>
             )}
 
             {post.organizationName && (
-              <p className="mt-4 text-white/90 font-semibold text-lg">🏢 {post.organizationName}</p>
+              <p className="mt-2 text-white/90 font-semibold text-sm">🏢 {post.organizationName}</p>
             )}
           </div>
         </div>
