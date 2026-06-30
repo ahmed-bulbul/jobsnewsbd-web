@@ -127,7 +127,7 @@ export default function JobsPage() {
                       key={post.id}
                       post={post}
                       categoryTypeSlug={catTypeMap.get(
-                        categories.find((c) => c.name === post.categoryName)?.id ?? 0,
+                        categories.find((c) => c.nameBn === post.categoryNameBn)?.id ?? 0,
                       )}
                     />
                   ))}

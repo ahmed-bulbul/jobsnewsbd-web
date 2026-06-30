@@ -40,7 +40,7 @@ export default function CategoryPills({ categoryTypes, categories }: Props) {
             >
               <span className="text-xl shrink-0">{categoryTypeEmoji(ct.slug)}</span>
               <div className="min-w-0">
-                <p className="font-semibold text-sm leading-tight">{ct.name}</p>
+                <p className="font-semibold text-sm leading-tight">{t(ct.nameBn, ct.nameEn ?? ct.nameBn)}</p>
                 {count > 0 && (
                   <p className="text-xs opacity-60 leading-tight">{count} {t('বিভাগ', 'categories')}</p>
                 )}
@@ -61,7 +61,7 @@ export default function CategoryPills({ categoryTypes, categories }: Props) {
               href={`/jobs?categoryId=${cat.id}`}
               className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${chipColors}`}
             >
-              {cat.name}
+              {t(cat.nameBn, cat.nameEn ?? cat.nameBn)}
             </Link>
           );
         })}

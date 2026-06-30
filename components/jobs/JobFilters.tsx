@@ -66,7 +66,7 @@ export default function JobFilters({
                   ? 'bg-primary-50 text-primary-700 font-medium'
                   : 'text-gray-600 hover:bg-cream'
               }`}>
-                {ct.name}
+                {t(ct.nameBn, ct.nameEn ?? ct.nameBn)}
               </div>
             </button>
           ))}
@@ -83,7 +83,7 @@ export default function JobFilters({
         >
           <option value="">{t('সব বিভাগ', 'All Categories')}</option>
           {filteredCategories.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
+            <option key={c.id} value={c.id}>{t(c.nameBn, c.nameEn ?? c.nameBn)}</option>
           ))}
         </select>
       </div>

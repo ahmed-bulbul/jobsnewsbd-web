@@ -22,7 +22,7 @@ export default async function HomePage() {
   const nameToTypeSlug: Record<string, string> = {};
   categories.forEach((c) => {
     const ct = categoryTypes.find((t) => t.id === c.categoryTypeId);
-    if (ct) nameToTypeSlug[c.name] = ct.slug;
+    if (ct) nameToTypeSlug[c.nameBn] = ct.slug;
   });
 
   return (

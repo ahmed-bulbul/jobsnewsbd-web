@@ -24,10 +24,12 @@ export default function AdminDashboard() {
   const [msg, setMsg]                 = useState('');
 
   // New category type form
-  const [ctName, setCtName] = useState('');
-  const [ctSlug, setCtSlug] = useState('');
+  const [ctNameBn, setCtNameBn] = useState('');
+  const [ctNameEn, setCtNameEn] = useState('');
+  const [ctSlug, setCtSlug]     = useState('');
   // New category form
-  const [catName, setCatName]       = useState('');
+  const [catNameBn, setCatNameBn]   = useState('');
+  const [catNameEn, setCatNameEn]   = useState('');
   const [catSlug, setCatSlug]       = useState('');
   const [catTypeId, setCatTypeId]   = useState('');
   // New post type form
@@ -66,19 +68,19 @@ export default function AdminDashboard() {
 
   const handleCreateCT = async (e: React.FormEvent) => {
     e.preventDefault();
-    await adminCreateCategoryType({ name: ctName, slug: ctSlug }, token);
+    await adminCreateCategoryType({ nameBn: ctNameBn, nameEn: ctNameEn, slug: ctSlug }, token);
     const updated = await getCategoryTypes();
     setCategoryTypes(updated);
-    setCtName(''); setCtSlug('');
+    setCtNameBn(''); setCtNameEn(''); setCtSlug('');
     flash('বিভাগের ধরন যুক্ত হয়েছে।');
   };
 
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault();
-    await adminCreateCategory({ name: catName, slug: catSlug, categoryTypeId: Number(catTypeId) }, token);
+    await adminCreateCategory({ nameBn: catNameBn, nameEn: catNameEn, slug: catSlug, categoryTypeId: Number(catTypeId) }, token);
     const updated = await getCategories();
     setCategories(updated);
-    setCatName(''); setCatSlug(''); setCatTypeId('');
+    setCatNameBn(''); setCatNameEn(''); setCatSlug(''); setCatTypeId('');
     flash('বিভাগ যুক্ত হয়েছে।');
   };
 
@@ -118,6 +120,7 @@ export default function AdminDashboard() {
         </div>
         <div className="flex items-center gap-4">
           <span className="text-primary-300 text-sm">👤 {adminName}</span>
+          <Link href="/admin/exam-centers" className="text-xs text-primary-300 hover:text-white">🏫 পরীক্ষা কেন্দ্র</Link>
           <Link href="/" className="text-xs text-primary-300 hover:text-white">সাইটে যান →</Link>
           <button
             onClick={() => { localStorage.removeItem('admin_token'); router.push('/admin/login'); }}
@@ -180,7 +183,7 @@ export default function AdminDashboard() {
                             <p className="text-xs text-warm-muted mt-0.5">{post.organizationName}</p>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-warm-muted">{post.categoryName}</td>
+                        <td className="px-4 py-3 text-warm-muted">{post.categoryNameBn}</td>
                         <td className="px-4 py-3"><StatusBadge status={post.status} /></td>
                         <td className="px-4 py-3 text-warm-muted text-xs">
                           {post.applicationEnd ? formatBanglaDate(post.applicationEnd) : '—'}
@@ -213,8 +216,12 @@ export default function AdminDashboard() {
               <h3 className="font-bold text-gray-900 mb-4">নতুন বিভাগের ধরন যুক্ত করুন</h3>
               <form onSubmit={handleCreateCT} className="space-y-3">
                 <div>
-                  <label className="label">নাম</label>
-                  <input value={ctName} onChange={(e) => setCtName(e.target.value)} required placeholder="যেমন: Government" className="input" />
+                  <label className="label">নাম (বাংলা)</label>
+                  <input value={ctNameBn} onChange={(e) => setCtNameBn(e.target.value)} required placeholder="যেমন: সরকারি" className="input" />
+                </div>
+                <div>
+                  <label className="label">নাম (ইংরেজি)</label>
+                  <input value={ctNameEn} onChange={(e) => setCtNameEn(e.target.value)} placeholder="যেমন: Government" className="input" />
                 </div>
                 <div>
                   <label className="label">স্লাগ</label>
@@ -226,7 +233,7 @@ export default function AdminDashboard() {
               <div className="mt-6 space-y-2">
                 {categoryTypes.map((ct) => (
                   <div key={ct.id} className="flex items-center justify-between bg-cream rounded-lg px-3 py-2 text-sm">
-                    <span className="font-medium">{ct.name}</span>
+                    <span className="font-medium">{ct.nameBn}</span>
                     <span className="text-warm-muted text-xs">{ct.slug}</span>
                   </div>
                 ))}
@@ -241,12 +248,16 @@ export default function AdminDashboard() {
                   <label className="label">ধরন</label>
                   <select value={catTypeId} onChange={(e) => setCatTypeId(e.target.value)} required className="input">
                     <option value="">ধরন বেছে নিন</option>
-                    {categoryTypes.map((ct) => <option key={ct.id} value={ct.id}>{ct.name}</option>)}
+                    {categoryTypes.map((ct) => <option key={ct.id} value={ct.id}>{ct.nameBn}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="label">নাম</label>
-                  <input value={catName} onChange={(e) => setCatName(e.target.value)} required placeholder="যেমন: Bangladesh Bank" className="input" />
+                  <label className="label">নাম (বাংলা)</label>
+                  <input value={catNameBn} onChange={(e) => setCatNameBn(e.target.value)} required placeholder="যেমন: বাংলাদেশ ব্যাংক" className="input" />
+                </div>
+                <div>
+                  <label className="label">নাম (ইংরেজি)</label>
+                  <input value={catNameEn} onChange={(e) => setCatNameEn(e.target.value)} placeholder="যেমন: Bangladesh Bank" className="input" />
                 </div>
                 <div>
                   <label className="label">স্লাগ</label>
@@ -260,8 +271,8 @@ export default function AdminDashboard() {
                   const ct = categoryTypes.find((t) => t.id === c.categoryTypeId);
                   return (
                     <div key={c.id} className="flex items-center justify-between bg-cream rounded-lg px-3 py-2 text-sm">
-                      <span className="font-medium">{c.name}</span>
-                      <span className="text-warm-muted text-xs">{ct?.name}</span>
+                      <span className="font-medium">{c.nameBn}</span>
+                      <span className="text-warm-muted text-xs">{ct?.nameBn}</span>
                     </div>
                   );
                 })}

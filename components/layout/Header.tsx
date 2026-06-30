@@ -33,8 +33,9 @@ export default function Header() {
   };
 
   const navLinks = [
-    { href: '/',     label: t('হোম', 'Home') },
-    { href: '/jobs', label: t('সব চাকরি', 'All Jobs') },
+    { href: '/',               label: t('হোম', 'Home') },
+    { href: '/jobs',           label: t('সব চাকরি', 'All Jobs') },
+    { href: '/exam-centers',   label: t('পরীক্ষা কেন্দ্র', 'Exam Centers') },
   ];
 
   const initials = user?.name

@@ -66,7 +66,7 @@ export default function InfiniteJobList({ initialPosts, initialLast, initialPage
           <div key={post.id} className="animate-fadeIn">
             <JobCard
               post={post}
-              categoryTypeSlug={nameToTypeSlug[post.categoryName ?? '']}
+              categoryTypeSlug={nameToTypeSlug[post.categoryNameBn ?? '']}
             />
           </div>
         ))}

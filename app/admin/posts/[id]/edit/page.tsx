@@ -168,9 +168,9 @@ export default function EditPostPage({ params }: Props) {
               <select value={form.categoryId} onChange={(e) => set('categoryId', e.target.value)} required className="input">
                 <option value="">বিভাগ বেছে নিন</option>
                 {categoryTypes.map((ct) => (
-                  <optgroup key={ct.id} label={ct.name}>
+                  <optgroup key={ct.id} label={ct.nameBn}>
                     {categories.filter((c) => c.categoryTypeId === ct.id).map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
+                      <option key={c.id} value={c.id}>{c.nameBn}</option>
                     ))}
                   </optgroup>
                 ))}

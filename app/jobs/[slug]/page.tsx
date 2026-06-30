@@ -48,7 +48,7 @@ export default async function JobDetailPage({ params }: Props) {
   const infoCards = [
     { icon: '📍', bn: 'জেলা', en: 'District', value: post.district },
     { icon: '🎓', bn: 'যোগ্যতা', en: 'Qualification', value: post.qualification },
-    { icon: '📁', bn: 'বিভাগ', en: 'Category', value: post.category.name },
+    { icon: '📁', bn: 'বিভাগ', en: 'Category', value: post.category.nameBn },
     { icon: '📅', bn: 'প্রকাশের তারিখ', en: 'Published Date', value: post.publishedAt ? new Date(post.publishedAt).toLocaleDateString('bn-BD') : null },
   ].filter((item) => item.value);
 
@@ -72,7 +72,7 @@ export default async function JobDetailPage({ params }: Props) {
               )}
               {categoryType && (
                 <span className="bg-white/20 text-white text-xs px-2.5 py-0.5 rounded-full font-medium">
-                  {categoryType.name}
+                  <T bn={categoryType.nameBn} en={categoryType.nameEn ?? categoryType.nameBn} />
                 </span>
               )}
             </div>

@@ -1,12 +1,16 @@
 import type {
   Category,
   CategoryType,
+  CenterTip,
+  ExamCenterDetail,
+  ExamCenterSummary,
   LoginResponse,
   PagedResponse,
   Post,
   PostFilters,
   PostSummary,
   PostType,
+  TipCategory,
   UserProfile,
   UserSavedJob,
   SavedJobStatus,
@@ -177,3 +181,76 @@ export const removeProfilePhoto = (token: string) =>
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
   }).then((r) => r.json() as Promise<UserProfile>);
+
+// ── Exam Centers ─────────────────────────────────────────────────────────────
+
+export const getExamCenters = (q?: string) =>
+  fetch(`${BASE}/api/exam-centers${q ? `?q=${encodeURIComponent(q)}` : ''}`, { next: { revalidate: 300 } })
+    .then((r) => r.json() as Promise<ExamCenterSummary[]>);
+
+export const getExamCenter = (id: number, token?: string) =>
+  fetch(`${BASE}/api/exam-centers/${id}`, {
+    next: { revalidate: 60 },
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  }).then((r) => r.json() as Promise<ExamCenterDetail>);
+
+export const getExamCenterTips = async (id: number, category?: TipCategory, token?: string): Promise<CenterTip[]> => {
+  const params = new URLSearchParams();
+  if (category) params.set('category', category);
+  const qs = params.toString();
+  const res = await fetch(`${BASE}/api/exam-centers/${id}/tips${qs ? `?${qs}` : ''}`, {
+    cache: 'no-store',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
+};
+
+export const addCenterTip = (centerId: number, token: string, category: TipCategory | undefined, body: string) =>
+  authPost<CenterTip>(`/api/user/exam-centers/${centerId}/tips`, { category, body }, token);
+
+export const deleteCenterTip = (tipId: number, token: string) =>
+  authDelete(`/api/user/exam-centers/tips/${tipId}`, token);
+
+export const toggleTipUpvote = (tipId: number, token: string) =>
+  fetch(`${BASE}/api/user/exam-centers/tips/${tipId}/upvote`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  }).then((r) => r.json() as Promise<CenterTip>);
+
+export const castMobileVote = (centerId: number, token: string, allowed: boolean) =>
+  fetch(`${BASE}/api/user/exam-centers/${centerId}/mobile-vote?allowed=${allowed}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  }).then((r) => r.json() as Promise<ExamCenterDetail>);
+
+// ── Admin Exam Centers ────────────────────────────────────────────────────────
+
+export const adminGetExamCenters = (token: string) =>
+  fetch(`${BASE}/api/admin/exam-centers`, { headers: { Authorization: `Bearer ${token}` } })
+    .then((r) => r.json() as Promise<ExamCenterSummary[]>);
+
+export const adminCreateExamCenter = (token: string, body: unknown) =>
+  authPost<ExamCenterDetail>('/api/admin/exam-centers', body, token);
+
+export const adminUpdateExamCenter = (token: string, id: number, body: unknown) =>
+  authPut<ExamCenterDetail>(`/api/admin/exam-centers/${id}`, body, token);
+
+export const adminDeleteExamCenter = (token: string, id: number) =>
+  authDelete(`/api/admin/exam-centers/${id}`, token);
+
+export const adminDeleteCenterTip = (token: string, tipId: number) =>
+  authDelete(`/api/admin/exam-centers/tips/${tipId}`, token);
+
+export async function adminUploadExamCenterPhoto(token: string, id: number, file: File): Promise<ExamCenterDetail> {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch(`${BASE}/api/admin/exam-centers/${id}/photo`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+  });
+  if (!res.ok) throw new Error(`Upload photo → ${res.status}`);
+  return res.json();
+}

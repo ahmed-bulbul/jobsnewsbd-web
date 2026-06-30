@@ -3,14 +3,16 @@ export type Lang = 'bn' | 'en';
 
 export interface CategoryType {
   id: number;
-  name: string;
+  nameBn: string;
+  nameEn: string | null;
   slug: string;
   createdAt: string;
 }
 
 export interface Category {
   id: number;
-  name: string;
+  nameBn: string;
+  nameEn: string | null;
   slug: string;
   categoryTypeId: number;
   createdAt: string;
@@ -33,7 +35,8 @@ export interface PostSummary {
   applicationStart: string | null;
   applicationEnd: string | null;
   publishedAt: string;
-  categoryName: string;
+  categoryNameBn: string;
+  categoryNameEn: string | null;
   postTypeName: string | null;
 }
 
@@ -101,6 +104,49 @@ export interface UserSavedJob {
   appliedAt: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export type TipCategory = 'TRANSPORT' | 'MOBILE' | 'TIMING' | 'FOOD' | 'ACCOMMODATION' | 'GENERAL';
+
+export interface MobileVoteStats {
+  allowed: number;
+  notAllowed: number;
+  userVote: boolean | null;
+}
+
+export interface ExamCenterSummary {
+  id: number;
+  nameBn: string;
+  nameEn: string;
+  area: string;
+  address: string;
+  mapsUrl: string | null;
+  photoUrl: string | null;
+  tipCount: number;
+  mobileAllowed: number;
+  mobileNotAllowed: number;
+}
+
+export interface ExamCenterDetail {
+  id: number;
+  nameBn: string;
+  nameEn: string;
+  area: string;
+  address: string;
+  mapsUrl: string | null;
+  photoUrl: string | null;
+  mobileVote: MobileVoteStats;
+}
+
+export interface CenterTip {
+  id: number;
+  category: TipCategory;
+  body: string;
+  upvoteCount: number;
+  userUpvoted: boolean;
+  authorName: string;
+  authorId: number;
+  createdAt: string;
 }
 
 export interface UserProfile {

@@ -39,8 +39,10 @@ export default function JobCard({ post, categoryTypeSlug }: Props) {
         {/* Top row: status + category + ending soon */}
         <div className="flex items-center gap-2 flex-wrap">
           <StatusBadge status={post.status} />
-          {post.categoryName && (
-            <span className="text-xs text-warm-muted">{post.categoryName}</span>
+          {(post.categoryNameBn || post.categoryNameEn) && (
+            <span className="text-xs text-warm-muted">
+              {lang === 'bn' ? post.categoryNameBn : (post.categoryNameEn ?? post.categoryNameBn)}
+            </span>
           )}
           {isEndingSoon && (
             <span className="ml-auto text-xs font-bold text-red-600 animate-pulse flex items-center gap-1">
