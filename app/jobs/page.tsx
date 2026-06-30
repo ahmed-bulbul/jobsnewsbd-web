@@ -23,12 +23,13 @@ export default function JobsPage() {
   const [loading, setLoading]             = useState(true);
 
   const [filters, setFilters] = useState<PostFilters>({
-    q:          searchParams.get('q') ?? undefined,
-    categoryId: searchParams.get('categoryId') ? Number(searchParams.get('categoryId')) : undefined,
-    postTypeId: searchParams.get('postTypeId') ? Number(searchParams.get('postTypeId')) : undefined,
-    status:     (searchParams.get('status') as PostFilters['status']) ?? undefined,
-    page:       0,
-    size:       12,
+    q:             searchParams.get('q') ?? undefined,
+    categoryId:    searchParams.get('categoryId') ? Number(searchParams.get('categoryId')) : undefined,
+    categoryTypeId: searchParams.get('categoryTypeId') ? Number(searchParams.get('categoryTypeId')) : undefined,
+    postTypeId:    searchParams.get('postTypeId') ? Number(searchParams.get('postTypeId')) : undefined,
+    status:        (searchParams.get('status') as PostFilters['status']) ?? undefined,
+    page:          0,
+    size:          12,
   });
 
   // Load static data once

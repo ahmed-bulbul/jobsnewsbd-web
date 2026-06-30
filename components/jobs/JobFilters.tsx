@@ -24,11 +24,11 @@ export default function JobFilters({
 }: Props) {
   const { t } = useLanguage();
 
-  const filteredCategories = filters.categoryId
-    ? categories
+  const filteredCategories = filters.categoryTypeId
+    ? categories.filter((c) => c.categoryTypeId === filters.categoryTypeId)
     : categories;
 
-  const hasFilters = !!(filters.categoryId || filters.postTypeId || filters.status || filters.q);
+  const hasFilters = !!(filters.categoryId || filters.categoryTypeId || filters.postTypeId || filters.status || filters.q);
 
   const statusOptions = [
     { value: 'ONGOING',  label: t('চলমান', 'Ongoing') },
@@ -70,21 +70,28 @@ export default function JobFilters({
       <div>
         <label className="label">{t('বিভাগের ধরন', 'Category Type')}</label>
         <div className="space-y-1.5">
-          {categoryTypes.map((ct) => (
-            <button
-              key={ct.id}
-              onClick={() => onChange({ categoryId: undefined })}
-              className="w-full text-left"
-            >
-              <div className={`px-3 py-2 rounded-lg text-sm transition-colors ${
-                categories.some((c) => c.id === filters.categoryId && c.categoryTypeId === ct.id)
-                  ? 'bg-primary-50 text-primary-700 font-medium'
-                  : 'text-gray-600 hover:bg-cream'
-              }`}>
-                {t(ct.nameBn, ct.nameEn ?? ct.nameBn)}
-              </div>
-            </button>
-          ))}
+          {categoryTypes.map((ct) => {
+            const isActive = filters.categoryTypeId === ct.id;
+            return (
+              <button
+                key={ct.id}
+                onClick={() => onChange({
+                  categoryTypeId: isActive ? undefined : ct.id,
+                  categoryId: undefined,
+                  page: 0,
+                })}
+                className="w-full text-left"
+              >
+                <div className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                  isActive
+                    ? 'bg-primary-50 text-primary-700 font-medium'
+                    : 'text-gray-600 hover:bg-cream'
+                }`}>
+                  {t(ct.nameBn, ct.nameEn ?? ct.nameBn)}
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 

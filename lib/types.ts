@@ -89,6 +89,7 @@ export interface LoginResponse {
 
 export interface PostFilters {
   categoryId?: number;
+  categoryTypeId?: number;
   postTypeId?: number;
   status?: PostStatus;
   q?: string;
