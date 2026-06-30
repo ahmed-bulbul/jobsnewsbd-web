@@ -36,6 +36,7 @@ export default function Header() {
     { href: '/',               label: t('হোম', 'Home') },
     { href: '/jobs',           label: t('সব চাকরি', 'All Jobs') },
     { href: '/exam-centers',   label: t('পরীক্ষা কেন্দ্র', 'Exam Centers') },
+    { href: '/tools',          label: t('টুলস', 'Tools') },
   ];
 
   const initials = user?.name
@@ -65,7 +66,7 @@ export default function Header() {
                 key={link.href}
                 href={link.href}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  pathname === link.href
+                  (link.href === '/' ? pathname === '/' : pathname.startsWith(link.href))
                     ? 'bg-primary-50 text-primary-700'
                     : 'text-gray-600 hover:text-primary hover:bg-primary-50'
                 }`}
@@ -156,7 +157,7 @@ export default function Header() {
               key={link.href}
               href={link.href}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                pathname === link.href
+                (link.href === '/' ? pathname === '/' : pathname.startsWith(link.href))
                   ? 'bg-primary-50 text-primary-700'
                   : 'text-gray-600 hover:text-primary'
               }`}

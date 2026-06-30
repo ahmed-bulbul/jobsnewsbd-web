@@ -1,0 +1,375 @@
+'use client';
+
+import { useCallback, useRef, useState } from 'react';
+import Link from 'next/link';
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
+
+interface Preset {
+  id: string;
+  labelBn: string;
+  labelEn: string;
+  width: number;
+  height: number;
+  maxKB: number;
+  note?: string;
+}
+
+const PRESETS: Preset[] = [
+  { id: 'passport',  labelBn: 'সরকারি চাকরির ছবি',  labelEn: 'Govt Job Photo',   width: 300, height: 300, maxKB: 100, note: 'বেশিরভাগ সরকারি ফর্ম' },
+  { id: 'signature', labelBn: 'স্বাক্ষর',        labelEn: 'Signature',    width: 300, height: 80,  maxKB: 60,  note: 'Teletalk আবেদন' },
+  { id: 'bcs',       labelBn: 'BCS ছবি',         labelEn: 'BCS Photo',    width: 200, height: 200, maxKB: 100, note: 'BPSC BCS পরীক্ষা' },
+  { id: 'nid',       labelBn: 'NID আপডেট',       labelEn: 'NID Photo',    width: 600, height: 800, maxKB: 200, note: 'জাতীয় পরিচয়পত্র' },
+  { id: 'bank',      labelBn: 'ব্যাংক জব ছবি',  labelEn: 'Bank Job',     width: 300, height: 300, maxKB: 80,  note: 'বাংলাদেশ ব্যাংক' },
+  { id: 'custom',    labelBn: 'কাস্টম সাইজ',    labelEn: 'Custom',       width: 0,   height: 0,   maxKB: 0 },
+];
+
+interface Result {
+  dataUrl: string;
+  sizeKB: number;
+  width: number;
+  height: number;
+}
+
+async function resizeImage(file: File, targetW: number, targetH: number, targetKB: number): Promise<Result> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width  = targetW;
+        canvas.height = targetH;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { reject(new Error('Canvas not supported')); return; }
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, targetW, targetH);
+
+        // Fit the image inside the canvas (cover-style)
+        const scale = Math.max(targetW / img.width, targetH / img.height);
+        const sw = img.width  * scale;
+        const sh = img.height * scale;
+        const sx = (targetW  - sw) / 2;
+        const sy = (targetH  - sh) / 2;
+        ctx.drawImage(img, sx, sy, sw, sh);
+
+        if (targetKB <= 0) {
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+          const sizeKB  = Math.round(atob(dataUrl.split(',')[1]).length / 1024);
+          resolve({ dataUrl, sizeKB, width: targetW, height: targetH });
+          return;
+        }
+
+        // Binary-search JPEG quality to hit target KB
+        let lo = 0.1, hi = 0.99, best = canvas.toDataURL('image/jpeg', 0.5);
+        for (let i = 0; i < 12; i++) {
+          const mid = (lo + hi) / 2;
+          const url = canvas.toDataURL('image/jpeg', mid);
+          const kb  = Math.round(atob(url.split(',')[1]).length / 1024);
+          if (kb <= targetKB) { best = url; lo = mid; } else { hi = mid; }
+        }
+        const sizeKB = Math.round(atob(best.split(',')[1]).length / 1024);
+        resolve({ dataUrl: best, sizeKB, width: targetW, height: targetH });
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+export default function ImageResizerPage() {
+  const [selectedPreset, setSelectedPreset] = useState<string>('passport');
+  const [customW, setCustomW] = useState('');
+  const [customH, setCustomH] = useState('');
+  const [customKB, setCustomKB] = useState('');
+  const [originalFile, setOriginalFile] = useState<File | null>(null);
+  const [originalPreview, setOriginalPreview] = useState('');
+  const [originalKB, setOriginalKB] = useState(0);
+  const [result, setResult] = useState<Result | null>(null);
+  const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState('');
+  const [dragging, setDragging] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const preset = PRESETS.find((p) => p.id === selectedPreset)!;
+
+  const loadFile = (file: File) => {
+    if (!file.type.startsWith('image/')) { setError('শুধু ছবি ফাইল (.jpg, .png, .webp) আপলোড করুন'); return; }
+    setError('');
+    setResult(null);
+    setOriginalFile(file);
+    setOriginalKB(Math.round(file.size / 1024));
+    const reader = new FileReader();
+    reader.onload = (e) => setOriginalPreview(e.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) loadFile(file);
+  };
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) loadFile(file);
+  }, []);
+
+  const handleProcess = async () => {
+    if (!originalFile) return;
+    const w = preset.id === 'custom' ? Number(customW) : preset.width;
+    const h = preset.id === 'custom' ? Number(customH) : preset.height;
+    const kb = preset.id === 'custom' ? Number(customKB) : preset.maxKB;
+    if (!w || !h) { setError('প্রস্থ ও উচ্চতা দিন'); return; }
+    setProcessing(true);
+    setError('');
+    try {
+      const res = await resizeImage(originalFile, w, h, kb);
+      setResult(res);
+    } catch {
+      setError('ছবি প্রক্রিয়া করতে সমস্যা হয়েছে। অন্য ছবি দিয়ে চেষ্টা করুন।');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleDownload = () => {
+    if (!result) return;
+    const a = document.createElement('a');
+    a.href = result.dataUrl;
+    a.download = `resized_${preset.id}_${result.width}x${result.height}.jpg`;
+    a.click();
+  };
+
+  const reset = () => {
+    setOriginalFile(null);
+    setOriginalPreview('');
+    setResult(null);
+    setError('');
+    if (fileRef.current) fileRef.current.value = '';
+  };
+
+  return (
+    <>
+      <Header />
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-xs text-warm-muted mb-6">
+          <Link href="/tools" className="hover:text-primary transition-colors">টুলস</Link>
+          <span>›</span>
+          <span className="text-gray-700 font-medium">ছবি রিসাইজার</span>
+        </nav>
+
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">ছবি রিসাইজার</h1>
+          <p className="mt-1 text-sm text-warm-muted">
+            সরকারি চাকরির আবেদনের জন্য ছবি ও স্বাক্ষর নির্দিষ্ট সাইজে কমান — সম্পূর্ণ বিনামূল্যে, কোনো আপলোড নেই
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          {/* Left: controls */}
+          <div className="lg:col-span-2 space-y-5">
+
+            {/* Preset selector */}
+            <div className="card p-5">
+              <h2 className="font-semibold text-gray-800 text-sm mb-3">সাইজ বেছে নিন</h2>
+              <div className="space-y-2">
+                {PRESETS.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => { setSelectedPreset(p.id); setResult(null); }}
+                    className={`w-full text-left px-3 py-2.5 rounded-lg border transition-all text-sm ${
+                      selectedPreset === p.id
+                        ? 'border-primary bg-primary-50 text-primary-800'
+                        : 'border-warm-border hover:border-primary/50 text-gray-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{p.labelBn}</span>
+                      {p.id !== 'custom' && (
+                        <span className="text-xs font-mono text-warm-muted">{p.width}×{p.height}</span>
+                      )}
+                    </div>
+                    {p.note && (
+                      <span className="text-xs text-warm-muted mt-0.5 block">{p.note}</span>
+                    )}
+                    {p.id !== 'custom' && p.maxKB > 0 && (
+                      <span className="text-xs text-warm-muted">সর্বোচ্চ {p.maxKB} KB</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* Custom inputs */}
+              {selectedPreset === 'custom' && (
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="label text-xs">প্রস্থ (px)</label>
+                    <input type="number" value={customW} onChange={(e) => setCustomW(e.target.value)} placeholder="300" className="input text-sm" />
+                  </div>
+                  <div>
+                    <label className="label text-xs">উচ্চতা (px)</label>
+                    <input type="number" value={customH} onChange={(e) => setCustomH(e.target.value)} placeholder="300" className="input text-sm" />
+                  </div>
+                  <div>
+                    <label className="label text-xs">সর্বোচ্চ KB</label>
+                    <input type="number" value={customKB} onChange={(e) => setCustomKB(e.target.value)} placeholder="100" className="input text-sm" />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Process button */}
+            {originalFile && (
+              <button
+                onClick={handleProcess}
+                disabled={processing}
+                className="btn-primary w-full justify-center py-3 text-base"
+              >
+                {processing ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    প্রক্রিয়া হচ্ছে...
+                  </span>
+                ) : '🔄 রিসাইজ করুন'}
+              </button>
+            )}
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{error}</div>
+            )}
+
+            {/* Info box */}
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800 leading-relaxed">
+              🔒 আপনার ছবি কোথাও আপলোড হয় না — সব কিছু আপনার ব্রাউজারেই হয়
+            </div>
+          </div>
+
+          {/* Right: upload + preview */}
+          <div className="lg:col-span-3 space-y-5">
+
+            {/* Drop zone */}
+            {!originalFile ? (
+              <div
+                onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={handleDrop}
+                onClick={() => fileRef.current?.click()}
+                className={`card flex flex-col items-center justify-center gap-4 py-16 cursor-pointer transition-all border-2 border-dashed ${
+                  dragging ? 'border-primary bg-primary-50' : 'border-warm-border hover:border-primary hover:bg-cream/50'
+                }`}
+              >
+                <span className="text-5xl">📁</span>
+                <div className="text-center">
+                  <p className="font-semibold text-gray-700">ছবি এখানে টেনে আনুন</p>
+                  <p className="text-sm text-warm-muted mt-1">অথবা ক্লিক করে ছবি বেছে নিন</p>
+                  <p className="text-xs text-warm-muted mt-2">JPG, PNG, WEBP সাপোর্টেড</p>
+                </div>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Before / After */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Original */}
+                  <div className="card p-3">
+                    <p className="text-xs font-semibold text-warm-muted mb-2 uppercase tracking-wide">আগে</p>
+                    <div className="bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center" style={{ height: 160 }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={originalPreview} alt="Original" className="max-h-full max-w-full object-contain" />
+                    </div>
+                    <p className="text-xs text-warm-muted mt-2 text-center">{originalKB} KB</p>
+                  </div>
+
+                  {/* Result */}
+                  <div className="card p-3">
+                    <p className="text-xs font-semibold text-warm-muted mb-2 uppercase tracking-wide">পরে</p>
+                    <div className="bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center" style={{ height: 160 }}>
+                      {result ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={result.dataUrl} alt="Resized" className="max-h-full max-w-full object-contain" />
+                      ) : (
+                        <span className="text-warm-muted text-sm">রিসাইজ করুন</span>
+                      )}
+                    </div>
+                    {result && (
+                      <p className="text-xs text-warm-muted mt-2 text-center">
+                        {result.sizeKB} KB — {result.width}×{result.height} px
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Result stats + actions */}
+                {result && (
+                  <div className="card p-4 bg-emerald-50 border-emerald-200">
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-emerald-800">✅ সফলভাবে রিসাইজ হয়েছে</p>
+                        <p className="text-xs text-emerald-700 mt-0.5">
+                          {originalKB} KB → {result.sizeKB} KB &nbsp;·&nbsp; {result.width}×{result.height} px
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleDownload}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                      >
+                        ⬇ ডাউনলোড করুন
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Change image */}
+                <button onClick={reset} className="btn-outline w-full text-sm py-2">
+                  অন্য ছবি দিন
+                </button>
+              </div>
+            )}
+
+            {/* Quick reference table */}
+            <div className="card p-5">
+              <h3 className="font-semibold text-gray-800 text-sm mb-3">সরকারি চাকরির ছবির সাইজ তালিকা</h3>
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-warm-muted border-b border-warm-border">
+                    <th className="text-left pb-2 font-medium">ধরন</th>
+                    <th className="text-center pb-2 font-medium">সাইজ (px)</th>
+                    <th className="text-right pb-2 font-medium">সর্বোচ্চ</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-warm-border">
+                  {[
+                    { label: 'সরকারি চাকরির ছবি (বেশিরভাগ)', size: '300×300', max: '100 KB' },
+                    { label: 'স্বাক্ষর (Teletalk)', size: '300×80', max: '60 KB' },
+                    { label: 'BCS ছবি (BPSC)', size: '200×200', max: '100 KB' },
+                    { label: 'বাংলাদেশ ব্যাংক', size: '300×300', max: '80 KB' },
+                    { label: 'NID আপডেট', size: '600×800', max: '200 KB' },
+                  ].map((row) => (
+                    <tr key={row.label}>
+                      <td className="py-2 text-gray-700">{row.label}</td>
+                      <td className="py-2 text-center font-mono text-primary">{row.size}</td>
+                      <td className="py-2 text-right text-warm-muted">{row.max}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </>
+  );
+}

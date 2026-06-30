@@ -51,6 +51,21 @@ export default function JobFilters({
         {t(`${totalElements} টি চাকরি পাওয়া গেছে`, `${totalElements} jobs found`)}
       </div>
 
+        {/* Post type */}
+        <div>
+            <label className="label">{t('বিজ্ঞপ্তির ধরন', 'Post Type')}</label>
+            <select
+                value={filters.postTypeId ?? ''}
+                onChange={(e) => onChange({ postTypeId: e.target.value ? Number(e.target.value) : undefined, page: 0 })}
+                className="input text-sm"
+            >
+                <option value="">{t('সব ধরন', 'All Types')}</option>
+                {postTypes.map((pt) => (
+                    <option key={pt.id} value={pt.id}>{pt.name}</option>
+                ))}
+            </select>
+        </div>
+
       {/* Category Type */}
       <div>
         <label className="label">{t('বিভাগের ধরন', 'Category Type')}</label>
@@ -88,20 +103,7 @@ export default function JobFilters({
         </select>
       </div>
 
-      {/* Post type */}
-      <div>
-        <label className="label">{t('বিজ্ঞপ্তির ধরন', 'Post Type')}</label>
-        <select
-          value={filters.postTypeId ?? ''}
-          onChange={(e) => onChange({ postTypeId: e.target.value ? Number(e.target.value) : undefined, page: 0 })}
-          className="input text-sm"
-        >
-          <option value="">{t('সব ধরন', 'All Types')}</option>
-          {postTypes.map((pt) => (
-            <option key={pt.id} value={pt.id}>{pt.name}</option>
-          ))}
-        </select>
-      </div>
+
 
       {/* Status */}
       <div>
