@@ -88,7 +88,7 @@ export default function ImageResizerPage() {
   const [customH, setCustomH] = useState('');
   const [customKB, setCustomKB] = useState('');
   const [originalFile, setOriginalFile] = useState<File | null>(null);
-  const [originalPreview, setOriginalPreview] = useState('');
+  const [originalPreview, setOriginalPreview] = useState<string | null>(null);
   const [originalKB, setOriginalKB] = useState(0);
   const [result, setResult] = useState<Result | null>(null);
   const [processing, setProcessing] = useState(false);
@@ -292,7 +292,7 @@ export default function ImageResizerPage() {
                     <p className="text-xs font-semibold text-warm-muted mb-2 uppercase tracking-wide">{t('আগে', 'Before')}</p>
                     <div className="bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center" style={{ height: 160 }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={originalPreview} alt="Original" className="max-h-full max-w-full object-contain" />
+                      {originalPreview && <img src={originalPreview} alt="Original" className="max-h-full max-w-full object-contain" />}
                     </div>
                     <p className="text-xs text-warm-muted mt-2 text-center">{originalKB} KB</p>
                   </div>
