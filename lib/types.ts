@@ -90,3 +90,31 @@ export interface PostFilters {
   page?: number;
   size?: number;
 }
+
+export type SavedJobStatus = 'SAVED' | 'APPLIED' | 'INTERVIEW' | 'OFFER' | 'REJECTED' | 'WITHDRAWN';
+
+export interface UserSavedJob {
+  id: number;
+  post: PostSummary;
+  status: SavedJobStatus;
+  notes: string | null;
+  appliedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserProfile {
+  id: number;
+  name: string;
+  email: string;
+  phone: string | null;
+  profilePhotoUrl: string | null;
+  createdAt: string;
+  stats: {
+    saved: number;
+    applied: number;
+    interview: number;
+    offer: number;
+    total: number;
+  };
+}

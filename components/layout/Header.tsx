@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
@@ -92,8 +93,10 @@ export default function Header() {
                   onClick={() => setDropdownOpen((o) => !o)}
                   className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-warm-border hover:border-primary transition-all"
                 >
-                  <div className="w-7 h-7 bg-primary rounded-full flex items-center justify-center text-white text-xs font-bold">
-                    {initials}
+                  <div className="w-7 h-7 bg-primary rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden">
+                    {user.photoUrl
+                      ? <Image src={user.photoUrl} alt={initials} width={28} height={28} className="object-cover w-full h-full" />
+                      : initials}
                   </div>
                   <span className="text-sm font-medium text-gray-700 max-w-[100px] truncate hidden sm:block">
                     {user.name || user.email}
@@ -109,10 +112,23 @@ export default function Header() {
                       <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
                       <p className="text-xs text-warm-muted truncate">{user.email}</p>
                     </div>
+                    <Link
+                      href="/profile"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-cream transition-colors"
+                    >
+                      <svg className="w-4 h-4 text-warm-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      {t('আমার প্রোফাইল', 'My profile')}
+                    </Link>
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
                     >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
                       {t('লগআউট করুন', 'Logout')}
                     </button>
                   </div>

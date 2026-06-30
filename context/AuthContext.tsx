@@ -8,12 +8,14 @@ interface AuthUser {
   name: string;
   email: string;
   role: string;
+  photoUrl?: string;
 }
 
 interface AuthContextValue {
   user: AuthUser | null;
   login: (u: AuthUser) => void;
   logout: () => void;
+  updateUser: (patch: Partial<AuthUser>) => void;
   openModal: (view?: 'login' | 'register') => void;
   closeModal: () => void;
   modalOpen: boolean;
@@ -24,6 +26,7 @@ const AuthContext = createContext<AuthContextValue>({
   user: null,
   login: () => {},
   logout: () => {},
+  updateUser: () => {},
   openModal: () => {},
   closeModal: () => {},
   modalOpen: false,
@@ -56,6 +59,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(STORAGE_KEY);
   };
 
+  const updateUser = (patch: Partial<AuthUser>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...patch };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
   const openModal = (view: 'login' | 'register' = 'login') => {
     setModalInitialView(view);
     setModalOpen(true);
@@ -64,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const closeModal = () => setModalOpen(false);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, openModal, closeModal, modalOpen, modalInitialView }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, openModal, closeModal, modalOpen, modalInitialView }}>
       {children}
     </AuthContext.Provider>
   );

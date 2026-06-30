@@ -7,6 +7,9 @@ import type {
   PostFilters,
   PostSummary,
   PostType,
+  UserProfile,
+  UserSavedJob,
+  SavedJobStatus,
 } from './types';
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8081';
@@ -127,3 +130,50 @@ export async function adminUploadCircularPdf(postId: number, file: File, token: 
 
 export const adminDeleteCircularPdf = (postId: number, token: string) =>
   authDelete(`/api/admin/posts/${postId}/circular`, token);
+
+// ── User profile & saved jobs ───────────────────────────────────────────────
+
+export const getUserProfile = (token: string) =>
+  fetch(`${BASE}/api/user/profile`, { headers: { Authorization: `Bearer ${token}` } })
+    .then((r) => { if (!r.ok) throw new Error('Unauthorized'); return r.json() as Promise<UserProfile>; });
+
+export const updateUserProfile = (token: string, name: string, phone: string) =>
+  authPut<UserProfile>('/api/user/profile', { name, phone }, token);
+
+export const getSavedJobs = (token: string) =>
+  fetch(`${BASE}/api/user/saved-jobs`, { headers: { Authorization: `Bearer ${token}` } })
+    .then((r) => r.json() as Promise<UserSavedJob[]>);
+
+export const saveJob = (token: string, postId: number) =>
+  authPost<UserSavedJob>('/api/user/saved-jobs', { postId }, token);
+
+export const updateSavedJob = (token: string, id: number, status: SavedJobStatus, notes: string | null, appliedAt?: string | null) =>
+  authPut<UserSavedJob>(`/api/user/saved-jobs/${id}`, { status, notes, appliedAt }, token);
+
+export const removeSavedJob = (token: string, id: number) =>
+  authDelete(`/api/user/saved-jobs/${id}`, token);
+
+export const checkJobSaved = (token: string, postId: number) =>
+  fetch(`${BASE}/api/user/saved-jobs/check/${postId}`, { headers: { Authorization: `Bearer ${token}` } })
+    .then((r) => r.json() as Promise<{ saved: boolean }>);
+
+export async function uploadProfilePhoto(token: string, file: File): Promise<UserProfile> {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch(`${BASE}/api/user/profile/photo`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { message?: string }).message ?? 'Upload failed');
+  }
+  return res.json();
+}
+
+export const removeProfilePhoto = (token: string) =>
+  fetch(`${BASE}/api/user/profile/photo`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  }).then((r) => r.json() as Promise<UserProfile>);

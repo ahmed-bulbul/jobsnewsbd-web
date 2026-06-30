@@ -7,6 +7,7 @@ import StatusBadge from '@/components/ui/StatusBadge';
 import CopyLinkButton from '@/components/ui/CopyLinkButton';
 import PdfViewerDynamic from '@/components/ui/PdfViewerDynamic';
 import T from '@/components/ui/T';
+import SaveJobButton from '@/components/profile/SaveJobButton';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
@@ -176,6 +177,9 @@ export default async function JobDetailPage({ params }: Props) {
                   <T bn="অনলাইনে আবেদন করুন →" en="Apply Online →" />
                 </a>
               )}
+
+              {/* Save job */}
+              <SaveJobButton postId={post.id} />
 
               {/* Share */}
               <CopyLinkButton />

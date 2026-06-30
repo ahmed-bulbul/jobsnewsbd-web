@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getPosts } from '@/lib/api';
 import JobCard from '@/components/jobs/JobCard';
+import JobCardSkeleton from '@/components/jobs/JobCardSkeleton';
 import T from '@/components/ui/T';
 import type { PostSummary } from '@/lib/types';
 
@@ -12,6 +13,8 @@ interface Props {
   initialPage: number;
   nameToTypeSlug: Record<string, string>;
 }
+
+const SKELETON_COUNT = 3;
 
 export default function InfiniteJobList({ initialPosts, initialLast, initialPage, nameToTypeSlug }: Props) {
   const [posts, setPosts] = useState<PostSummary[]>(initialPosts);
@@ -47,7 +50,7 @@ export default function InfiniteJobList({ initialPosts, initialLast, initialPage
     return () => observer.disconnect();
   }, [loadMore]);
 
-  if (posts.length === 0) {
+  if (posts.length === 0 && !loading) {
     return (
       <div className="text-center py-16 text-warm-muted">
         <div className="text-5xl mb-4">📋</div>
@@ -60,25 +63,25 @@ export default function InfiniteJobList({ initialPosts, initialLast, initialPage
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {posts.map((post) => (
-          <JobCard
-            key={post.id}
-            post={post}
-            categoryTypeSlug={nameToTypeSlug[post.categoryName ?? '']}
-          />
+          <div key={post.id} className="animate-fadeIn">
+            <JobCard
+              post={post}
+              categoryTypeSlug={nameToTypeSlug[post.categoryName ?? '']}
+            />
+          </div>
+        ))}
+
+        {/* Skeleton cards appear inline in the grid while loading */}
+        {loading && Array.from({ length: SKELETON_COUNT }).map((_, i) => (
+          <JobCardSkeleton key={`sk-${i}`} />
         ))}
       </div>
 
-      {/* Sentinel — IntersectionObserver target */}
-      <div ref={sentinelRef} className="h-4 mt-6" />
-
-      {loading && (
-        <div className="flex justify-center py-6">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
-      )}
+      {/* Sentinel — IntersectionObserver fires loadMore when this enters view */}
+      <div ref={sentinelRef} className="h-4 mt-4" />
 
       {last && posts.length > 9 && (
-        <p className="text-center text-sm text-warm-muted py-4">
+        <p className="text-center text-sm text-warm-muted py-6">
           ✓ <T bn="সব বিজ্ঞপ্তি দেখা হয়েছে" en="All circulars loaded" />
         </p>
       )}
