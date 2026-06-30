@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import T from '@/components/ui/T';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'টুলস — চাকরির খবর',
-  description: 'সরকারি চাকরির আবেদনে কাজে লাগে এমন বিনামূল্যের অনলাইন টুলস',
+  title: 'টুলস / Tools — চাকরির খবর',
+  description: 'সরকারি চাকরির আবেদনে কাজে লাগে এমন বিনামূল্যের অনলাইন টুলস | Free online tools for Bangladesh govt job applications',
 };
 
 const TOOLS = [
@@ -15,9 +16,10 @@ const TOOLS = [
     titleBn: 'ছবি রিসাইজার',
     titleEn: 'Image Resizer',
     descBn: 'সরকারি চাকরির ফর্মের জন্য ছবি ও স্বাক্ষর নির্দিষ্ট সাইজে কমান — পাসপোর্ট সাইজ ৩০০×৩০০, স্বাক্ষর ৩০০×৮০',
-    descEn: 'Resize your photo & signature to exact govt job specs — 300×300 passport, 300×80 signature',
+    descEn: 'Resize your photo & signature to exact govt job specs — 300×300 passport photo, 300×80 signature',
     available: true,
-    badge: 'নতুন',
+    badgeBn: 'নতুন',
+    badgeEn: 'New',
   },
   {
     href: '/tools/age-calculator',
@@ -25,18 +27,21 @@ const TOOLS = [
     titleBn: 'বয়স ক্যালকুলেটর',
     titleEn: 'Age Calculator',
     descBn: 'জন্মতারিখ দিন, জানুন আপনি কোন সরকারি চাকরিতে আবেদনের যোগ্য — BCS, ব্যাংক, সেনাবাহিনী সহ ৮টি ক্যাটাগরি',
-    descEn: 'Enter your date of birth and see which govt jobs you are eligible for — BCS, bank, army and more',
+    descEn: 'Enter your date of birth and instantly see which govt jobs you qualify for — BCS, bank, army and 8 more categories',
     available: true,
-    badge: 'নতুন',
+    badgeBn: 'নতুন',
+    badgeEn: 'New',
   },
   {
     href: '/tools/info-store',
     icon: '📋',
     titleBn: 'তথ্য সংরক্ষণ',
     titleEn: 'Info Store',
-    descBn: 'আপনার NID, জন্মতারিখ, ঠিকানা একবার সেভ করুন — যেকোনো আবেদনে দ্রুত কপি করুন',
-    descEn: 'Save your NID, DOB, address once — quickly copy into any application form',
-    available: false,
+    descBn: 'NID, জন্মতারিখ, ঠিকানা, শিক্ষাগত তথ্য একবার সেভ করুন — যেকোনো আবেদনে 📋 বোতামে কপি করুন',
+    descEn: 'Save your NID, DOB, address and education details once — copy instantly into any job application form',
+    available: true,
+    badgeBn: 'নতুন',
+    badgeEn: 'New',
   },
 ];
 
@@ -46,9 +51,14 @@ export default function ToolsPage() {
       <Header />
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">টুলস <span className="font-sans text-gray-500 font-normal text-lg">/ Tools</span></h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            <T bn="টুলস" en="Tools" />
+          </h1>
           <p className="mt-2 text-warm-muted text-sm">
-            সরকারি চাকরির আবেদনে যা যা লাগে — সব এক জায়গায়, বিনামূল্যে
+            <T
+              bn="সরকারি চাকরির আবেদনে যা যা লাগে — সব এক জায়গায়, বিনামূল্যে"
+              en="Everything you need for a Bangladesh govt job application — all in one place, completely free"
+            />
           </p>
         </div>
 
@@ -66,7 +76,7 @@ export default function ToolsPage() {
                 <div className="card p-6 flex flex-col gap-3 opacity-60 cursor-not-allowed h-full">
                   <ToolCard tool={tool} />
                   <span className="mt-auto text-xs font-medium text-warm-muted bg-cream px-2.5 py-1 rounded-full w-fit">
-                    শীঘ্রই আসছে
+                    <T bn="শীঘ্রই আসছে" en="Coming Soon" />
                   </span>
                 </div>
               )}
@@ -84,18 +94,19 @@ function ToolCard({ tool }: { tool: typeof TOOLS[number] }) {
     <>
       <div className="flex items-start justify-between">
         <span className="text-4xl">{tool.icon}</span>
-        {tool.badge && (
+        {tool.badgeBn && (
           <span className="text-[10px] font-bold bg-primary text-white px-2 py-0.5 rounded-full">
-            {tool.badge}
+            <T bn={tool.badgeBn} en={tool.badgeEn} />
           </span>
         )}
       </div>
       <div>
         <h2 className="font-bold text-gray-900 text-base group-hover:text-primary transition-colors">
-          {tool.titleBn}
-          <span className="font-sans font-normal text-warm-muted text-xs ml-1.5">{tool.titleEn}</span>
+          <T bn={tool.titleBn} en={tool.titleEn} />
         </h2>
-        <p className="text-sm text-warm-muted mt-1.5 leading-relaxed">{tool.descBn}</p>
+        <p className="text-sm text-warm-muted mt-1.5 leading-relaxed">
+          <T bn={tool.descBn} en={tool.descEn} />
+        </p>
       </div>
     </>
   );

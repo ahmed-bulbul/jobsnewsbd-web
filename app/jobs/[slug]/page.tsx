@@ -67,7 +67,7 @@ export default async function JobDetailPage({ params }: Props) {
               <StatusBadge status={post.status} />
               {post.postType && (
                 <span className="bg-white/20 text-white text-xs px-2.5 py-0.5 rounded-full font-medium">
-                  {post.postType.name}
+                  <T bn={post.postType.nameBn} en={post.postType.nameEn ?? post.postType.nameBn} />
                 </span>
               )}
               {categoryType && (

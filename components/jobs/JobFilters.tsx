@@ -61,7 +61,7 @@ export default function JobFilters({
             >
                 <option value="">{t('সব ধরন', 'All Types')}</option>
                 {postTypes.map((pt) => (
-                    <option key={pt.id} value={pt.id}>{pt.name}</option>
+                    <option key={pt.id} value={pt.id}>{t(pt.nameBn, pt.nameEn ?? pt.nameBn)}</option>
                 ))}
             </select>
         </div>

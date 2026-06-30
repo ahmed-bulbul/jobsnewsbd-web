@@ -180,7 +180,7 @@ export default function EditPostPage({ params }: Props) {
               <label className="label">ধরন</label>
               <select value={form.postTypeId} onChange={(e) => set('postTypeId', e.target.value)} className="input">
                 <option value="">ধরন বেছে নিন</option>
-                {postTypes.map((pt) => <option key={pt.id} value={pt.id}>{pt.name}</option>)}
+                {postTypes.map((pt) => <option key={pt.id} value={pt.id}>{pt.nameBn}{pt.nameEn ? ` / ${pt.nameEn}` : ''}</option>)}
               </select>
             </div>
             <div>

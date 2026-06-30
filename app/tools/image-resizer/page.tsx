@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Preset {
   id: string;
@@ -16,12 +17,12 @@ interface Preset {
 }
 
 const PRESETS: Preset[] = [
-  { id: 'passport',  labelBn: 'সরকারি চাকরির ছবি',  labelEn: 'Govt Job Photo',   width: 300, height: 300, maxKB: 100, note: 'বেশিরভাগ সরকারি ফর্ম' },
-  { id: 'signature', labelBn: 'স্বাক্ষর',        labelEn: 'Signature',    width: 300, height: 80,  maxKB: 60,  note: 'Teletalk আবেদন' },
-  { id: 'bcs',       labelBn: 'BCS ছবি',         labelEn: 'BCS Photo',    width: 200, height: 200, maxKB: 100, note: 'BPSC BCS পরীক্ষা' },
-  { id: 'nid',       labelBn: 'NID আপডেট',       labelEn: 'NID Photo',    width: 600, height: 800, maxKB: 200, note: 'জাতীয় পরিচয়পত্র' },
-  { id: 'bank',      labelBn: 'ব্যাংক জব ছবি',  labelEn: 'Bank Job',     width: 300, height: 300, maxKB: 80,  note: 'বাংলাদেশ ব্যাংক' },
-  { id: 'custom',    labelBn: 'কাস্টম সাইজ',    labelEn: 'Custom',       width: 0,   height: 0,   maxKB: 0 },
+  { id: 'passport',  labelBn: 'সরকারি চাকরির ছবি', labelEn: 'Govt Job Photo', width: 300, height: 300, maxKB: 100, note: 'বেশিরভাগ সরকারি ফর্ম' },
+  { id: 'signature', labelBn: 'স্বাক্ষর',           labelEn: 'Signature',      width: 300, height: 80,  maxKB: 60,  note: 'Teletalk application' },
+  { id: 'bcs',       labelBn: 'BCS ছবি',            labelEn: 'BCS Photo',      width: 200, height: 200, maxKB: 100, note: 'BPSC BCS exam' },
+  { id: 'nid',       labelBn: 'NID আপডেট',          labelEn: 'NID Photo',      width: 600, height: 800, maxKB: 200, note: 'National ID update' },
+  { id: 'bank',      labelBn: 'ব্যাংক জব ছবি',     labelEn: 'Bank Job Photo', width: 300, height: 300, maxKB: 80,  note: 'Bangladesh Bank' },
+  { id: 'custom',    labelBn: 'কাস্টম সাইজ',       labelEn: 'Custom Size',    width: 0,   height: 0,   maxKB: 0 },
 ];
 
 interface Result {
@@ -81,6 +82,7 @@ async function resizeImage(file: File, targetW: number, targetH: number, targetK
 }
 
 export default function ImageResizerPage() {
+  const { t, lang } = useLanguage();
   const [selectedPreset, setSelectedPreset] = useState<string>('passport');
   const [customW, setCustomW] = useState('');
   const [customH, setCustomH] = useState('');
@@ -97,7 +99,7 @@ export default function ImageResizerPage() {
   const preset = PRESETS.find((p) => p.id === selectedPreset)!;
 
   const loadFile = (file: File) => {
-    if (!file.type.startsWith('image/')) { setError('শুধু ছবি ফাইল (.jpg, .png, .webp) আপলোড করুন'); return; }
+    if (!file.type.startsWith('image/')) { setError(t('শুধু ছবি ফাইল (.jpg, .png, .webp) আপলোড করুন', 'Only image files (.jpg, .png, .webp) are supported')); return; }
     setError('');
     setResult(null);
     setOriginalFile(file);
@@ -124,14 +126,14 @@ export default function ImageResizerPage() {
     const w = preset.id === 'custom' ? Number(customW) : preset.width;
     const h = preset.id === 'custom' ? Number(customH) : preset.height;
     const kb = preset.id === 'custom' ? Number(customKB) : preset.maxKB;
-    if (!w || !h) { setError('প্রস্থ ও উচ্চতা দিন'); return; }
+    if (!w || !h) { setError(t('প্রস্থ ও উচ্চতা দিন', 'Enter width and height')); return; }
     setProcessing(true);
     setError('');
     try {
       const res = await resizeImage(originalFile, w, h, kb);
       setResult(res);
     } catch {
-      setError('ছবি প্রক্রিয়া করতে সমস্যা হয়েছে। অন্য ছবি দিয়ে চেষ্টা করুন।');
+      setError(t('ছবি প্রক্রিয়া করতে সমস্যা হয়েছে। অন্য ছবি দিয়ে চেষ্টা করুন।', 'Could not process image. Please try another file.'));
     } finally {
       setProcessing(false);
     }
@@ -159,15 +161,18 @@ export default function ImageResizerPage() {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-xs text-warm-muted mb-6">
-          <Link href="/tools" className="hover:text-primary transition-colors">টুলস</Link>
+          <Link href="/tools" className="hover:text-primary transition-colors">{t('টুলস', 'Tools')}</Link>
           <span>›</span>
-          <span className="text-gray-700 font-medium">ছবি রিসাইজার</span>
+          <span className="text-gray-700 font-medium">{t('ছবি রিসাইজার', 'Image Resizer')}</span>
         </nav>
 
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">ছবি রিসাইজার</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('ছবি রিসাইজার', 'Image Resizer')}</h1>
           <p className="mt-1 text-sm text-warm-muted">
-            সরকারি চাকরির আবেদনের জন্য ছবি ও স্বাক্ষর নির্দিষ্ট সাইজে কমান — সম্পূর্ণ বিনামূল্যে, কোনো আপলোড নেই
+            {t(
+              'সরকারি চাকরির আবেদনের জন্য ছবি ও স্বাক্ষর নির্দিষ্ট সাইজে কমান — সম্পূর্ণ বিনামূল্যে, কোনো আপলোড নেই',
+              'Resize your photo & signature to exact govt job specs — completely free, nothing is uploaded',
+            )}
           </p>
         </div>
 
@@ -177,7 +182,7 @@ export default function ImageResizerPage() {
 
             {/* Preset selector */}
             <div className="card p-5">
-              <h2 className="font-semibold text-gray-800 text-sm mb-3">সাইজ বেছে নিন</h2>
+              <h2 className="font-semibold text-gray-800 text-sm mb-3">{t('সাইজ বেছে নিন', 'Select Size')}</h2>
               <div className="space-y-2">
                 {PRESETS.map((p) => (
                   <button
@@ -190,7 +195,7 @@ export default function ImageResizerPage() {
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-medium">{p.labelBn}</span>
+                      <span className="font-medium">{lang === 'bn' ? p.labelBn : p.labelEn}</span>
                       {p.id !== 'custom' && (
                         <span className="text-xs font-mono text-warm-muted">{p.width}×{p.height}</span>
                       )}
@@ -199,7 +204,7 @@ export default function ImageResizerPage() {
                       <span className="text-xs text-warm-muted mt-0.5 block">{p.note}</span>
                     )}
                     {p.id !== 'custom' && p.maxKB > 0 && (
-                      <span className="text-xs text-warm-muted">সর্বোচ্চ {p.maxKB} KB</span>
+                      <span className="text-xs text-warm-muted">{t('সর্বোচ্চ', 'Max')} {p.maxKB} KB</span>
                     )}
                   </button>
                 ))}
@@ -209,15 +214,15 @@ export default function ImageResizerPage() {
               {selectedPreset === 'custom' && (
                 <div className="mt-3 grid grid-cols-3 gap-2">
                   <div>
-                    <label className="label text-xs">প্রস্থ (px)</label>
+                    <label className="label text-xs">{t('প্রস্থ (px)', 'Width (px)')}</label>
                     <input type="number" value={customW} onChange={(e) => setCustomW(e.target.value)} placeholder="300" className="input text-sm" />
                   </div>
                   <div>
-                    <label className="label text-xs">উচ্চতা (px)</label>
+                    <label className="label text-xs">{t('উচ্চতা (px)', 'Height (px)')}</label>
                     <input type="number" value={customH} onChange={(e) => setCustomH(e.target.value)} placeholder="300" className="input text-sm" />
                   </div>
                   <div>
-                    <label className="label text-xs">সর্বোচ্চ KB</label>
+                    <label className="label text-xs">{t('সর্বোচ্চ KB', 'Max KB')}</label>
                     <input type="number" value={customKB} onChange={(e) => setCustomKB(e.target.value)} placeholder="100" className="input text-sm" />
                   </div>
                 </div>
@@ -234,9 +239,9 @@ export default function ImageResizerPage() {
                 {processing ? (
                   <span className="flex items-center gap-2">
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    প্রক্রিয়া হচ্ছে...
+                    {t('প্রক্রিয়া হচ্ছে...', 'Processing...')}
                   </span>
-                ) : '🔄 রিসাইজ করুন'}
+                ) : `🔄 ${t('রিসাইজ করুন', 'Resize Image')}`}
               </button>
             )}
 
@@ -246,7 +251,7 @@ export default function ImageResizerPage() {
 
             {/* Info box */}
             <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800 leading-relaxed">
-              🔒 আপনার ছবি কোথাও আপলোড হয় না — সব কিছু আপনার ব্রাউজারেই হয়
+              🔒 {t('আপনার ছবি কোথাও আপলোড হয় না — সব কিছু আপনার ব্রাউজারেই হয়', 'Your image is never uploaded — everything happens in your browser')}
             </div>
           </div>
 
@@ -266,9 +271,9 @@ export default function ImageResizerPage() {
               >
                 <span className="text-5xl">📁</span>
                 <div className="text-center">
-                  <p className="font-semibold text-gray-700">ছবি এখানে টেনে আনুন</p>
-                  <p className="text-sm text-warm-muted mt-1">অথবা ক্লিক করে ছবি বেছে নিন</p>
-                  <p className="text-xs text-warm-muted mt-2">JPG, PNG, WEBP সাপোর্টেড</p>
+                  <p className="font-semibold text-gray-700">{t('ছবি এখানে টেনে আনুন', 'Drag & drop your image here')}</p>
+                  <p className="text-sm text-warm-muted mt-1">{t('অথবা ক্লিক করে ছবি বেছে নিন', 'or click to browse')}</p>
+                  <p className="text-xs text-warm-muted mt-2">{t('JPG, PNG, WEBP সাপোর্টেড', 'JPG, PNG, WEBP supported')}</p>
                 </div>
                 <input
                   ref={fileRef}
@@ -284,7 +289,7 @@ export default function ImageResizerPage() {
                 <div className="grid grid-cols-2 gap-4">
                   {/* Original */}
                   <div className="card p-3">
-                    <p className="text-xs font-semibold text-warm-muted mb-2 uppercase tracking-wide">আগে</p>
+                    <p className="text-xs font-semibold text-warm-muted mb-2 uppercase tracking-wide">{t('আগে', 'Before')}</p>
                     <div className="bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center" style={{ height: 160 }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={originalPreview} alt="Original" className="max-h-full max-w-full object-contain" />
@@ -294,13 +299,13 @@ export default function ImageResizerPage() {
 
                   {/* Result */}
                   <div className="card p-3">
-                    <p className="text-xs font-semibold text-warm-muted mb-2 uppercase tracking-wide">পরে</p>
+                    <p className="text-xs font-semibold text-warm-muted mb-2 uppercase tracking-wide">{t('পরে', 'After')}</p>
                     <div className="bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center" style={{ height: 160 }}>
                       {result ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={result.dataUrl} alt="Resized" className="max-h-full max-w-full object-contain" />
                       ) : (
-                        <span className="text-warm-muted text-sm">রিসাইজ করুন</span>
+                        <span className="text-warm-muted text-sm">{t('রিসাইজ করুন', 'Resize first')}</span>
                       )}
                     </div>
                     {result && (
@@ -316,7 +321,7 @@ export default function ImageResizerPage() {
                   <div className="card p-4 bg-emerald-50 border-emerald-200">
                     <div className="flex items-center justify-between flex-wrap gap-3">
                       <div>
-                        <p className="text-sm font-semibold text-emerald-800">✅ সফলভাবে রিসাইজ হয়েছে</p>
+                        <p className="text-sm font-semibold text-emerald-800">✅ {t('সফলভাবে রিসাইজ হয়েছে', 'Successfully resized')}</p>
                         <p className="text-xs text-emerald-700 mt-0.5">
                           {originalKB} KB → {result.sizeKB} KB &nbsp;·&nbsp; {result.width}×{result.height} px
                         </p>
@@ -325,7 +330,7 @@ export default function ImageResizerPage() {
                         onClick={handleDownload}
                         className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
                       >
-                        ⬇ ডাউনলোড করুন
+                        ⬇ {t('ডাউনলোড করুন', 'Download')}
                       </button>
                     </div>
                   </div>
@@ -333,32 +338,34 @@ export default function ImageResizerPage() {
 
                 {/* Change image */}
                 <button onClick={reset} className="btn-outline w-full text-sm py-2">
-                  অন্য ছবি দিন
+                  {t('অন্য ছবি দিন', 'Choose another image')}
                 </button>
               </div>
             )}
 
             {/* Quick reference table */}
             <div className="card p-5">
-              <h3 className="font-semibold text-gray-800 text-sm mb-3">সরকারি চাকরির ছবির সাইজ তালিকা</h3>
+              <h3 className="font-semibold text-gray-800 text-sm mb-3">
+                {t('সরকারি চাকরির ছবির সাইজ তালিকা', 'Govt Job Photo Size Reference')}
+              </h3>
               <table className="w-full text-xs">
                 <thead>
                   <tr className="text-warm-muted border-b border-warm-border">
-                    <th className="text-left pb-2 font-medium">ধরন</th>
-                    <th className="text-center pb-2 font-medium">সাইজ (px)</th>
-                    <th className="text-right pb-2 font-medium">সর্বোচ্চ</th>
+                    <th className="text-left pb-2 font-medium">{t('ধরন', 'Type')}</th>
+                    <th className="text-center pb-2 font-medium">{t('সাইজ (px)', 'Size (px)')}</th>
+                    <th className="text-right pb-2 font-medium">{t('সর্বোচ্চ', 'Max')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-warm-border">
                   {[
-                    { label: 'সরকারি চাকরির ছবি (বেশিরভাগ)', size: '300×300', max: '100 KB' },
-                    { label: 'স্বাক্ষর (Teletalk)', size: '300×80', max: '60 KB' },
-                    { label: 'BCS ছবি (BPSC)', size: '200×200', max: '100 KB' },
-                    { label: 'বাংলাদেশ ব্যাংক', size: '300×300', max: '80 KB' },
-                    { label: 'NID আপডেট', size: '600×800', max: '200 KB' },
+                    { bn: 'সরকারি চাকরির ছবি (বেশিরভাগ)', en: 'Govt Job Photo (most forms)', size: '300×300', max: '100 KB' },
+                    { bn: 'স্বাক্ষর (Teletalk)',            en: 'Signature (Teletalk)',        size: '300×80',  max: '60 KB' },
+                    { bn: 'BCS ছবি (BPSC)',                 en: 'BCS Photo (BPSC)',            size: '200×200', max: '100 KB' },
+                    { bn: 'বাংলাদেশ ব্যাংক',               en: 'Bangladesh Bank',             size: '300×300', max: '80 KB' },
+                    { bn: 'NID আপডেট',                      en: 'NID Update',                  size: '600×800', max: '200 KB' },
                   ].map((row) => (
-                    <tr key={row.label}>
-                      <td className="py-2 text-gray-700">{row.label}</td>
+                    <tr key={row.size + row.max}>
+                      <td className="py-2 text-gray-700">{t(row.bn, row.en)}</td>
                       <td className="py-2 text-center font-mono text-primary">{row.size}</td>
                       <td className="py-2 text-right text-warm-muted">{row.max}</td>
                     </tr>

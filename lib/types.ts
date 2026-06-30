@@ -20,7 +20,8 @@ export interface Category {
 
 export interface PostType {
   id: number;
-  name: string;
+  nameBn: string;
+  nameEn: string | null;
   slug: string;
 }
 
@@ -37,7 +38,8 @@ export interface PostSummary {
   publishedAt: string;
   categoryNameBn: string;
   categoryNameEn: string | null;
-  postTypeName: string | null;
+  postTypeNameBn: string | null;
+  postTypeNameEn: string | null;
 }
 
 export interface PostImage {

@@ -243,6 +243,28 @@ export const adminDeleteExamCenter = (token: string, id: number) =>
 export const adminDeleteCenterTip = (token: string, tipId: number) =>
   authDelete(`/api/admin/exam-centers/tips/${tipId}`, token);
 
+// ── Info Store ────────────────────────────────────────────────────────────────
+
+export async function getInfoStore(token: string): Promise<string> {
+  const res = await fetch(`${BASE}/api/user/info-store`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+  if (!res.ok) return '{}';
+  const json = await res.json();
+  return (json as { data: string }).data ?? '{}';
+}
+
+export async function saveInfoStore(token: string, data: object): Promise<void> {
+  await fetch(`${BASE}/api/user/info-store`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  });
+}
+
+// ── Admin exam center photo ───────────────────────────────────────────────────
+
 export async function adminUploadExamCenterPhoto(token: string, id: number, file: File): Promise<ExamCenterDetail> {
   const form = new FormData();
   form.append('file', file);

@@ -33,8 +33,9 @@ export default function AdminDashboard() {
   const [catSlug, setCatSlug]       = useState('');
   const [catTypeId, setCatTypeId]   = useState('');
   // New post type form
-  const [ptName, setPtName] = useState('');
-  const [ptSlug, setPtSlug] = useState('');
+  const [ptNameBn, setPtNameBn] = useState('');
+  const [ptNameEn, setPtNameEn] = useState('');
+  const [ptSlug, setPtSlug]     = useState('');
 
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(''), 3000); };
 
@@ -86,10 +87,10 @@ export default function AdminDashboard() {
 
   const handleCreatePostType = async (e: React.FormEvent) => {
     e.preventDefault();
-    await adminCreatePostType({ name: ptName, slug: ptSlug }, token);
+    await adminCreatePostType({ nameBn: ptNameBn, nameEn: ptNameEn, slug: ptSlug }, token);
     const updated = await getPostTypes();
     setPostTypes(updated);
-    setPtName(''); setPtSlug('');
+    setPtNameBn(''); setPtNameEn(''); setPtSlug('');
     flash('বিজ্ঞপ্তির ধরন যুক্ত হয়েছে।');
   };
 
@@ -288,12 +289,16 @@ export default function AdminDashboard() {
               <h3 className="font-bold text-gray-900 mb-4">নতুন বিজ্ঞপ্তির ধরন যুক্ত করুন</h3>
               <form onSubmit={handleCreatePostType} className="space-y-3">
                 <div>
-                  <label className="label">নাম</label>
-                  <input value={ptName} onChange={(e) => setPtName(e.target.value)} required placeholder="যেমন: Job Circular" className="input" />
+                  <label className="label">নাম (বাংলা)</label>
+                  <input value={ptNameBn} onChange={(e) => setPtNameBn(e.target.value)} required placeholder="যেমন: চাকরির বিজ্ঞপ্তি" className="input" />
+                </div>
+                <div>
+                  <label className="label">নাম (English)</label>
+                  <input value={ptNameEn} onChange={(e) => setPtNameEn(e.target.value)} placeholder="e.g. Job Circular" className="input" />
                 </div>
                 <div>
                   <label className="label">স্লাগ</label>
-                  <input value={ptSlug} onChange={(e) => setPtSlug(e.target.value)} required placeholder="যেমন: job-circular" className="input" />
+                  <input value={ptSlug} onChange={(e) => setPtSlug(e.target.value)} placeholder="যেমন: job-circular" className="input" />
                 </div>
                 <button type="submit" className="btn-primary">যুক্ত করুন</button>
               </form>
@@ -301,7 +306,7 @@ export default function AdminDashboard() {
               <div className="mt-6 space-y-2">
                 {postTypes.map((pt) => (
                   <div key={pt.id} className="flex items-center justify-between bg-cream rounded-lg px-3 py-2 text-sm">
-                    <span className="font-medium">{pt.name}</span>
+                    <span className="font-medium">{pt.nameBn}{pt.nameEn ? ` / ${pt.nameEn}` : ''}</span>
                     <span className="text-warm-muted text-xs">{pt.slug}</span>
                   </div>
                 ))}

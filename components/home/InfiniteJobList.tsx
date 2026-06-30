@@ -22,22 +22,30 @@ export default function InfiniteJobList({ initialPosts, initialLast, initialPage
   const [last, setLast] = useState(initialLast);
   const [loading, setLoading] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  // Ref-based guard: prevents double-fetch when the observer fires before React
+  // processes the setLoading(true) state update (closure captures stale value).
+  const fetchingRef = useRef(false);
 
   const loadMore = useCallback(async () => {
-    if (loading || last) return;
+    if (fetchingRef.current || last) return;
+    fetchingRef.current = true;
     setLoading(true);
     try {
       const next = page + 1;
       const result = await getPosts({ page: next, size: 9 });
-      setPosts((prev) => [...prev, ...result.content]);
+      setPosts((prev) => {
+        const existingIds = new Set(prev.map((p) => p.id));
+        return [...prev, ...result.content.filter((p) => !existingIds.has(p.id))];
+      });
       setPage(next);
       setLast(result.last);
     } catch {
       /* silent — user can scroll again to retry */
     } finally {
+      fetchingRef.current = false;
       setLoading(false);
     }
-  }, [loading, last, page]);
+  }, [last, page]);
 
   useEffect(() => {
     const el = sentinelRef.current;
