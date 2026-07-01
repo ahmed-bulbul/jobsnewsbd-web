@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 
 interface AuthUser {
   token: string;
@@ -49,31 +49,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = (u: AuthUser) => {
+  const login = useCallback((u: AuthUser) => {
     setUser(u);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem(STORAGE_KEY);
-  };
+  }, []);
 
-  const updateUser = (patch: Partial<AuthUser>) => {
+  const updateUser = useCallback((patch: Partial<AuthUser>) => {
     setUser((prev) => {
       if (!prev) return prev;
       const next = { ...prev, ...patch };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       return next;
     });
-  };
+  }, []);
 
-  const openModal = (view: 'login' | 'register' = 'login') => {
+  const openModal = useCallback((view: 'login' | 'register' = 'login') => {
     setModalInitialView(view);
     setModalOpen(true);
-  };
+  }, []);
 
-  const closeModal = () => setModalOpen(false);
+  const closeModal = useCallback(() => setModalOpen(false), []);
 
   return (
     <AuthContext.Provider value={{ user, login, logout, updateUser, openModal, closeModal, modalOpen, modalInitialView }}>
