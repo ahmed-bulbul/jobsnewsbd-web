@@ -1,14 +1,16 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { login } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextUrl = searchParams.get('next') ?? '/';
   const { login: authLogin } = useAuth();
   const { t } = useLanguage();
   const [email, setEmail] = useState('');
@@ -28,7 +30,7 @@ export default function LoginPage() {
         return;
       }
       authLogin({ token: result.token, userId: result.userId, name: result.name ?? '', email: result.email, role: result.role });
-      router.push('/');
+      router.push(nextUrl);
     } catch (err: unknown) {
       setError((err as Error).message ?? t('লগইন ব্যর্থ হয়েছে', 'Login failed'));
     } finally {
@@ -85,5 +87,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }

@@ -198,6 +198,70 @@ export interface PrepTopicDetail extends PrepTopic {
   contents: PrepContent[];
 }
 
+// ── Exam system ───────────────────────────────────────────────────────────────
+
+export interface ExamSet {
+  id: number;
+  topicId: number;
+  topicNameBn: string;
+  titleBn: string;
+  descriptionBn: string | null;
+  startsAt: string;
+  endsAt: string;
+  durationMinutes: number;
+  published: boolean;
+  questionCount: number;
+  totalAttempts: number;
+  userAttemptCount: number;
+}
+
+export interface ExamQuestion {
+  id: number;
+  examSetId: number;
+  questionText: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  correctOption: string;
+  explanationText: string | null;
+  explanationImageUrl: string | null;
+  displayOrder: number;
+}
+
+// Public question (no correctOption)
+export interface ExamQuestionPublic {
+  id: number;
+  questionText: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  displayOrder: number;
+}
+
+export interface QuestionResult {
+  questionId: number;
+  questionText: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  correctOption: string;
+  selectedOption: string | null;
+  correct: boolean;
+  explanationText: string | null;
+  explanationImageUrl: string | null;
+}
+
+export interface ExamResult {
+  attemptId: number;
+  score: number;
+  totalQuestions: number;
+  submittedAt: string;
+  questions: QuestionResult[];
+}
+
 export interface UserProfile {
   id: number;
   name: string;

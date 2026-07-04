@@ -69,6 +69,15 @@ async function authDelete(path: string, token: string): Promise<void> {
   if (!res.ok) throw new Error(`DELETE ${path} → ${res.status}`);
 }
 
+async function authGet<T>(path: string, token: string): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+  if (!res.ok) throw new Error(`GET ${path} → ${res.status}`);
+  return res.json();
+}
+
 // ── Public ─────────────────────────────────────────────────────────────────
 
 export const getCategoryTypes = () =>
@@ -345,3 +354,53 @@ export const adminUpdatePrepContent = (token: string, id: number, body: unknown)
 
 export const adminDeletePrepContent = (token: string, id: number) =>
   authDelete(`/api/admin/prep/content/${id}`, token);
+
+// ── Public Exam ───────────────────────────────────────────────────────────────
+
+export const getExamSets = (topicId: number) =>
+  get<import('./types').ExamSet[]>(`/api/exam/topics/${topicId}/sets`);
+
+export const getExamQuestions = (examSetId: number) =>
+  get<import('./types').ExamQuestionPublic[]>(`/api/exam/sets/${examSetId}/questions`);
+
+export const submitExamAttempt = (examSetId: number, answers: { questionId: number; selectedOption: string | null }[], token: string) =>
+  authPost<import('./types').ExamResult>(`/api/exam/sets/${examSetId}/attempt`, { answers }, token);
+
+// ── Admin Exam ────────────────────────────────────────────────────────────────
+
+export const adminGetExamSets = (token: string, topicId: number) =>
+  authGet<import('./types').ExamSet[]>(`/api/admin/exam/topics/${topicId}/sets`, token);
+
+export const adminCreateExamSet = (token: string, body: unknown) =>
+  authPost<import('./types').ExamSet>('/api/admin/exam/sets', body, token);
+
+export const adminUpdateExamSet = (token: string, id: number, body: unknown) =>
+  authPut<import('./types').ExamSet>(`/api/admin/exam/sets/${id}`, body, token);
+
+export const adminDeleteExamSet = (token: string, id: number) =>
+  authDelete(`/api/admin/exam/sets/${id}`, token);
+
+export const adminGetQuestions = (token: string, examSetId: number) =>
+  authGet<import('./types').ExamQuestion[]>(`/api/admin/exam/sets/${examSetId}/questions`, token);
+
+export const adminCreateQuestion = (token: string, examSetId: number, body: unknown) =>
+  authPost<import('./types').ExamQuestion>(`/api/admin/exam/sets/${examSetId}/questions`, body, token);
+
+export const adminUpdateQuestion = (token: string, id: number, body: unknown) =>
+  authPut<import('./types').ExamQuestion>(`/api/admin/exam/questions/${id}`, body, token);
+
+export const adminDeleteQuestion = (token: string, id: number) =>
+  authDelete(`/api/admin/exam/questions/${id}`, token);
+
+export const adminUploadImage = async (token: string, file: File): Promise<string> => {
+  const form = new FormData();
+  form.append('file', file);
+  const r = await fetch(`${BASE}/api/admin/upload/image`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+  });
+  if (!r.ok) throw new Error('Upload failed');
+  const data = await r.json() as { url: string };
+  return data.url;
+};

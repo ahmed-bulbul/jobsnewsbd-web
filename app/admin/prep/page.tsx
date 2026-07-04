@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -15,10 +15,19 @@ import {
   adminCreatePrepContent,
   adminUpdatePrepContent,
   adminDeletePrepContent,
+  adminGetExamSets,
+  adminCreateExamSet,
+  adminUpdateExamSet,
+  adminDeleteExamSet,
+  adminGetQuestions,
+  adminCreateQuestion,
+  adminUpdateQuestion,
+  adminDeleteQuestion,
+  adminUploadImage,
 } from '@/lib/api';
-import type { PrepCategory, PrepCategoryDetail, PrepContent, PrepTopic } from '@/lib/types';
+import type { ExamQuestion, ExamSet, PrepCategory, PrepCategoryDetail, PrepContent, PrepTopic } from '@/lib/types';
 
-type Tab = 'categories' | 'topics' | 'content';
+type Tab = 'categories' | 'topics' | 'content' | 'exam';
 
 // Flat topic record enriched with its category name
 interface FlatTopic extends PrepTopic { categoryNameBn: string }
@@ -153,6 +162,115 @@ function TopicPicker({
 
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ── Question editor sub-component ─────────────────────────────────────────────
+function QuestionEditor({
+  token,
+  examSetId,
+  onSaved,
+  onCancel,
+  editing,
+}: {
+  token: string;
+  examSetId: number;
+  onSaved: () => void;
+  onCancel: () => void;
+  editing: ExamQuestion | null;
+}) {
+  const [questionText, setQuestionText] = useState(editing?.questionText ?? '');
+  const [optionA, setOptionA] = useState(editing?.optionA ?? '');
+  const [optionB, setOptionB] = useState(editing?.optionB ?? '');
+  const [optionC, setOptionC] = useState(editing?.optionC ?? '');
+  const [optionD, setOptionD] = useState(editing?.optionD ?? '');
+  const [correct, setCorrect] = useState(editing?.correctOption ?? 'A');
+  const [expText, setExpText] = useState(editing?.explanationText ?? '');
+  const [expImg, setExpImg] = useState(editing?.explanationImageUrl ?? '');
+  const [order, setOrder] = useState(String(editing?.displayOrder ?? 0));
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const url = await adminUploadImage(token, file);
+      setExpImg(url);
+    } catch { /* ignore */ } finally { setUploading(false); }
+  };
+
+  const save = async () => {
+    if (!questionText.trim() || !optionA || !optionB || !optionC || !optionD) return;
+    setSaving(true);
+    const body = { questionText, optionA, optionB, optionC, optionD, correctOption: correct, explanationText: expText || null, explanationImageUrl: expImg || null, displayOrder: Number(order) };
+    try {
+      if (editing) await adminUpdateQuestion(token, editing.id, body);
+      else await adminCreateQuestion(token, examSetId, body);
+      onSaved();
+    } catch { /* ignore */ } finally { setSaving(false); }
+  };
+
+  return (
+    <div className="bg-gray-50 border border-warm-border rounded-2xl p-4 space-y-3">
+      <h3 className="font-bold text-gray-800 text-sm">{editing ? 'প্রশ্ন এডিট করুন' : 'নতুন প্রশ্ন'}</h3>
+
+      <div>
+        <label className="block text-xs font-semibold text-gray-600 mb-1">প্রশ্ন *</label>
+        <textarea value={questionText} onChange={(e) => setQuestionText(e.target.value)} rows={3}
+          className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none" />
+      </div>
+
+      {(['A', 'B', 'C', 'D'] as const).map((opt) => {
+        const val = opt === 'A' ? optionA : opt === 'B' ? optionB : opt === 'C' ? optionC : optionD;
+        const set = opt === 'A' ? setOptionA : opt === 'B' ? setOptionB : opt === 'C' ? setOptionC : setOptionD;
+        return (
+          <div key={opt} className="flex items-center gap-2">
+            <input type="radio" name="correct" value={opt} checked={correct === opt} onChange={() => setCorrect(opt)} className="accent-primary" />
+            <span className="text-xs font-bold text-gray-500 w-5">{opt}.</span>
+            <input type="text" value={val} onChange={(e) => set(e.target.value)} placeholder={`অপশন ${opt}`}
+              className="flex-1 border border-warm-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-primary" />
+          </div>
+        );
+      })}
+      <p className="text-xs text-warm-muted">রেডিও বাটন সিলেক্ট করে সঠিক উত্তর চিহ্নিত করুন</p>
+
+      <div>
+        <label className="block text-xs font-semibold text-gray-600 mb-1">ব্যাখ্যা (টেক্সট)</label>
+        <textarea value={expText} onChange={(e) => setExpText(e.target.value)} rows={2}
+          className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none" />
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-gray-600 mb-1">ব্যাখ্যার ছবি</label>
+        {expImg && <img src={expImg} alt="" className="h-20 rounded-lg mb-2 object-cover" />}
+        <div className="flex gap-2">
+          <input ref={fileRef} type="file" accept="image/*" className="hidden"
+            onChange={(e) => { if (e.target.files?.[0]) handleImageUpload(e.target.files[0]); }} />
+          <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
+            className="text-xs border border-warm-border rounded-lg px-3 py-1.5 hover:border-primary text-gray-600 disabled:opacity-50">
+            {uploading ? 'আপলোড হচ্ছে...' : '📷 ছবি আপলোড'}
+          </button>
+          {expImg && <button type="button" onClick={() => setExpImg('')} className="text-xs text-red-500 hover:underline">সরান</button>}
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <label className="text-xs font-semibold text-gray-600">ক্রম</label>
+        <input type="number" value={order} onChange={(e) => setOrder(e.target.value)}
+          className="w-20 border border-warm-border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-primary" />
+      </div>
+
+      <div className="flex gap-2 pt-1">
+        <button onClick={save} disabled={saving}
+          className="flex-1 bg-primary text-white rounded-xl py-2 text-sm font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50">
+          {saving ? 'সংরক্ষণ...' : editing ? 'আপডেট' : 'প্রশ্ন যোগ করুন'}
+        </button>
+        <button onClick={onCancel} className="px-3 text-warm-muted hover:text-gray-700 text-sm border border-warm-border rounded-xl">বাতিল</button>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function AdminPrepPage() {
   const router = useRouter();
   const [token, setToken] = useState('');
@@ -192,6 +310,23 @@ export default function AdminPrepPage() {
   const [contentBody, setContentBody] = useState('');
   const [contentOrder, setContentOrder] = useState('0');
   const [contentPublished, setContentPublished] = useState(false);
+
+  // Exam state
+  const [examTopicId, setExamTopicId] = useState('');
+  const [examSets, setExamSets] = useState<ExamSet[]>([]);
+  const [activeSetId, setActiveSetId] = useState<number | null>(null);
+  const [questions, setQuestions] = useState<ExamQuestion[]>([]);
+  const [editingSet, setEditingSet] = useState<ExamSet | null>(null);
+  const [editingQuestion, setEditingQuestion] = useState<ExamQuestion | null>(null);
+  const [showQuestionEditor, setShowQuestionEditor] = useState(false);
+  const [examLoadingQ, setExamLoadingQ] = useState(false);
+  // Exam set form fields
+  const [setTitleBn, setSetTitleBn] = useState('');
+  const [setDescBn, setSetDescBn] = useState('');
+  const [setStartsAt, setSetStartsAt] = useState('');
+  const [setEndsAt, setSetEndsAt] = useState('');
+  const [setDuration, setSetDuration] = useState('30');
+  const [setPublished, setSetPublished] = useState(false);
 
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(''), 3000); };
 
@@ -332,6 +467,58 @@ export default function AdminPrepPage() {
     } catch { flash('মুছতে ব্যর্থ'); }
   };
 
+  // ── Exam actions ──────────────────────────────────────────────────────────
+
+  const loadExamSets = async (topicId: string) => {
+    if (!topicId) return;
+    const sets = await adminGetExamSets(token, Number(topicId));
+    setExamSets(sets);
+    setActiveSetId(null);
+    setQuestions([]);
+  };
+
+  const loadQuestions = async (setId: number) => {
+    setExamLoadingQ(true);
+    setActiveSetId(setId);
+    try {
+      const qs = await adminGetQuestions(token, setId);
+      setQuestions(qs);
+    } finally { setExamLoadingQ(false); }
+  };
+
+  const resetSetForm = () => {
+    setEditingSet(null); setSetTitleBn(''); setSetDescBn('');
+    setSetStartsAt(''); setSetEndsAt(''); setSetDuration('30'); setSetPublished(false);
+  };
+
+  const editSet = (s: ExamSet) => {
+    setEditingSet(s); setSetTitleBn(s.titleBn); setSetDescBn(s.descriptionBn ?? '');
+    setSetStartsAt(s.startsAt.slice(0, 16)); setSetEndsAt(s.endsAt.slice(0, 16));
+    setSetDuration(String(s.durationMinutes)); setSetPublished(s.published);
+  };
+
+  const saveSet = async () => {
+    if (!examTopicId || !setTitleBn || !setStartsAt || !setEndsAt) { flash('সব ঘর পূরণ করুন'); return; }
+    const body = { topicId: Number(examTopicId), titleBn: setTitleBn, descriptionBn: setDescBn || null, startsAt: setStartsAt, endsAt: setEndsAt, durationMinutes: Number(setDuration), published: setPublished };
+    try {
+      if (editingSet) await adminUpdateExamSet(token, editingSet.id, body);
+      else await adminCreateExamSet(token, body);
+      await loadExamSets(examTopicId);
+      resetSetForm();
+      flash(editingSet ? 'আপডেট হয়েছে' : 'পরীক্ষা সেট তৈরি হয়েছে');
+    } catch { flash('ত্রুটি হয়েছে'); }
+  };
+
+  const deleteSet = async (id: number) => {
+    if (!confirm('পরীক্ষা সেট মুছে ফেলবেন?')) return;
+    try {
+      await adminDeleteExamSet(token, id);
+      await loadExamSets(examTopicId);
+      if (activeSetId === id) { setActiveSetId(null); setQuestions([]); }
+      flash('মুছে ফেলা হয়েছে');
+    } catch { flash('মুছতে ব্যর্থ'); }
+  };
+
   if (loading) return <div className="min-h-screen flex items-center justify-center text-warm-muted">লোড হচ্ছে...</div>;
 
   return (
@@ -349,13 +536,13 @@ export default function AdminPrepPage() {
       <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Tabs */}
         <div className="flex gap-1 bg-white border border-warm-border rounded-xl p-1 mb-6 w-fit">
-          {(['categories', 'topics', 'content'] as Tab[]).map((t) => (
+          {(['categories', 'topics', 'content', 'exam'] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${tab === t ? 'bg-primary text-white shadow-sm' : 'text-gray-600 hover:text-primary'}`}
             >
-              {t === 'categories' ? 'ক্যাটাগরি' : t === 'topics' ? 'বিষয়' : 'কন্টেন্ট'}
+              {t === 'categories' ? 'ক্যাটাগরি' : t === 'topics' ? 'বিষয়' : t === 'content' ? 'কন্টেন্ট' : '📝 পরীক্ষা'}
             </button>
           ))}
         </div>
@@ -554,6 +741,144 @@ export default function AdminPrepPage() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* ── Exam ───────────────────────────────────────────────────── */}
+        {tab === 'exam' && (
+          <div className="space-y-6">
+            {/* Step 1: pick topic */}
+            <div className="bg-white rounded-2xl border border-warm-border p-5">
+              <h2 className="font-bold text-gray-900 mb-3">বিষয় বেছে নিন</h2>
+              <TopicPicker allTopics={allTopics} categories={categories} value={examTopicId}
+                onChange={(id) => { setExamTopicId(id); loadExamSets(id); resetSetForm(); }} />
+            </div>
+
+            {examTopicId && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Exam set form */}
+                <div className="bg-white rounded-2xl border border-warm-border p-5 space-y-3 h-fit">
+                  <h2 className="font-bold text-gray-900">{editingSet ? 'সেট এডিট করুন' : 'নতুন পরীক্ষা সেট'}</h2>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">শিরোনাম (বাংলা) *</label>
+                    <input type="text" value={setTitleBn} onChange={(e) => setSetTitleBn(e.target.value)}
+                      className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">বিবরণ</label>
+                    <textarea value={setDescBn} onChange={(e) => setSetDescBn(e.target.value)} rows={2}
+                      className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">শুরু হবে *</label>
+                    <input type="datetime-local" value={setStartsAt} onChange={(e) => setSetStartsAt(e.target.value)}
+                      className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">শেষ হবে *</label>
+                    <input type="datetime-local" value={setEndsAt} onChange={(e) => setSetEndsAt(e.target.value)}
+                      className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">সময়সীমা (মিনিট) *</label>
+                    <input type="number" value={setDuration} onChange={(e) => setSetDuration(e.target.value)} min="1"
+                      className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" />
+                  </div>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" checked={setPublished} onChange={(e) => setSetPublished(e.target.checked)} className="rounded accent-primary w-4 h-4" />
+                    <span className="font-medium text-gray-700">প্রকাশিত</span>
+                  </label>
+                  <div className="flex gap-2 pt-1">
+                    <button onClick={saveSet} className="flex-1 bg-primary text-white rounded-xl py-2 text-sm font-semibold hover:bg-primary-dark transition-colors">
+                      {editingSet ? 'আপডেট' : 'তৈরি করুন'}
+                    </button>
+                    {editingSet && <button onClick={resetSetForm} className="px-3 text-warm-muted hover:text-gray-700 text-sm border border-warm-border rounded-xl">বাতিল</button>}
+                  </div>
+                </div>
+
+                {/* Exam set list + questions */}
+                <div className="lg:col-span-2 space-y-4">
+                  {examSets.length === 0 && <p className="text-sm text-warm-muted">কোনো পরীক্ষা সেট নেই</p>}
+                  {examSets.map((s) => (
+                    <div key={s.id} className="bg-white rounded-2xl border border-warm-border overflow-hidden">
+                      <div className="flex items-center gap-3 p-4 border-b border-warm-border">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-gray-900 text-sm">{s.titleBn}</span>
+                            {s.published
+                              ? <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">প্রকাশিত</span>
+                              : <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">ড্রাফট</span>}
+                          </div>
+                          <p className="text-xs text-warm-muted mt-0.5">
+                            {new Date(s.startsAt).toLocaleString('bn-BD')} – {new Date(s.endsAt).toLocaleString('bn-BD')} • {s.durationMinutes} মিনিট • {s.questionCount}টি প্রশ্ন • {s.totalAttempts} অ্যাটেম্প্ট
+                          </p>
+                        </div>
+                        <button onClick={() => { editSet(s); window.scrollTo(0,0); }} className="text-xs text-blue-600 hover:underline">এডিট</button>
+                        <button onClick={() => loadQuestions(s.id)} className="text-xs text-primary hover:underline ml-2">প্রশ্ন →</button>
+                        <button onClick={() => deleteSet(s.id)} className="text-xs text-red-500 hover:underline ml-2">মুছুন</button>
+                      </div>
+
+                      {activeSetId === s.id && (
+                        <div className="p-4 space-y-3">
+                          {examLoadingQ ? (
+                            <p className="text-xs text-warm-muted">লোড হচ্ছে...</p>
+                          ) : (
+                            <>
+                              {questions.map((q, i) => (
+                                <div key={q.id} className="bg-gray-50 rounded-xl p-3 border border-warm-border">
+                                  {editingQuestion?.id === q.id ? (
+                                    <QuestionEditor token={token} examSetId={s.id} editing={q}
+                                      onSaved={async () => { await loadQuestions(s.id); setEditingQuestion(null); flash('প্রশ্ন আপডেট হয়েছে'); }}
+                                      onCancel={() => setEditingQuestion(null)} />
+                                  ) : (
+                                    <div className="flex items-start gap-2">
+                                      <span className="text-xs font-bold text-gray-500 mt-0.5 w-5">{i + 1}.</span>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-sm text-gray-900 font-medium">{q.questionText}</p>
+                                        <div className="mt-1 grid grid-cols-2 gap-1">
+                                          {(['A', 'B', 'C', 'D'] as const).map((opt) => {
+                                            const txt = opt === 'A' ? q.optionA : opt === 'B' ? q.optionB : opt === 'C' ? q.optionC : q.optionD;
+                                            return (
+                                              <span key={opt} className={`text-xs px-2 py-0.5 rounded-lg ${q.correctOption === opt ? 'bg-green-100 text-green-700 font-semibold' : 'bg-gray-100 text-gray-600'}`}>
+                                                {opt}. {txt}
+                                              </span>
+                                            );
+                                          })}
+                                        </div>
+                                      </div>
+                                      <div className="flex gap-2 shrink-0">
+                                        <button onClick={() => { setEditingQuestion(q); setShowQuestionEditor(false); }} className="text-xs text-blue-600 hover:underline">এডিট</button>
+                                        <button onClick={async () => {
+                                          if (!confirm('প্রশ্ন মুছে ফেলবেন?')) return;
+                                          await adminDeleteQuestion(token, q.id);
+                                          await loadQuestions(s.id);
+                                          flash('মুছে ফেলা হয়েছে');
+                                        }} className="text-xs text-red-500 hover:underline">মুছুন</button>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+
+                              {showQuestionEditor && editingQuestion === null ? (
+                                <QuestionEditor token={token} examSetId={s.id} editing={null}
+                                  onSaved={async () => { await loadQuestions(s.id); setShowQuestionEditor(false); flash('প্রশ্ন যোগ হয়েছে'); }}
+                                  onCancel={() => setShowQuestionEditor(false)} />
+                              ) : editingQuestion === null && (
+                                <button onClick={() => setShowQuestionEditor(true)}
+                                  className="w-full border-2 border-dashed border-warm-border rounded-xl py-3 text-sm text-warm-muted hover:border-primary hover:text-primary transition-colors">
+                                  + নতুন প্রশ্ন যোগ করুন
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
