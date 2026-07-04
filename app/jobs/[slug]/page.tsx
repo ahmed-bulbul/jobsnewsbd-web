@@ -2,6 +2,7 @@ import { getPostBySlug, getCategoryTypes, getCategories } from '@/lib/api';
 import { notFound } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import CommentsSection from './CommentsSection';
 import DeadlineCountdown from '@/components/ui/DeadlineCountdown';
 import StatusBadge from '@/components/ui/StatusBadge';
 import CopyLinkButton from '@/components/ui/CopyLinkButton';
@@ -194,6 +195,11 @@ export default async function JobDetailPage({ params }: Props) {
             <PdfViewerDynamic url={post.circularPdfUrl} />
           </div>
         )}
+
+        {/* Comments */}
+        <div className="border-t border-warm-border mt-6 pt-8">
+          <CommentsSection slug={slug} />
+        </div>
       </main>
       <Footer />
     </>

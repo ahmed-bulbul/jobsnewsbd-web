@@ -2,6 +2,7 @@ import type {
   Category,
   CategoryType,
   CenterTip,
+  Comment,
   ExamCenterDetail,
   ExamCenterSummary,
   LoginResponse,
@@ -391,6 +392,19 @@ export const adminUpdateQuestion = (token: string, id: number, body: unknown) =>
 
 export const adminDeleteQuestion = (token: string, id: number) =>
   authDelete(`/api/admin/exam/questions/${id}`, token);
+
+// ── Comments ──────────────────────────────────────────────────────────────────
+export const getComments = (slug: string) =>
+  get<Comment[]>(`/api/posts/${slug}/comments`);
+
+export const addComment = (slug: string, token: string, body: string) =>
+  authPost<Comment>(`/api/posts/${slug}/comments`, { body }, token);
+
+export const addReply = (slug: string, commentId: number, token: string, body: string) =>
+  authPost<Comment>(`/api/posts/${slug}/comments/${commentId}/replies`, { body }, token);
+
+export const deleteComment = (commentId: number, token: string) =>
+  authDelete(`/api/user/comments/${commentId}`, token);
 
 export const adminUploadImage = async (token: string, file: File): Promise<string> => {
   const form = new FormData();

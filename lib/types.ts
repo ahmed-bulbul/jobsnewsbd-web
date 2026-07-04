@@ -262,6 +262,15 @@ export interface ExamResult {
   questions: QuestionResult[];
 }
 
+export interface Comment {
+  id: number;
+  body: string;
+  authorId: number;
+  authorName: string;
+  createdAt: string;
+  replies: Comment[];
+}
+
 export interface UserProfile {
   id: number;
   name: string;
