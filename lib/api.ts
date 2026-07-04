@@ -10,6 +10,11 @@ import type {
   PostFilters,
   PostSummary,
   PostType,
+  PrepCategory,
+  PrepCategoryDetail,
+  PrepContent,
+  PrepTopic,
+  PrepTopicDetail,
   TipCategory,
   UserProfile,
   UserSavedJob,
@@ -276,3 +281,67 @@ export async function adminUploadExamCenterPhoto(token: string, id: number, file
   if (!res.ok) throw new Error(`Upload photo → ${res.status}`);
   return res.json();
 }
+
+// ── Device / Push notification registration ───────────────────────────────
+
+export interface DeviceRegistrationPayload {
+  deviceToken: string;
+  platform: 'ANDROID' | 'IOS' | 'WEB';
+  deviceName?: string;
+  appVersion?: string;
+}
+
+export const registerDevice = (token: string, payload: DeviceRegistrationPayload) =>
+  fetch(`${BASE}/api/user/devices`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+
+export const unregisterDevice = (token: string, deviceToken: string) =>
+  fetch(`${BASE}/api/user/devices/${encodeURIComponent(deviceToken)}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+// ── Job Preparation ───────────────────────────────────────────────────────────
+
+export const getPrepCategories = () =>
+  get<PrepCategory[]>('/api/prep/categories');
+
+export const getPrepCategory = (slug: string) =>
+  get<PrepCategoryDetail>(`/api/prep/categories/${slug}`);
+
+export const getPrepTopic = (slug: string) =>
+  get<PrepTopicDetail>(`/api/prep/topics/${slug}`);
+
+export const getPrepContent = (id: number) =>
+  get<PrepContent>(`/api/prep/content/${id}`);
+
+// Admin prep
+export const adminCreatePrepCategory = (token: string, body: unknown) =>
+  authPost<PrepCategory>('/api/admin/prep/categories', body, token);
+
+export const adminUpdatePrepCategory = (token: string, id: number, body: unknown) =>
+  authPut<PrepCategory>(`/api/admin/prep/categories/${id}`, body, token);
+
+export const adminDeletePrepCategory = (token: string, id: number) =>
+  authDelete(`/api/admin/prep/categories/${id}`, token);
+
+export const adminCreatePrepTopic = (token: string, body: unknown) =>
+  authPost<PrepTopic>('/api/admin/prep/topics', body, token);
+
+export const adminUpdatePrepTopic = (token: string, id: number, body: unknown) =>
+  authPut<PrepTopic>(`/api/admin/prep/topics/${id}`, body, token);
+
+export const adminDeletePrepTopic = (token: string, id: number) =>
+  authDelete(`/api/admin/prep/topics/${id}`, token);
+
+export const adminCreatePrepContent = (token: string, body: unknown) =>
+  authPost<PrepContent>('/api/admin/prep/content', body, token);
+
+export const adminUpdatePrepContent = (token: string, id: number, body: unknown) =>
+  authPut<PrepContent>(`/api/admin/prep/content/${id}`, body, token);
+
+export const adminDeletePrepContent = (token: string, id: number) =>
+  authDelete(`/api/admin/prep/content/${id}`, token);

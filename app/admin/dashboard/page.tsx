@@ -122,6 +122,7 @@ export default function AdminDashboard() {
         <div className="flex items-center gap-4">
           <span className="text-primary-300 text-sm">👤 {adminName}</span>
           <Link href="/admin/exam-centers" className="text-xs text-primary-300 hover:text-white">🏫 পরীক্ষা কেন্দ্র</Link>
+          <Link href="/admin/prep" className="text-xs text-primary-300 hover:text-white">📚 প্রস্তুতি</Link>
           <Link href="/" className="text-xs text-primary-300 hover:text-white">সাইটে যান →</Link>
           <button
             onClick={() => { localStorage.removeItem('admin_token'); router.push('/admin/login'); }}

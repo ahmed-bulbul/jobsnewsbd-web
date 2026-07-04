@@ -152,6 +152,52 @@ export interface CenterTip {
   createdAt: string;
 }
 
+// ── Job Preparation ───────────────────────────────────────────────────────────
+
+export type ContentType = 'VIDEO' | 'POST' | 'PDF' | 'QUIZ';
+
+export interface PrepCategory {
+  id: number;
+  nameBn: string;
+  nameEn: string | null;
+  slug: string;
+  icon: string | null;
+  colorHex: string | null;
+  displayOrder: number;
+}
+
+export interface PrepTopic {
+  id: number;
+  categoryId: number;
+  nameBn: string;
+  nameEn: string | null;
+  slug: string;
+  description: string | null;
+  displayOrder: number;
+}
+
+export interface PrepContent {
+  id: number;
+  topicId: number;
+  title: string;
+  contentType: ContentType;
+  contentUrl: string | null;
+  thumbnailUrl: string | null;
+  body: string | null;
+  durationSeconds: number | null;
+  displayOrder: number;
+  published?: boolean;
+  updatedAt: string;
+}
+
+export interface PrepCategoryDetail extends PrepCategory {
+  topics: PrepTopic[];
+}
+
+export interface PrepTopicDetail extends PrepTopic {
+  contents: PrepContent[];
+}
+
 export interface UserProfile {
   id: number;
   name: string;

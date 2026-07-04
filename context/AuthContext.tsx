@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 interface AuthUser {
   token: string;
@@ -54,11 +55,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
   }, []);
 
-  const logout = useCallback(() => {
-    setUser(null);
-    localStorage.removeItem(STORAGE_KEY);
-  }, []);
-
   const updateUser = useCallback((patch: Partial<AuthUser>) => {
     setUser((prev) => {
       if (!prev) return prev;
@@ -75,8 +71,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const closeModal = useCallback(() => setModalOpen(false), []);
 
+  const { unregister: unregisterPush } = usePushNotifications(user?.token ?? null);
+
+  const logoutWithCleanup = useCallback(() => {
+    unregisterPush();
+    setUser(null);
+    localStorage.removeItem(STORAGE_KEY);
+  }, [unregisterPush]);
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUser, openModal, closeModal, modalOpen, modalInitialView }}>
+    <AuthContext.Provider value={{ user, login, logout: logoutWithCleanup, updateUser, openModal, closeModal, modalOpen, modalInitialView }}>
       {children}
     </AuthContext.Provider>
   );
