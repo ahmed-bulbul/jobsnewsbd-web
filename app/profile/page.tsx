@@ -464,7 +464,7 @@ export default function ProfilePage() {
             {/* Status filter tabs */}
             <div className="flex gap-1.5 flex-wrap">
               {([
-                { key: 'ALL', bn: 'সব', en: 'All' },
+                { key: 'ALL',       label: 'সব',          labelEn: 'All',       color: 'text-gray-700', bg: 'bg-gray-100', dot: '' },
                 { key: 'SAVED',     ...STATUS_CONFIG.SAVED },
                 { key: 'APPLIED',   ...STATUS_CONFIG.APPLIED },
                 { key: 'INTERVIEW', ...STATUS_CONFIG.INTERVIEW },
@@ -483,7 +483,7 @@ export default function ProfilePage() {
                         : 'bg-white border-warm-border text-gray-500 hover:border-gray-300'
                     }`}
                   >
-                    {t(label ?? 'সব', labelEn ?? 'All')} {count > 0 && <span className="ml-1 opacity-70">({count})</span>}
+                    {t(label, labelEn)} {count > 0 && <span className="ml-1 opacity-70">({count})</span>}
                   </button>
                 );
               })}

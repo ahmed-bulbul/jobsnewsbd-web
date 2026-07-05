@@ -3,10 +3,12 @@ import type {
   CategoryType,
   CenterTip,
   Comment,
+  EnrollmentRequest,
   ExamCenterDetail,
   ExamCenterSummary,
   LoginResponse,
   PagedResponse,
+  PaymentConfig,
   Post,
   PostFilters,
   PostSummary,
@@ -24,6 +26,13 @@ import type {
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8081';
 
+export class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
 async function get<T>(path: string, params?: Record<string, string | number | boolean | undefined>): Promise<T> {
   const url = new URL(`${BASE}${path}`);
   if (params) {
@@ -32,7 +41,21 @@ async function get<T>(path: string, params?: Record<string, string | number | bo
     });
   }
   const res = await fetch(url.toString(), { next: { revalidate: 60 } });
-  if (!res.ok) throw new Error(`GET ${path} → ${res.status}`);
+  if (!res.ok) throw new ApiError(res.status, `GET ${path} → ${res.status}`);
+  return res.json();
+}
+
+async function authGet<T>(path: string, token: string, params?: Record<string, string | number | boolean | undefined>): Promise<T> {
+  const url = new URL(`${BASE}${path}`);
+  if (params) {
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, String(v));
+    });
+  }
+  const res = await fetch(url.toString(), {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new ApiError(res.status, `GET ${path} → ${res.status}`);
   return res.json();
 }
 
@@ -68,15 +91,6 @@ async function authDelete(path: string, token: string): Promise<void> {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error(`DELETE ${path} → ${res.status}`);
-}
-
-async function authGet<T>(path: string, token: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: 'no-store',
-  });
-  if (!res.ok) throw new Error(`GET ${path} → ${res.status}`);
-  return res.json();
 }
 
 // ── Public ─────────────────────────────────────────────────────────────────
@@ -326,17 +340,17 @@ export const unregisterDevice = (token: string, deviceToken: string) =>
 
 // ── Job Preparation ───────────────────────────────────────────────────────────
 
-export const getPrepCategories = () =>
-  get<PrepCategory[]>('/api/prep/categories');
+export const getPrepCategories = (token?: string) =>
+  token ? authGet<PrepCategory[]>('/api/prep/categories', token) : get<PrepCategory[]>('/api/prep/categories');
 
-export const getPrepCategory = (slug: string) =>
-  get<PrepCategoryDetail>(`/api/prep/categories/${slug}`);
+export const getPrepCategory = (slug: string, token?: string) =>
+  token ? authGet<PrepCategoryDetail>(`/api/prep/categories/${slug}`, token) : get<PrepCategoryDetail>(`/api/prep/categories/${slug}`);
 
-export const getPrepTopic = (slug: string) =>
-  get<PrepTopicDetail>(`/api/prep/topics/${slug}`);
+export const getPrepTopic = (slug: string, token?: string) =>
+  token ? authGet<PrepTopicDetail>(`/api/prep/topics/${slug}`, token) : get<PrepTopicDetail>(`/api/prep/topics/${slug}`);
 
-export const getPrepContent = (id: number) =>
-  get<PrepContent>(`/api/prep/content/${id}`);
+export const getPrepContent = (id: number, token?: string) =>
+  token ? authGet<PrepContent>(`/api/prep/content/${id}`, token) : get<PrepContent>(`/api/prep/content/${id}`);
 
 // Admin prep
 export const adminCreatePrepCategory = (token: string, body: unknown) =>
@@ -347,6 +361,12 @@ export const adminUpdatePrepCategory = (token: string, id: number, body: unknown
 
 export const adminDeletePrepCategory = (token: string, id: number) =>
   authDelete(`/api/admin/prep/categories/${id}`, token);
+
+export const adminEnrollUser = (token: string, categoryId: number, userId: number) =>
+  authPost<void>(`/api/admin/prep/categories/${categoryId}/enrollments/${userId}`, {}, token);
+
+export const adminUnenrollUser = (token: string, categoryId: number, userId: number) =>
+  authDelete(`/api/admin/prep/categories/${categoryId}/enrollments/${userId}`, token);
 
 export const adminCreatePrepTopic = (token: string, body: unknown) =>
   authPost<PrepTopic>('/api/admin/prep/topics', body, token);
@@ -428,3 +448,34 @@ export const adminUploadImage = async (token: string, file: File): Promise<strin
   const data = await r.json() as { url: string };
   return data.url;
 };
+
+// ── Payment config ────────────────────────────────────────────────────────────
+
+export const getPaymentConfig = () =>
+  get<PaymentConfig>('/api/payment-config');
+
+export const adminUpdatePaymentConfig = (token: string, bkashNumber: string, rocketNumber: string) =>
+  authPut<PaymentConfig>('/api/admin/prep/payment-config', { bkashNumber, rocketNumber }, token);
+
+// ── Enrollment requests ───────────────────────────────────────────────────────
+
+export const submitEnrollmentRequest = (token: string, categoryId: number, paymentMethod: string, transactionId: string) =>
+  authPost<EnrollmentRequest>('/api/user/prep/enrollment-requests', { categoryId, paymentMethod, transactionId }, token);
+
+export const getMyEnrollmentRequest = async (token: string, categoryId: number): Promise<EnrollmentRequest | null> => {
+  const res = await fetch(`${BASE}/api/user/prep/enrollment-requests/category/${categoryId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (res.status === 204) return null;
+  if (!res.ok) throw new ApiError(res.status, `GET enrollment-request → ${res.status}`);
+  return res.json();
+};
+
+export const adminGetEnrollmentRequests = (token: string, status?: string) =>
+  authGet<EnrollmentRequest[]>(`/api/admin/prep/enrollment-requests${status ? `?status=${status}` : ''}`, token);
+
+export const adminApproveEnrollmentRequest = (token: string, id: number) =>
+  authPost<EnrollmentRequest>(`/api/admin/prep/enrollment-requests/${id}/approve`, {}, token);
+
+export const adminRejectEnrollmentRequest = (token: string, id: number, adminNote?: string) =>
+  authPost<EnrollmentRequest>(`/api/admin/prep/enrollment-requests/${id}/reject`, { adminNote: adminNote ?? null }, token);

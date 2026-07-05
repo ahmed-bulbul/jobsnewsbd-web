@@ -24,10 +24,17 @@ import {
   adminUpdateQuestion,
   adminDeleteQuestion,
   adminUploadImage,
+  adminEnrollUser,
+  adminUnenrollUser,
+  getPaymentConfig,
+  adminUpdatePaymentConfig,
+  adminGetEnrollmentRequests,
+  adminApproveEnrollmentRequest,
+  adminRejectEnrollmentRequest,
 } from '@/lib/api';
-import type { ExamQuestion, ExamSet, PrepCategory, PrepCategoryDetail, PrepContent, PrepTopic } from '@/lib/types';
+import type { EnrollmentRequest, ExamQuestion, ExamSet, PaymentConfig, PrepCategory, PrepCategoryDetail, PrepContent, PrepTopic } from '@/lib/types';
 
-type Tab = 'categories' | 'topics' | 'content' | 'exam';
+type Tab = 'categories' | 'topics' | 'content' | 'exam' | 'payment';
 
 // Flat topic record enriched with its category name
 interface FlatTopic extends PrepTopic { categoryNameBn: string }
@@ -291,6 +298,25 @@ export default function AdminPrepPage() {
   const [catIcon, setCatIcon] = useState('');
   const [catColor, setCatColor] = useState('#1D4ED8');
   const [catOrder, setCatOrder] = useState('0');
+  const [catEnrollmentType, setCatEnrollmentType] = useState<'FREE' | 'PAID'>('FREE');
+  const [catPrice, setCatPrice] = useState('');
+  const [catCurrency, setCatCurrency] = useState('BDT');
+  const [catDescription, setCatDescription] = useState('');
+  const [catContactPhone, setCatContactPhone] = useState('');
+
+  // Enrollment management
+  const [enrollCatId, setEnrollCatId] = useState<number | null>(null);
+  const [enrollUserId, setEnrollUserId] = useState('');
+  const [enrollLoading, setEnrollLoading] = useState(false);
+
+  // Payment config & requests
+  const [paymentConfig, setPaymentConfig] = useState<PaymentConfig>({ bkashNumber: '', rocketNumber: '' });
+  const [paymentConfigSaving, setPaymentConfigSaving] = useState(false);
+  const [enrollmentRequests, setEnrollmentRequests] = useState<EnrollmentRequest[]>([]);
+  const [requestsFilter, setRequestsFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('PENDING');
+  const [requestsLoading, setRequestsLoading] = useState(false);
+  const [rejectNoteId, setRejectNoteId] = useState<number | null>(null);
+  const [rejectNote, setRejectNote] = useState('');
 
   // Topic form
   const [topicId, setTopicId] = useState(0);
@@ -352,7 +378,43 @@ export default function AdminPrepPage() {
     loadCategories()
       .then((cats) => loadAllTopics(cats))
       .finally(() => setLoading(false));
+    getPaymentConfig().then(cfg => setPaymentConfig({ bkashNumber: cfg.bkashNumber ?? '', rocketNumber: cfg.rocketNumber ?? '' })).catch(() => {});
   }, [router, loadCategories, loadAllTopics]);
+
+  const loadEnrollmentRequests = useCallback(async (t: string, filter: string) => {
+    setRequestsLoading(true);
+    try {
+      const reqs = await adminGetEnrollmentRequests(t, filter === 'ALL' ? undefined : filter);
+      setEnrollmentRequests(reqs);
+    } catch { /* ignore */ } finally { setRequestsLoading(false); }
+  }, []);
+
+  const handleSavePaymentConfig = async () => {
+    setPaymentConfigSaving(true);
+    try {
+      await adminUpdatePaymentConfig(token, paymentConfig.bkashNumber ?? '', paymentConfig.rocketNumber ?? '');
+      flash('পেমেন্ট কনফিগ সংরক্ষিত');
+    } catch { flash('সংরক্ষণ ব্যর্থ'); } finally { setPaymentConfigSaving(false); }
+  };
+
+  const handleApprove = async (id: number) => {
+    if (!confirm('অনুমোদন করবেন?')) return;
+    try {
+      await adminApproveEnrollmentRequest(token, id);
+      flash('অনুমোদন হয়েছে');
+      loadEnrollmentRequests(token, requestsFilter);
+    } catch (e: unknown) { flash((e as Error).message || 'ব্যর্থ'); }
+  };
+
+  const handleReject = async (id: number) => {
+    try {
+      await adminRejectEnrollmentRequest(token, id, rejectNote || undefined);
+      flash('বাতিল হয়েছে');
+      setRejectNoteId(null);
+      setRejectNote('');
+      loadEnrollmentRequests(token, requestsFilter);
+    } catch { flash('ব্যর্থ'); }
+  };
 
   const loadCategoryTopics = async (slug: string) => {
     const detail = await getPrepCategory(slug);
@@ -370,16 +432,31 @@ export default function AdminPrepPage() {
   const resetCatForm = () => {
     setCatId(0); setCatNameBn(''); setCatNameEn('');
     setCatSlug(''); setCatIcon(''); setCatColor('#1D4ED8'); setCatOrder('0');
+    setCatEnrollmentType('FREE'); setCatPrice(''); setCatCurrency('BDT');
+    setCatDescription(''); setCatContactPhone('');
   };
 
   const editCat = (c: PrepCategory) => {
     setCatId(c.id); setCatNameBn(c.nameBn); setCatNameEn(c.nameEn ?? '');
     setCatSlug(c.slug); setCatIcon(c.icon ?? ''); setCatColor(c.colorHex ?? '#1D4ED8');
     setCatOrder(String(c.displayOrder));
+    setCatEnrollmentType(c.enrollmentType ?? 'FREE');
+    setCatPrice(c.price != null ? String(c.price) : '');
+    setCatCurrency(c.currency ?? 'BDT');
+    setCatDescription(c.description ?? '');
+    setCatContactPhone(c.contactPhone ?? '');
   };
 
   const saveCat = async () => {
-    const body = { nameBn: catNameBn, nameEn: catNameEn, slug: catSlug, icon: catIcon, colorHex: catColor, displayOrder: Number(catOrder), active: true };
+    const body = {
+      nameBn: catNameBn, nameEn: catNameEn, slug: catSlug, icon: catIcon,
+      colorHex: catColor, displayOrder: Number(catOrder), active: true,
+      enrollmentType: catEnrollmentType,
+      price: catEnrollmentType === 'PAID' && catPrice ? Number(catPrice) : null,
+      currency: catCurrency || 'BDT',
+      description: catDescription || null,
+      contactPhone: catContactPhone || null,
+    };
     try {
       if (catId) await adminUpdatePrepCategory(token, catId, body);
       else await adminCreatePrepCategory(token, body);
@@ -388,6 +465,27 @@ export default function AdminPrepPage() {
       resetCatForm();
       flash(catId ? 'আপডেট হয়েছে' : 'তৈরি হয়েছে');
     } catch { flash('ত্রুটি হয়েছে'); }
+  };
+
+  const handleEnroll = async (categoryId: number, userId: number) => {
+    setEnrollLoading(true);
+    try {
+      await adminEnrollUser(token, categoryId, userId);
+      flash('ভর্তি সম্পন্ন হয়েছে');
+      setEnrollUserId('');
+    } catch { flash('ভর্তি ব্যর্থ হয়েছে'); }
+    finally { setEnrollLoading(false); }
+  };
+
+  const handleUnenroll = async (categoryId: number, userId: number) => {
+    if (!confirm(`User ID ${userId} কে বাদ দেবেন?`)) return;
+    setEnrollLoading(true);
+    try {
+      await adminUnenrollUser(token, categoryId, userId);
+      flash('বাদ দেওয়া হয়েছে');
+      setEnrollUserId('');
+    } catch { flash('বাদ দিতে ব্যর্থ'); }
+    finally { setEnrollLoading(false); }
   };
 
   const deleteCat = async (id: number) => {
@@ -535,14 +633,17 @@ export default function AdminPrepPage() {
 
       <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Tabs */}
-        <div className="flex gap-1 bg-white border border-warm-border rounded-xl p-1 mb-6 w-fit">
-          {(['categories', 'topics', 'content', 'exam'] as Tab[]).map((t) => (
+        <div className="flex gap-1 bg-white border border-warm-border rounded-xl p-1 mb-6 w-fit flex-wrap">
+          {(['categories', 'topics', 'content', 'exam', 'payment'] as Tab[]).map((t) => (
             <button
               key={t}
-              onClick={() => setTab(t)}
+              onClick={() => {
+                setTab(t);
+                if (t === 'payment') loadEnrollmentRequests(token, requestsFilter);
+              }}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${tab === t ? 'bg-primary text-white shadow-sm' : 'text-gray-600 hover:text-primary'}`}
             >
-              {t === 'categories' ? 'ক্যাটাগরি' : t === 'topics' ? 'বিষয়' : t === 'content' ? 'কন্টেন্ট' : '📝 পরীক্ষা'}
+              {t === 'categories' ? 'ক্যাটাগরি' : t === 'topics' ? 'বিষয়' : t === 'content' ? 'কন্টেন্ট' : t === 'exam' ? '📝 পরীক্ষা' : '💳 পেমেন্ট'}
             </button>
           ))}
         </div>
@@ -558,6 +659,44 @@ export default function AdminPrepPage() {
               <Field label="আইকন" value={catIcon} onChange={setCatIcon} placeholder="school" />
               <Field label="রং (#hex)" value={catColor} onChange={setCatColor} />
               <Field label="ক্রম" value={catOrder} onChange={setCatOrder} type="number" />
+
+              {/* Enrollment */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">ভর্তির ধরন *</label>
+                <select
+                  value={catEnrollmentType}
+                  onChange={(e) => setCatEnrollmentType(e.target.value as 'FREE' | 'PAID')}
+                  className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
+                >
+                  <option value="FREE">বিনামূল্যে (FREE)</option>
+                  <option value="PAID">পেইড (PAID)</option>
+                </select>
+              </div>
+
+              {catEnrollmentType === 'PAID' && (
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Field label="মূল্য" value={catPrice} onChange={setCatPrice} type="number" placeholder="0" />
+                  </div>
+                  <div className="w-24">
+                    <Field label="মুদ্রা" value={catCurrency} onChange={setCatCurrency} placeholder="BDT" />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">বিবরণ (Description)</label>
+                <textarea
+                  value={catDescription}
+                  onChange={(e) => setCatDescription(e.target.value)}
+                  rows={3}
+                  placeholder="কোর্সের সংক্ষিপ্ত বিবরণ..."
+                  className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none"
+                />
+              </div>
+
+              <Field label="WhatsApp নম্বর (যোগাযোগ)" value={catContactPhone} onChange={setCatContactPhone} placeholder="+8801XXXXXXXXX" />
+
               <div className="flex gap-2 pt-1">
                 <button onClick={saveCat} className="flex-1 bg-primary text-white rounded-xl py-2 text-sm font-semibold hover:bg-primary-dark transition-colors">
                   {catId ? 'আপডেট' : 'তৈরি করুন'}
@@ -568,19 +707,69 @@ export default function AdminPrepPage() {
               </div>
             </div>
 
-            <div className="lg:col-span-2 space-y-2">
+            <div className="lg:col-span-2 space-y-3">
               {categories.map((c) => (
-                <div key={c.id} className="bg-white rounded-xl border border-warm-border p-4 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold" style={{ background: c.colorHex ?? '#374151' }}>
-                    {c.displayOrder}
+                <div key={c.id} className="bg-white rounded-xl border border-warm-border overflow-hidden">
+                  <div className="p-4 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold" style={{ background: c.colorHex ?? '#374151' }}>
+                      {c.displayOrder}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-gray-900 text-sm">{c.nameBn}</p>
+                        {c.enrollmentType === 'PAID' ? (
+                          <span className="text-xs bg-amber-100 text-amber-700 font-semibold px-2 py-0.5 rounded-full">
+                            💰 {c.price != null ? `${c.price} ${c.currency}` : 'PAID'}
+                          </span>
+                        ) : (
+                          <span className="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">বিনামূল্যে</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-warm-muted">{c.slug}</p>
+                    </div>
+                    <button onClick={() => { setTab('topics'); loadCategoryTopics(c.slug); setTopicCatId(String(c.id)); }} className="text-xs text-primary hover:underline">বিষয় →</button>
+                    {c.enrollmentType === 'PAID' && (
+                      <button
+                        onClick={() => setEnrollCatId(enrollCatId === c.id ? null : c.id)}
+                        className="text-xs text-amber-600 hover:underline ml-2"
+                      >ভর্তি</button>
+                    )}
+                    <button onClick={() => editCat(c)} className="text-xs text-blue-600 hover:underline ml-2">এডিট</button>
+                    <button onClick={() => deleteCat(c.id)} className="text-xs text-red-500 hover:underline ml-2">মুছুন</button>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 text-sm">{c.nameBn}</p>
-                    <p className="text-xs text-warm-muted">{c.slug}</p>
-                  </div>
-                  <button onClick={() => { setTab('topics'); loadCategoryTopics(c.slug); setTopicCatId(String(c.id)); }} className="text-xs text-primary hover:underline">বিষয় →</button>
-                  <button onClick={() => editCat(c)} className="text-xs text-blue-600 hover:underline ml-2">এডিট</button>
-                  <button onClick={() => deleteCat(c.id)} className="text-xs text-red-500 hover:underline ml-2">মুছুন</button>
+
+                  {/* Enrollment management panel for PAID categories */}
+                  {enrollCatId === c.id && (
+                    <div className="border-t border-warm-border bg-amber-50 p-4 space-y-3">
+                      <p className="text-xs font-semibold text-amber-800">ব্যবহারকারী ভর্তি পরিচালনা — {c.nameBn}</p>
+                      <div className="flex gap-2">
+                        <input
+                          type="number"
+                          value={enrollUserId}
+                          onChange={(e) => setEnrollUserId(e.target.value)}
+                          placeholder="User ID লিখুন"
+                          className="flex-1 border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary bg-white"
+                        />
+                        <button
+                          onClick={() => enrollUserId && handleEnroll(c.id, Number(enrollUserId))}
+                          disabled={enrollLoading || !enrollUserId}
+                          className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-semibold hover:bg-amber-700 disabled:opacity-50 transition-colors"
+                        >
+                          {enrollLoading ? '...' : 'ভর্তি করুন'}
+                        </button>
+                        <button
+                          onClick={() => enrollUserId && handleUnenroll(c.id, Number(enrollUserId))}
+                          disabled={enrollLoading || !enrollUserId}
+                          className="px-4 py-2 border border-red-300 text-red-600 rounded-lg text-sm font-semibold hover:bg-red-50 disabled:opacity-50 transition-colors"
+                        >
+                          বাদ দিন
+                        </button>
+                      </div>
+                      <p className="text-xs text-amber-700">
+                        ব্যবহারকারীর ID প্রোফাইল থেকে দেখা যাবে। ID দিয়ে ভর্তি/বাদ দিন।
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -879,6 +1068,139 @@ export default function AdminPrepPage() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* ── Payment ────────────────────────────────────────────────── */}
+        {tab === 'payment' && (
+          <div className="space-y-6">
+            {/* Payment config card */}
+            <div className="bg-white rounded-2xl border border-warm-border p-5 space-y-4 max-w-md">
+              <h2 className="font-bold text-gray-900">💳 পেমেন্ট নম্বর সেটআপ</h2>
+              <p className="text-xs text-warm-muted">এই নম্বরে ব্যবহারকারীরা টাকা পাঠাবেন। সব ক্যাটাগরির জন্য একই নম্বর প্রযোজ্য।</p>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">bKash নম্বর</label>
+                <input
+                  type="text"
+                  value={paymentConfig.bkashNumber ?? ''}
+                  onChange={(e) => setPaymentConfig((p) => ({ ...p, bkashNumber: e.target.value }))}
+                  placeholder="+8801XXXXXXXXX"
+                  className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Rocket নম্বর</label>
+                <input
+                  type="text"
+                  value={paymentConfig.rocketNumber ?? ''}
+                  onChange={(e) => setPaymentConfig((p) => ({ ...p, rocketNumber: e.target.value }))}
+                  placeholder="+8801XXXXXXXXX"
+                  className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
+                />
+              </div>
+              <button
+                onClick={handleSavePaymentConfig}
+                disabled={paymentConfigSaving}
+                className="bg-primary text-white rounded-xl px-6 py-2 text-sm font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50"
+              >
+                {paymentConfigSaving ? 'সংরক্ষণ হচ্ছে...' : 'সংরক্ষণ করুন'}
+              </button>
+            </div>
+
+            {/* Enrollment requests */}
+            <div className="bg-white rounded-2xl border border-warm-border p-5 space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <h2 className="font-bold text-gray-900">ভর্তির আবেদনসমূহ</h2>
+                <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+                  {(['PENDING', 'APPROVED', 'REJECTED', 'ALL'] as const).map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => { setRequestsFilter(f); loadEnrollmentRequests(token, f); }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${requestsFilter === f ? 'bg-white shadow-sm text-primary' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                      {f === 'PENDING' ? 'অপেক্ষমাণ' : f === 'APPROVED' ? 'অনুমোদিত' : f === 'REJECTED' ? 'বাতিল' : 'সব'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {requestsLoading ? (
+                <p className="text-sm text-warm-muted py-4 text-center">লোড হচ্ছে...</p>
+              ) : enrollmentRequests.length === 0 ? (
+                <p className="text-sm text-warm-muted py-4 text-center">কোনো আবেদন নেই</p>
+              ) : (
+                <div className="space-y-3">
+                  {enrollmentRequests.map((req) => (
+                    <div key={req.id} className="border border-warm-border rounded-xl p-4 space-y-2">
+                      <div className="flex items-start gap-3 flex-wrap">
+                        {/* Method badge */}
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${req.paymentMethod === 'BKASH' ? 'bg-pink-100 text-pink-700' : 'bg-purple-100 text-purple-700'}`}>
+                          {req.paymentMethod}
+                        </span>
+                        {/* Status badge */}
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                          req.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
+                          req.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
+                          'bg-red-100 text-red-600'
+                        }`}>
+                          {req.status === 'PENDING' ? 'অপেক্ষমাণ' : req.status === 'APPROVED' ? 'অনুমোদিত' : 'বাতিল'}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 truncate">{req.userName} <span className="font-normal text-warm-muted text-xs">({req.userEmail})</span></p>
+                          <p className="text-xs text-warm-muted">{req.categoryNameBn}{req.amount != null ? ` • ৳${req.amount}` : ''}</p>
+                        </div>
+                        <p className="text-xs text-warm-muted shrink-0">{new Date(req.createdAt).toLocaleString('bn-BD')}</p>
+                      </div>
+
+                      <div className="bg-gray-50 rounded-lg px-3 py-2">
+                        <p className="text-xs text-gray-500">Transaction ID</p>
+                        <p className="text-sm font-mono font-semibold text-gray-800">{req.transactionId}</p>
+                      </div>
+
+                      {req.adminNote && (
+                        <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">নোট: {req.adminNote}</p>
+                      )}
+
+                      {req.status === 'PENDING' && (
+                        <div className="flex flex-col gap-2 pt-1">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleApprove(req.id)}
+                              className="flex-1 bg-green-600 text-white rounded-lg py-1.5 text-xs font-semibold hover:bg-green-700 transition-colors"
+                            >
+                              অনুমোদন করুন
+                            </button>
+                            <button
+                              onClick={() => setRejectNoteId(rejectNoteId === req.id ? null : req.id)}
+                              className="flex-1 border border-red-300 text-red-600 rounded-lg py-1.5 text-xs font-semibold hover:bg-red-50 transition-colors"
+                            >
+                              বাতিল করুন
+                            </button>
+                          </div>
+                          {rejectNoteId === req.id && (
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={rejectNote}
+                                onChange={(e) => setRejectNote(e.target.value)}
+                                placeholder="বাতিলের কারণ (ঐচ্ছিক)"
+                                className="flex-1 border border-warm-border rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-red-400"
+                              />
+                              <button
+                                onClick={() => handleReject(req.id)}
+                                className="px-4 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-700 transition-colors"
+                              >
+                                নিশ্চিত করুন
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

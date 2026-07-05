@@ -5,7 +5,8 @@ import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useLanguage } from '@/context/LanguageContext';
-import { getPrepTopic } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
+import { getPrepTopic, ApiError } from '@/lib/api';
 import type { PrepContent, PrepTopicDetail } from '@/lib/types';
 
 function ContentTypeBadge({ type }: { type: string }) {
@@ -70,16 +71,21 @@ function ContentCard({ content }: { content: PrepContent }) {
 export default function PrepTopicPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [data, setData] = useState<PrepTopicDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
-    getPrepTopic(slug)
+    getPrepTopic(slug, user?.token ?? undefined)
       .then(setData)
-      .catch(() => setError(true))
+      .catch((e) => {
+        if (e instanceof ApiError && e.status === 403) setAccessDenied(true);
+        else setError(true);
+      })
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [slug, user]);
 
   return (
     <div className="min-h-screen bg-warm-bg flex flex-col">
@@ -102,6 +108,21 @@ export default function PrepTopicPage({ params }: { params: Promise<{ slug: stri
                 <div key={i} className="h-20 bg-white rounded-xl border border-warm-border" />
               ))}
             </div>
+          </div>
+        ) : accessDenied ? (
+          <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+            <div className="w-20 h-20 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mb-5">
+              <svg className="w-10 h-10 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">{t('ভর্তি প্রয়োজন', 'Enrollment Required')}</h2>
+            <p className="text-warm-muted text-sm mb-4 max-w-sm">
+              {t('এই বিষয়বস্তু দেখতে প্রথমে বিভাগে ভর্তি হন। ভর্তির জন্য অ্যাডমিনের সাথে যোগাযোগ করুন।', 'Enroll in the category to access this content. Contact admin to enroll.')}
+            </p>
+            <Link href="/prep" className="text-sm text-primary hover:underline font-medium">
+              ← {t('সব ক্যাটাগরি দেখুন', 'View all categories')}
+            </Link>
           </div>
         ) : error || !data ? (
           <div className="text-center py-20 text-warm-muted">

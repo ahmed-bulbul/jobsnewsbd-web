@@ -156,9 +156,37 @@ export interface CenterTip {
   createdAt: string;
 }
 
+// ── Payment ───────────────────────────────────────────────────────────────────
+
+export interface PaymentConfig {
+  bkashNumber: string | null;
+  rocketNumber: string | null;
+}
+
+export type PaymentMethod = 'BKASH' | 'ROCKET';
+export type EnrollmentRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface EnrollmentRequest {
+  id: number;
+  categoryId: number;
+  categoryNameBn: string;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  paymentMethod: PaymentMethod;
+  transactionId: string;
+  amount: number | null;
+  status: EnrollmentRequestStatus;
+  adminNote: string | null;
+  createdAt: string;
+  reviewedAt: string | null;
+}
+
 // ── Job Preparation ───────────────────────────────────────────────────────────
 
 export type ContentType = 'VIDEO' | 'POST' | 'PDF' | 'QUIZ';
+
+export type EnrollmentType = 'FREE' | 'PAID';
 
 export interface PrepCategory {
   id: number;
@@ -168,6 +196,12 @@ export interface PrepCategory {
   icon: string | null;
   colorHex: string | null;
   displayOrder: number;
+  enrollmentType: EnrollmentType;
+  price: number | null;
+  currency: string;
+  isEnrolled: boolean;
+  description: string | null;
+  contactPhone: string | null;
 }
 
 export interface PrepTopic {
@@ -178,6 +212,12 @@ export interface PrepTopic {
   slug: string;
   description: string | null;
   displayOrder: number;
+  contentCount: number;
+}
+
+export interface PrepCategoryDetail extends PrepCategory {
+  topics: PrepTopic[];
+  totalContents: number;
 }
 
 export interface PrepContent {
@@ -192,10 +232,6 @@ export interface PrepContent {
   displayOrder: number;
   published?: boolean;
   updatedAt: string;
-}
-
-export interface PrepCategoryDetail extends PrepCategory {
-  topics: PrepTopic[];
 }
 
 export interface PrepTopicDetail extends PrepTopic {
