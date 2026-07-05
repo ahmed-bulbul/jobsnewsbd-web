@@ -150,6 +150,16 @@ export async function adminUploadCircularPdf(postId: number, file: File, token: 
 export const adminDeleteCircularPdf = (postId: number, token: string) =>
   authDelete(`/api/admin/posts/${postId}/circular`, token);
 
+export const adminGetAnalytics = (token: string) =>
+  authGet<{
+    totalPublished: number;
+    totalDraft: number;
+    totalUsers: number;
+    totalViews: number;
+    postsByDay: { date: string; count: number }[];
+    topPosts: { id: number; slug: string; title: string; views: number }[];
+  }>('/api/admin/analytics', token);
+
 // ── User profile & saved jobs ───────────────────────────────────────────────
 
 export const getUserProfile = (token: string) =>

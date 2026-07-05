@@ -121,6 +121,7 @@ export default function AdminDashboard() {
         </div>
         <div className="flex items-center gap-4">
           <span className="text-primary-300 text-sm">👤 {adminName}</span>
+          <Link href="/admin/analytics" className="text-xs text-primary-300 hover:text-white">📊 অ্যানালিটিক্স</Link>
           <Link href="/admin/exam-centers" className="text-xs text-primary-300 hover:text-white">🏫 পরীক্ষা কেন্দ্র</Link>
           <Link href="/admin/prep" className="text-xs text-primary-300 hover:text-white">📚 প্রস্তুতি</Link>
           <Link href="/" className="text-xs text-primary-300 hover:text-white">সাইটে যান →</Link>
