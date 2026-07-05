@@ -18,7 +18,7 @@ export default function NewPostPage() {
   const [form, setForm] = useState({
     titleBn: '', titleEn: '', organizationName: '', categoryId: '',
     postTypeId: '', district: '', qualification: '', description: '',
-    applicationStart: '', applicationEnd: '', sourceUrl: '', publish: false,
+    applicationStart: '', applicationEnd: '', sourceUrl: '', vacancyCount: '', publish: false,
   });
 
   useEffect(() => {
@@ -41,10 +41,11 @@ export default function NewPostPage() {
     try {
       await adminCreatePost({
         ...form,
-        categoryId:  Number(form.categoryId),
-        postTypeId:  form.postTypeId ? Number(form.postTypeId) : null,
+        categoryId:   Number(form.categoryId),
+        postTypeId:   form.postTypeId ? Number(form.postTypeId) : null,
         applicationStart: form.applicationStart || null,
         applicationEnd:   form.applicationEnd   || null,
+        vacancyCount: form.vacancyCount ? Number(form.vacancyCount) : null,
       }, token);
       router.push('/admin/dashboard');
     } catch (err: unknown) {
@@ -110,6 +111,10 @@ export default function NewPostPage() {
             <div>
               <label className="label">যোগ্যতা</label>
               <input value={form.qualification} onChange={(e) => set('qualification', e.target.value)} className="input" placeholder="যেমন: স্নাতক" />
+            </div>
+            <div>
+              <label className="label">শূন্যপদ সংখ্যা</label>
+              <input value={form.vacancyCount} onChange={(e) => set('vacancyCount', e.target.value)} type="number" min="0" className="input" placeholder="যেমন: ৫০" />
             </div>
             <div>
               <label className="label">সোর্স লিংক</label>

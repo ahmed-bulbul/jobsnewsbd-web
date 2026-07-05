@@ -173,6 +173,7 @@ export default function AdminDashboard() {
                       <th className="px-4 py-3 font-semibold text-gray-700">বিভাগ</th>
                       <th className="px-4 py-3 font-semibold text-gray-700">অবস্থা</th>
                       <th className="px-4 py-3 font-semibold text-gray-700">শেষ তারিখ</th>
+                      <th className="px-4 py-3 font-semibold text-gray-700 text-right">ভিউ</th>
                       <th className="px-4 py-3 font-semibold text-gray-700">কার্যক্রম</th>
                     </tr>
                   </thead>
@@ -190,6 +191,19 @@ export default function AdminDashboard() {
                         <td className="px-4 py-3 text-warm-muted text-xs">
                           {post.applicationEnd ? formatBanglaDate(post.applicationEnd) : '—'}
                         </td>
+                        <td className="px-4 py-3 text-right">
+                          {post.viewCount > 0 ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-violet-600 bg-violet-50 px-2 py-0.5 rounded-full">
+                              <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                              </svg>
+                              {post.viewCount.toLocaleString('bn-BD')}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-warm-muted">—</span>
+                          )}
+                        </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <Link href={`/admin/posts/${post.id}/edit`} className="text-xs text-primary-600 hover:text-primary font-medium">সম্পাদনা</Link>
@@ -200,7 +214,7 @@ export default function AdminDashboard() {
                     ))}
                     {posts.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="px-4 py-12 text-center text-warm-muted">কোনো বিজ্ঞপ্তি নেই</td>
+                        <td colSpan={6} className="px-4 py-12 text-center text-warm-muted">কোনো বিজ্ঞপ্তি নেই</td>
                       </tr>
                     )}
                   </tbody>

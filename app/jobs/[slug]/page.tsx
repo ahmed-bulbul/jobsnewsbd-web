@@ -19,9 +19,46 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPostBySlug(slug).catch(() => null);
   if (!post) return { title: 'চাকরি পাওয়া যায়নি' };
+
+  const title = post.titleBn ?? post.titleEn;
+  const description = [
+    post.organizationName,
+    post.district,
+    post.qualification,
+    post.titleEn,
+  ].filter(Boolean).join(' | ');
+  const url = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jobsnewsbd.com'}/jobs/${slug}`;
+  const ogImage = post.images?.[0]?.url
+    ? `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8081'}${post.images[0].url}`
+    : `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jobsnewsbd.com'}/og-default.png`;
+
   return {
-    title: post.titleBn ?? post.titleEn,
-    description: `${post.organizationName ?? ''} — ${post.titleEn}`,
+    title,
+    description,
+    keywords: [
+      post.titleEn,
+      post.titleBn ?? '',
+      post.organizationName ?? '',
+      post.district ?? '',
+      post.category.nameBn,
+      'চাকরি', 'job circular', 'Bangladesh job',
+    ].filter(Boolean),
+    openGraph: {
+      title,
+      description,
+      url,
+      type: 'website',
+      locale: 'bn_BD',
+      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
+      siteName: 'চাকরির খবর',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImage],
+    },
+    alternates: { canonical: url },
   };
 }
 
@@ -53,8 +90,37 @@ export default async function JobDetailPage({ params }: Props) {
     { icon: '📅', bn: 'প্রকাশের তারিখ', en: 'Published Date', value: post.publishedAt ? new Date(post.publishedAt).toLocaleDateString('bn-BD') : null },
   ].filter((item) => item.value);
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jobsnewsbd.com';
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'JobPosting',
+    title: post.titleBn ?? post.titleEn,
+    description: post.description ?? `${post.organizationName ?? ''} — ${post.titleEn}`,
+    identifier: { '@type': 'PropertyValue', name: 'jobsnewsbd', value: post.id },
+    datePosted: post.publishedAt,
+    validThrough: post.applicationEnd ?? undefined,
+    hiringOrganization: {
+      '@type': 'Organization',
+      name: post.organizationName ?? 'N/A',
+    },
+    jobLocation: {
+      '@type': 'Place',
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: post.district ?? 'Bangladesh',
+        addressCountry: 'BD',
+      },
+    },
+    employmentType: 'FULL_TIME',
+    url: `${siteUrl}/jobs/${post.slug}`,
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Header />
       <main>
         {/* Hero banner */}

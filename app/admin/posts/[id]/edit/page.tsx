@@ -21,6 +21,7 @@ export default function EditPostPage({ params }: Props) {
   const [submitting, setSubmitting]       = useState(false);
   const [error, setError]                 = useState('');
   const [loading, setLoading]             = useState(true);
+  const [viewCount, setViewCount]         = useState(0);
   const [existingPdfUrl, setExistingPdfUrl] = useState<string | null>(null);
   const [pdfFile, setPdfFile]             = useState<File | null>(null);
   const [pdfUploading, setPdfUploading]   = useState(false);
@@ -30,7 +31,7 @@ export default function EditPostPage({ params }: Props) {
   const [form, setForm] = useState({
     titleBn: '', titleEn: '', organizationName: '', categoryId: '',
     postTypeId: '', district: '', qualification: '', description: '',
-    applicationStart: '', applicationEnd: '', sourceUrl: '', publish: false,
+    applicationStart: '', applicationEnd: '', sourceUrl: '', vacancyCount: '', publish: false,
   });
 
   useEffect(() => {
@@ -64,9 +65,11 @@ export default function EditPostPage({ params }: Props) {
           applicationStart: fmt(post.applicationStart),
           applicationEnd: fmt(post.applicationEnd),
           sourceUrl: post.sourceUrl ?? '',
+          vacancyCount: post.vacancyCount != null ? String(post.vacancyCount) : '',
           publish: post.publishedAt != null,
         });
         setExistingPdfUrl(post.circularPdfUrl ?? null);
+        setViewCount(post.viewCount ?? 0);
       }
       setLoading(false);
     });
@@ -82,10 +85,11 @@ export default function EditPostPage({ params }: Props) {
     try {
       await adminUpdatePost(id, {
         ...form,
-        categoryId:  Number(form.categoryId),
-        postTypeId:  form.postTypeId ? Number(form.postTypeId) : null,
+        categoryId:   Number(form.categoryId),
+        postTypeId:   form.postTypeId ? Number(form.postTypeId) : null,
         applicationStart: form.applicationStart || null,
         applicationEnd:   form.applicationEnd   || null,
+        vacancyCount: form.vacancyCount ? Number(form.vacancyCount) : null,
       }, token);
       router.push('/admin/dashboard');
     } catch (err: unknown) {
@@ -137,6 +141,15 @@ export default function EditPostPage({ params }: Props) {
       <header className="bg-primary-900 text-white px-6 py-4 flex items-center gap-4">
         <Link href="/admin/dashboard" className="text-primary-300 hover:text-white text-sm">← ড্যাশবোর্ড</Link>
         <h1 className="font-bold">বিজ্ঞপ্তি সম্পাদনা</h1>
+        {viewCount > 0 && (
+          <span className="ml-auto flex items-center gap-1.5 text-xs bg-violet-500/20 text-violet-200 border border-violet-400/30 px-3 py-1 rounded-full">
+            <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+              <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+            </svg>
+            {viewCount.toLocaleString('bn-BD')} ভিউ
+          </span>
+        )}
       </header>
 
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
@@ -186,6 +199,10 @@ export default function EditPostPage({ params }: Props) {
             <div>
               <label className="label">যোগ্যতা</label>
               <input value={form.qualification} onChange={(e) => set('qualification', e.target.value)} className="input" />
+            </div>
+            <div>
+              <label className="label">শূন্যপদ সংখ্যা</label>
+              <input value={form.vacancyCount} onChange={(e) => set('vacancyCount', e.target.value)} type="number" min="0" className="input" placeholder="যেমন: ৫০" />
             </div>
             <div>
               <label className="label">সোর্স লিংক</label>

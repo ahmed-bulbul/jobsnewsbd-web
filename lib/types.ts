@@ -40,6 +40,8 @@ export interface PostSummary {
   categoryNameEn: string | null;
   postTypeNameBn: string | null;
   postTypeNameEn: string | null;
+  viewCount: number;
+  vacancyCount: number | null;
 }
 
 export interface PostImage {
@@ -68,6 +70,8 @@ export interface Post {
   createdAt: string;
   updatedAt: string;
   images: PostImage[];
+  viewCount: number;
+  vacancyCount: number | null;
 }
 
 export interface PagedResponse<T> {
