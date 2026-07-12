@@ -24,7 +24,7 @@ import type {
   SavedJobStatus,
 } from './types';
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://api.jobradarbd.com';
+const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.jobradarbd.com';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
