@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -11,7 +11,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { getCategoryTypes, getCategories, getPostTypes, getPosts } from '@/lib/api';
 import type { Category, CategoryType, PagedResponse, PostFilters, PostSummary, PostType } from '@/lib/types';
 
-export default function JobsPage() {
+function JobsPageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { t } = useLanguage();
@@ -154,5 +154,13 @@ export default function JobsPage() {
       </main>
       <Footer />
     </>
+  );
+}
+
+export default function JobsPage() {
+  return (
+    <Suspense fallback={null}>
+      <JobsPageInner />
+    </Suspense>
   );
 }
