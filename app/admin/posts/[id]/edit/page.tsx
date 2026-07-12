@@ -47,7 +47,7 @@ export default function EditPostPage({ params }: Props) {
 
       // Load existing post data
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8081'}/api/admin/posts/${numId}`,
+        `${process.env.NEXT_PUBLIC_API_URL ?? 'https://api.jobradarbd.com'}/api/admin/posts/${numId}`,
         { headers: { Authorization: `Bearer ${t}` } },
       );
       if (res.ok) {

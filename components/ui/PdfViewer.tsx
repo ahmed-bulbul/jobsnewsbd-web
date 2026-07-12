@@ -90,14 +90,14 @@ export default function PdfViewer({ url }: Props) {
         {!loading && (
           <div className="flex items-center gap-2 text-sm">
             <button onClick={prev} disabled={currentPage <= 1}
-              className="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 disabled:opacity-40 transition-colors">
+              className="px-3 py-2 rounded bg-white/10 hover:bg-white/20 disabled:opacity-40 transition-colors">
               ←
             </button>
             <span className="min-w-[90px] text-center">
               {t(`পৃষ্ঠা ${toBn(currentPage)} / ${toBn(numPages)}`, `Page ${currentPage} / ${numPages}`)}
             </span>
             <button onClick={next} disabled={currentPage >= numPages}
-              className="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 disabled:opacity-40 transition-colors">
+              className="px-3 py-2 rounded bg-white/10 hover:bg-white/20 disabled:opacity-40 transition-colors">
               →
             </button>
           </div>

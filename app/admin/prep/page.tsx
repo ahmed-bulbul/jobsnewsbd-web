@@ -247,7 +247,7 @@ function QuestionEditor({
 
       <div>
         <label className="block text-xs font-semibold text-gray-600 mb-1">ব্যাখ্যার ছবি</label>
-        {expImg && <img src={expImg} alt="" className="h-20 rounded-lg mb-2 object-cover" />}
+        {expImg && <img src={expImg} alt="" className="h-20 max-w-full rounded-lg mb-2 object-cover" />}
         <div className="flex gap-2">
           <input ref={fileRef} type="file" accept="image/*" className="hidden"
             onChange={(e) => { if (e.target.files?.[0]) handleImageUpload(e.target.files[0]); }} />
@@ -1024,7 +1024,7 @@ export default function AdminPrepPage() {
                                       <span className="text-xs font-bold text-gray-500 mt-0.5 w-5">{i + 1}.</span>
                                       <div className="flex-1 min-w-0">
                                         <p className="text-sm text-gray-900 font-medium">{q.questionText}</p>
-                                        <div className="mt-1 grid grid-cols-2 gap-1">
+                                        <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-1">
                                           {(['A', 'B', 'C', 'D'] as const).map((opt) => {
                                             const txt = opt === 'A' ? q.optionA : opt === 'B' ? q.optionB : opt === 'C' ? q.optionC : q.optionD;
                                             return (

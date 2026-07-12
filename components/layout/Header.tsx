@@ -13,6 +13,7 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -25,6 +26,11 @@ export default function Header() {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   const handleLogout = () => {
     logout();
@@ -78,7 +84,25 @@ export default function Header() {
           </nav>
 
           {/* Right controls */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
+            {/* Hamburger — mobile only */}
+            <button
+              onClick={() => setMobileMenuOpen((o) => !o)}
+              className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg border border-warm-border text-gray-600 hover:border-primary hover:text-primary transition-all"
+              aria-label={t('মেনু', 'Menu')}
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
+
             {/* Language toggle */}
             <button
               onClick={() => setLang(lang === 'bn' ? 'en' : 'bn')}
@@ -86,7 +110,7 @@ export default function Header() {
               title={lang === 'bn' ? 'Switch to English' : 'বাংলায় দেখুন'}
             >
               <span className="text-base">{lang === 'bn' ? '🇧🇩' : '🇬🇧'}</span>
-              <span className="font-sans text-xs">{lang === 'bn' ? 'বাংলা' : 'EN'}</span>
+              <span className="font-sans text-xs hidden sm:inline">{lang === 'bn' ? 'বাংলা' : 'EN'}</span>
             </button>
 
             {user ? (
@@ -139,11 +163,11 @@ export default function Header() {
               </div>
             ) : (
               /* Guest: login + register */
-              <div className="flex items-center gap-2">
-                <button onClick={() => openModal('login')} className="btn-outline text-sm px-4 py-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <button onClick={() => openModal('login')} className="btn-outline text-xs sm:text-sm px-2.5 sm:px-4 py-1.5 sm:py-2 whitespace-nowrap">
                   {t('লগইন', 'Login')}
                 </button>
-                <button onClick={() => openModal('register')} className="btn-primary text-sm px-4 py-2">
+                <button onClick={() => openModal('register')} className="btn-primary text-xs sm:text-sm px-2.5 sm:px-4 py-1.5 sm:py-2 whitespace-nowrap">
                   {t('নিবন্ধন', 'Register')}
                 </button>
               </div>
@@ -151,22 +175,25 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Mobile nav */}
-        <nav className="md:hidden flex items-center gap-1 pb-2">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                (link.href === '/' ? pathname === '/' : pathname.startsWith(link.href))
-                  ? 'bg-primary-50 text-primary-700'
-                  : 'text-gray-600 hover:text-primary'
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        {/* Mobile nav — collapsible panel */}
+        {mobileMenuOpen && (
+          <nav className="md:hidden flex flex-col gap-1 pb-3">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  (link.href === '/' ? pathname === '/' : pathname.startsWith(link.href))
+                    ? 'bg-primary-50 text-primary-700'
+                    : 'text-gray-600 hover:text-primary hover:bg-primary-50'
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        )}
       </div>
     </header>
   );

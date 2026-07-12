@@ -83,7 +83,7 @@ function ResultView({ result, backHref }: { result: ExamResult; backHref: string
                   <span className="text-base shrink-0">{isSkipped ? '⏭' : q.correct ? '✅' : '❌'}</span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-1.5 mt-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mt-3">
                   {(['A', 'B', 'C', 'D'] as const).map((opt) => {
                     const txt = optionText(q, opt);
                     const isCorrect = q.correctOption === opt;
@@ -262,7 +262,7 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
           /* Exam in progress */
           <>
             {/* Sticky top bar */}
-            <div className="sticky top-0 z-10 bg-white border border-warm-border rounded-2xl px-4 py-3 mb-5 flex items-center gap-3 shadow-sm">
+            <div className="sticky top-16 z-10 bg-white border border-warm-border rounded-2xl px-4 py-3 mb-5 flex items-center gap-3 shadow-sm">
               <div className="flex-1">
                 <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                   <div className="h-full rounded-full transition-all duration-300"

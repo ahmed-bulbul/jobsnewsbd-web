@@ -110,28 +110,28 @@ export default function AdminExamCentersPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       {msg && (
-        <div className="fixed top-4 right-4 bg-indigo-600 text-white px-4 py-2 rounded-lg shadow z-50 text-sm">{msg}</div>
+        <div className="fixed top-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-xs bg-indigo-600 text-white px-4 py-2 rounded-lg shadow z-50 text-sm">{msg}</div>
       )}
 
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
           <div>
             <Link href="/admin/dashboard" className="text-sm text-indigo-600 hover:underline mb-1 inline-block">← Dashboard</Link>
             <h1 className="text-2xl font-bold text-gray-900">Exam Centers</h1>
             <p className="text-sm text-gray-500">{centers.length} centers</p>
           </div>
-          <button onClick={openCreate} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+          <button onClick={openCreate} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors self-start sm:self-auto">
             + Add Center
           </button>
         </div>
 
         {/* Centers table */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
           {centers.length === 0 ? (
             <div className="text-center py-16 text-gray-400">No exam centers yet.</div>
           ) : (
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[640px] text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="text-left px-4 py-3 text-gray-500 font-medium">Photo</th>
@@ -196,7 +196,7 @@ export default function AdminExamCentersPage() {
       {/* Create/Edit modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-5 border-b border-gray-200">
               <h2 className="font-bold text-gray-900">{editing ? 'Edit Center' : 'Add Center'}</h2>
               <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600">✕</button>

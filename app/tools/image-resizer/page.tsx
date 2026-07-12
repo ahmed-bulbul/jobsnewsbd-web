@@ -212,7 +212,7 @@ export default function ImageResizerPage() {
 
               {/* Custom inputs */}
               {selectedPreset === 'custom' && (
-                <div className="mt-3 grid grid-cols-3 gap-2">
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <div>
                     <label className="label text-xs">{t('প্রস্থ (px)', 'Width (px)')}</label>
                     <input type="number" value={customW} onChange={(e) => setCustomW(e.target.value)} placeholder="300" className="input text-sm" />
@@ -286,7 +286,7 @@ export default function ImageResizerPage() {
             ) : (
               <div className="space-y-4">
                 {/* Before / After */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Original */}
                   <div className="card p-3">
                     <p className="text-xs font-semibold text-warm-muted mb-2 uppercase tracking-wide">{t('আগে', 'Before')}</p>

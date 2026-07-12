@@ -250,7 +250,7 @@ function AvatarUpload({ photoUrl, initials, token, onUpload, onRemove }: {
       {/* Avatar circle */}
       <div
         onClick={() => !uploading && inputRef.current?.click()}
-        className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/30 overflow-hidden flex items-center justify-center cursor-pointer"
+        className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/30 overflow-hidden flex items-center justify-center cursor-pointer"
       >
         {photoUrl ? (
           <Image src={photoUrl} alt="Profile" width={80} height={80} className="object-cover w-full h-full" />
@@ -275,7 +275,7 @@ function AvatarUpload({ photoUrl, initials, token, onUpload, onRemove }: {
       {photoUrl && !uploading && (
         <button
           onClick={onRemove}
-          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow"
+          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shadow"
           title={t('ছবি সরান', 'Remove photo')}
         >
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -409,7 +409,7 @@ export default function ProfilePage() {
         {/* Profile header */}
         <div className="bg-gradient-to-br from-primary-900 to-primary-600 text-white">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-            <div className="flex items-center gap-5">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-5">
               {/* Avatar — click to upload */}
               <AvatarUpload
                 photoUrl={profile?.profilePhotoUrl ?? null}
@@ -418,8 +418,8 @@ export default function ProfilePage() {
                 onUpload={handlePhotoUpload}
                 onRemove={handlePhotoRemove}
               />
-              <div className="flex-1 min-w-0">
-                <h1 className="text-2xl font-bold truncate">{profile?.name ?? user?.name}</h1>
+              <div className="flex-1 min-w-[140px]">
+                <h1 className="text-xl sm:text-2xl font-bold truncate">{profile?.name ?? user?.name}</h1>
                 <p className="text-white/70 text-sm mt-0.5 truncate">{profile?.email ?? user?.email}</p>
                 {profile?.phone && <p className="text-white/60 text-xs mt-0.5">📞 {profile.phone}</p>}
                 <p className="text-white/50 text-xs mt-1">

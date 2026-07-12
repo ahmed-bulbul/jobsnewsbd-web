@@ -39,7 +39,7 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
     }
   };
 
-  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8081';
+  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.jobradarbd.com';
 
   return (
     <div className="space-y-4">
@@ -248,7 +248,7 @@ function OtpForm({ email, onSuccess, onBack }: { email: string; onSuccess: () =>
       {resendMsg && <div className="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm">{resendMsg}</div>}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="flex gap-2 justify-center" onPaste={handlePaste}>
+        <div className="flex gap-1.5 sm:gap-2 justify-center" onPaste={handlePaste}>
           {digits.map((d, i) => (
             <input
               key={i}
@@ -256,7 +256,7 @@ function OtpForm({ email, onSuccess, onBack }: { email: string; onSuccess: () =>
               type="text" inputMode="numeric" maxLength={1} value={d}
               onChange={(e) => handleChange(i, e.target.value)}
               onKeyDown={(e) => handleKeyDown(i, e)}
-              className="w-11 h-13 text-center text-xl font-bold border-2 border-warm-border rounded-xl focus:outline-none focus:border-primary transition-colors bg-white"
+              className="w-9 h-11 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold border-2 border-warm-border rounded-xl focus:outline-none focus:border-primary transition-colors bg-white"
             />
           ))}
         </div>
@@ -310,7 +310,7 @@ export default function AuthModal() {
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={closeModal} />
 
       {/* Panel */}
-      <div className="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div className="relative z-10 w-full max-w-md max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl">
 
         {/* Close button */}
         <button

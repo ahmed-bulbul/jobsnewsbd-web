@@ -111,23 +111,23 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-cream">
       {/* Admin header */}
-      <header className="bg-primary-900 text-white px-6 py-4 flex items-center justify-between shadow-lg">
+      <header className="bg-primary-900 text-white px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-y-3 shadow-lg">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-primary font-bold">চ</div>
+          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-primary font-bold shrink-0">চ</div>
           <div>
             <span className="font-bold">চাকরির খবর</span>
             <span className="text-primary-300 text-xs ml-2">Admin Panel</span>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4 flex-wrap w-full sm:w-auto">
           <span className="text-primary-300 text-sm">👤 {adminName}</span>
-          <Link href="/admin/analytics" className="text-xs text-primary-300 hover:text-white">📊 অ্যানালিটিক্স</Link>
-          <Link href="/admin/exam-centers" className="text-xs text-primary-300 hover:text-white">🏫 পরীক্ষা কেন্দ্র</Link>
-          <Link href="/admin/prep" className="text-xs text-primary-300 hover:text-white">📚 প্রস্তুতি</Link>
-          <Link href="/" className="text-xs text-primary-300 hover:text-white">সাইটে যান →</Link>
+          <Link href="/admin/analytics" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">📊 অ্যানালিটিক্স</Link>
+          <Link href="/admin/exam-centers" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">🏫 পরীক্ষা কেন্দ্র</Link>
+          <Link href="/admin/prep" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">📚 প্রস্তুতি</Link>
+          <Link href="/" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">সাইটে যান →</Link>
           <button
             onClick={() => { localStorage.removeItem('admin_token'); router.push('/admin/login'); }}
-            className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors"
+            className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
           >
             লগআউট
           </button>

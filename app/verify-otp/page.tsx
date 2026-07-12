@@ -121,7 +121,7 @@ function VerifyOtpForm() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="flex gap-2 justify-center" onPaste={handlePaste}>
+            <div className="flex gap-1.5 sm:gap-2 justify-center" onPaste={handlePaste}>
               {digits.map((d, i) => (
                 <input
                   key={i}
@@ -132,7 +132,7 @@ function VerifyOtpForm() {
                   value={d}
                   onChange={(e) => handleChange(i, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(i, e)}
-                  className="w-12 h-14 text-center text-2xl font-bold border-2 border-warm-border rounded-xl focus:outline-none focus:border-primary transition-colors bg-white"
+                  className="w-10 h-12 sm:w-12 sm:h-14 text-center text-xl sm:text-2xl font-bold border-2 border-warm-border rounded-xl focus:outline-none focus:border-primary transition-colors bg-white"
                 />
               ))}
             </div>

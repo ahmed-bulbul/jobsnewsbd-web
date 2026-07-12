@@ -35,15 +35,15 @@ export default async function HomePage() {
 
         {/* Stats bar */}
         <div className="bg-primary-900 text-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 grid grid-cols-3 divide-x divide-primary-700">
+          <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 grid grid-cols-3 divide-x divide-primary-700">
             {[
               { bn: 'মোট বিজ্ঞপ্তি', en: 'Total Circulars', value: latestPosts.totalElements },
               { bn: 'বিভাগ',         en: 'Categories',      value: categories.length },
               { bn: 'ধরন',           en: 'Job Types',       value: categoryTypes.length },
             ].map((s) => (
-              <div key={s.bn} className="text-center px-4">
-                <div className="text-2xl font-bold text-accent">{s.value}+</div>
-                <div className="text-xs text-primary-300 mt-0.5"><T bn={s.bn} en={s.en} /></div>
+              <div key={s.bn} className="text-center px-1 sm:px-4">
+                <div className="text-lg sm:text-2xl font-bold text-accent">{s.value}+</div>
+                <div className="text-[10px] sm:text-xs text-primary-300 mt-0.5 leading-tight"><T bn={s.bn} en={s.en} /></div>
               </div>
             ))}
           </div>

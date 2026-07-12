@@ -21,11 +21,11 @@ export default function Pagination({ page, totalPages, onPageChange }: Props) {
   });
 
   return (
-    <nav className="flex items-center justify-center gap-1 mt-8" aria-label="Pagination">
+    <nav className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-1 mt-8" aria-label="Pagination">
       <button
         onClick={() => onPageChange(page - 1)}
         disabled={page === 0}
-        className="px-3 py-2 rounded-lg border border-warm-border text-sm text-gray-600 hover:bg-cream disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        className="px-2.5 sm:px-3 py-2 rounded-lg border border-warm-border text-xs sm:text-sm text-gray-600 hover:bg-cream disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
         {t('← আগে', '← Prev')}
       </button>
@@ -34,7 +34,7 @@ export default function Pagination({ page, totalPages, onPageChange }: Props) {
         <button
           key={p}
           onClick={() => onPageChange(p)}
-          className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+          className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
             p === page
               ? 'bg-primary text-white shadow-sm'
               : 'border border-warm-border text-gray-600 hover:bg-cream'
@@ -47,7 +47,7 @@ export default function Pagination({ page, totalPages, onPageChange }: Props) {
       <button
         onClick={() => onPageChange(page + 1)}
         disabled={page >= totalPages - 1}
-        className="px-3 py-2 rounded-lg border border-warm-border text-sm text-gray-600 hover:bg-cream disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        className="px-2.5 sm:px-3 py-2 rounded-lg border border-warm-border text-xs sm:text-sm text-gray-600 hover:bg-cream disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
         {t('পরে →', 'Next →')}
       </button>

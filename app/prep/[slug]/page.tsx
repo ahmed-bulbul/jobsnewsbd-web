@@ -91,7 +91,7 @@ function PaymentModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm px-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+      <div className="bg-white rounded-2xl w-full max-w-md max-h-[85vh] shadow-2xl overflow-y-auto" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-warm-border">
           <h3 className="font-bold text-gray-900">{t('পেমেন্ট করুন', 'Make Payment')}</h3>

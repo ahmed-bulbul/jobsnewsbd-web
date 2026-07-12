@@ -37,7 +37,7 @@ export default function JobFilters({
   ];
 
   return (
-    <aside className="bg-white rounded-2xl border border-warm-border shadow-card p-5 space-y-5 h-fit sticky top-20">
+    <aside className="bg-white rounded-2xl border border-warm-border shadow-card p-5 space-y-5 h-fit lg:sticky lg:top-20">
       <div className="flex items-center justify-between">
         <h3 className="font-bold text-gray-900">{t('ফিল্টার', 'Filters')}</h3>
         {hasFilters && (

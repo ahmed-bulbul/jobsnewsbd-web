@@ -29,8 +29,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   ].filter(Boolean).join(' | ');
   const url = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jobsnewsbd.com'}/jobs/${slug}`;
   const ogImage = post.images?.[0]?.url
-    ? `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8081'}${post.images[0].url}`
-    : `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jobsnewsbd.com'}/og-default.png`;
+    ? `${process.env.NEXT_PUBLIC_API_URL ?? 'https://api.jobradarbd.com'}${post.images[0].url}`
+    : `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://api.jobradarbd.com'}/og-default.png`;
 
   return {
     title,
@@ -163,7 +163,7 @@ export default async function JobDetailPage({ params }: Props) {
             <div className="lg:col-span-2 space-y-6">
 
               {/* Key info cards */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {infoCards.map((item) => (
                   <div key={item.en} className="card p-4 flex flex-col gap-1">
                     <span className="text-xl">{item.icon}</span>
