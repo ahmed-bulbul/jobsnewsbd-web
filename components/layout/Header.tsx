@@ -58,11 +58,11 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm group-hover:bg-primary-600 transition-colors">
-              চ
+                🎯
             </div>
             <div className="leading-tight">
-              <span className="block font-bold text-primary text-lg">চাকরির খবর</span>
-              <span className="block text-[10px] text-warm-muted -mt-0.5 font-sans">Jobs News BD</span>
+              <span className="block font-bold text-primary text-lg">জব রাডার বাংলাদেশ</span>
+              <span className="block text-[10px] text-warm-muted -mt-0.5 font-sans">Job Radar BD</span>
             </div>
           </Link>
 

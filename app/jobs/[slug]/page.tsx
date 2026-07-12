@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     post.qualification,
     post.titleEn,
   ].filter(Boolean).join(' | ');
-  const url = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jobsnewsbd.com'}/jobs/${slug}`;
+  const url = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jobradarbd.com'}/jobs/${slug}`;
   const ogImage = post.images?.[0]?.url
     ? `${process.env.NEXT_PUBLIC_API_URL ?? 'https://api.jobradarbd.com'}${post.images[0].url}`
     : `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://api.jobradarbd.com'}/og-default.png`;

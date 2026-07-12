@@ -19,7 +19,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: { default: 'চাকরির খবর | Jobs News BD', template: '%s | চাকরির খবর' },
+  title: { default: 'চাকরির খবর | Job Radar BD', template: '%s | চাকরির খবর' },
   description: 'বাংলাদেশের সরকারি ও বেসরকারি চাকরির বিজ্ঞপ্তি এক জায়গায়',
   keywords: ['সরকারি চাকরি', 'বাংলাদেশ ব্যাংক চাকরি', 'job circular bangladesh', 'bd jobs'],
 };
