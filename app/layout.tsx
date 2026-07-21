@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
-import { Hind_Siliguri, Inter } from 'next/font/google';
+import { Noto_Sans_Bengali, Inter } from 'next/font/google';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { AuthProvider } from '@/context/AuthContext';
 import AuthModal from '@/components/ui/AuthModal';
 import './globals.css';
 
-const hindSiliguri = Hind_Siliguri({
+const notoSansBengali = Noto_Sans_Bengali({
   subsets: ['bengali', 'latin'],
   weight: ['300', '400', '500', '600', '700'],
   variable: '--font-hind',
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="bn" className={`${hindSiliguri.variable} ${inter.variable}`}>
+    <html lang="bn" className={`${notoSansBengali.variable} ${inter.variable}`}>
       <body>
         <AuthProvider>
           <LanguageProvider>
