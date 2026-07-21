@@ -139,7 +139,7 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const examSetId = Number(id);
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, openModal } = useAuth();
   const searchParams = useSearchParams();
 
   const examTitle = searchParams.get('title') ?? '';
@@ -217,15 +217,15 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
             <p className="text-sm text-warm-muted mb-6 max-w-xs mx-auto">
               {t('পরীক্ষায় অংশ নিতে ও ফলাফল সংরক্ষণ করতে আগে লগইন করুন।', 'Please login to take the exam and save your results.')}
             </p>
-            <Link
-              href={`/login?next=${encodeURIComponent(`/prep/exam/${examSetId}?title=${encodeURIComponent(examTitle)}&duration=${duration}&slug=${backSlug}`)}`}
+            <button
+              onClick={() => openModal('login')}
               className="inline-block px-8 py-3 rounded-xl text-white font-bold text-sm"
               style={{ background: 'linear-gradient(135deg, #D97706, #B45309)' }}>
               {t('লগইন করুন', 'Login')}
-            </Link>
+            </button>
             <p className="text-xs text-warm-muted mt-4">
               {t('অ্যাকাউন্ট নেই?', "Don't have an account?")}{' '}
-              <Link href="/register" className="text-primary hover:underline">{t('নিবন্ধন করুন', 'Register')}</Link>
+              <button onClick={() => openModal('register')} className="text-primary hover:underline">{t('নিবন্ধন করুন', 'Register')}</button>
             </p>
           </div>
         ) : error && !result ? (
