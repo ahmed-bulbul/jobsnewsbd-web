@@ -302,6 +302,31 @@ export async function saveInfoStore(token: string, data: object): Promise<void> 
   });
 }
 
+export async function uploadInfoStoreDocument(
+  token: string,
+  file: File
+): Promise<Omit<import('./types').InfoStoreDocument, 'id' | 'label'>> {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch(`${BASE}/api/user/info-store/documents`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { message?: string }).message ?? `Upload document → ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function deleteInfoStoreDocument(token: string, url: string): Promise<void> {
+  await fetch(`${BASE}/api/user/info-store/documents?url=${encodeURIComponent(url)}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
 // ── Admin exam center photo ───────────────────────────────────────────────────
 
 export async function adminUploadExamCenterPhoto(token: string, id: number, file: File): Promise<ExamCenterDetail> {

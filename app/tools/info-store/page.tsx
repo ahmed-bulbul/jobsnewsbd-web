@@ -6,7 +6,8 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { getInfoStore, saveInfoStore } from '@/lib/api';
+import { getInfoStore, saveInfoStore, uploadInfoStoreDocument, deleteInfoStoreDocument } from '@/lib/api';
+import type { InfoStoreDocument } from '@/lib/types';
 
 // ── Data shape ───────────────────────────────────────────────────────────────
 
@@ -68,6 +69,8 @@ interface InfoStore {
   mastersSubject: string;
   mastersYear: string;
   mastersCgpa: string;
+  // Documents (photo, signature, certificates, etc.)
+  documents: InfoStoreDocument[];
 }
 
 const EMPTY: InfoStore = {
@@ -82,7 +85,23 @@ const EMPTY: InfoStore = {
   hscBoard: '', hscYear: '', hscRoll: '', hscGpa: '', hscGroup: 'বিজ্ঞান',
   gradUniversity: '', gradSubject: '', gradYear: '', gradCgpa: '', gradDegree: 'স্নাতক (সম্মান)',
   mastersUniversity: '', mastersSubject: '', mastersYear: '', mastersCgpa: '',
+  documents: [],
 };
+
+const DOC_LABELS = [
+  { bn: 'ছবি', en: 'Photo' },
+  { bn: 'স্বাক্ষর', en: 'Signature' },
+  { bn: 'জাতীয় পরিচয়পত্র', en: 'NID' },
+  { bn: 'সার্টিফিকেট', en: 'Certificate' },
+  { bn: 'মার্কশিট', en: 'Marksheet' },
+  { bn: 'অন্যান্য', en: 'Other' },
+];
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 // ── Copy helper ──────────────────────────────────────────────────────────────
 
@@ -171,6 +190,149 @@ function Section({ title, icon, children, defaultOpen = true }: {
   );
 }
 
+// ── Document card ────────────────────────────────────────────────────────────
+
+function DocumentCard({ doc, onDelete, t }: {
+  doc: InfoStoreDocument; onDelete: () => void; t: (bn: string, en: string) => string;
+}) {
+  const isImage = doc.mimeType.startsWith('image/');
+  return (
+    <div className="flex items-center gap-3 border border-warm-border rounded-xl p-3 bg-white">
+      {isImage ? (
+        <img src={doc.url} alt={doc.label} className="w-14 h-14 rounded-lg object-cover border border-warm-border shrink-0" />
+      ) : (
+        <div className="w-14 h-14 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center text-2xl shrink-0">📄</div>
+      )}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-gray-800 truncate">{doc.label}</p>
+        <p className="text-xs text-warm-muted truncate">{doc.fileName}</p>
+        <p className="text-xs text-warm-muted">{formatSize(doc.sizeBytes)}</p>
+      </div>
+      <div className="flex items-center gap-1.5 shrink-0">
+        <a
+          href={doc.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={t('দেখুন', 'View')}
+          className="px-2.5 py-1.5 rounded-lg text-xs font-medium border bg-cream border-warm-border text-gray-600 hover:border-primary hover:text-primary transition-colors"
+        >
+          👁
+        </a>
+        <button
+          type="button"
+          onClick={onDelete}
+          title={t('মুছুন', 'Delete')}
+          className="px-2.5 py-1.5 rounded-lg text-xs font-medium border bg-red-50 border-red-200 text-red-500 hover:bg-red-100 transition-colors"
+        >
+          🗑
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Documents section ────────────────────────────────────────────────────────
+
+function DocumentsSection({
+  documents, loggedIn, uploadLabel, setUploadLabel, uploading, uploadError,
+  fileInputRef, onFileSelected, onDelete, onLoginClick, t,
+}: {
+  documents: InfoStoreDocument[];
+  loggedIn: boolean;
+  uploadLabel: string;
+  setUploadLabel: (v: string) => void;
+  uploading: boolean;
+  uploadError: string;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  onFileSelected: (file: File | null) => void;
+  onDelete: (doc: InfoStoreDocument) => void;
+  onLoginClick: () => void;
+  t: (bn: string, en: string) => string;
+}) {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="card overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between px-5 py-4 bg-cream hover:bg-primary-50 transition-colors"
+      >
+        <span className="font-bold text-gray-800 flex items-center gap-2">
+          <span>📎</span> {t('নথি ও ছবি', 'Documents & Photos')}
+          {documents.length > 0 && (
+            <span className="text-xs font-normal text-warm-muted">({documents.length})</span>
+          )}
+        </span>
+        <span className={`text-warm-muted transition-transform text-sm ${open ? 'rotate-180' : ''}`}>▾</span>
+      </button>
+
+      {open && (
+        <div className="p-5 space-y-4">
+          <p className="text-xs text-warm-muted -mt-1">
+            {t('ছবি, স্বাক্ষর, সার্টিফিকেট বা অন্য যেকোনো ডকুমেন্ট (JPG/PNG/WEBP/PDF, সর্বোচ্চ ৫MB) যুক্ত করুন।', 'Add your photo, signature, certificates, or any other document (JPG/PNG/WEBP/PDF, max 5MB).')}
+          </p>
+
+          {!loggedIn ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800 flex items-center justify-between gap-3 flex-wrap">
+              <span className="flex items-start gap-2">
+                <span>⚠️</span>
+                <span>{t('ফাইল যুক্ত করতে লগইন করুন।', 'Please log in to add files.')}</span>
+              </span>
+              <button
+                onClick={onLoginClick}
+                className="shrink-0 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+              >
+                {t('লগইন করুন', 'Log In')}
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={uploadLabel}
+                onChange={(e) => setUploadLabel(e.target.value)}
+                className="input text-sm w-auto"
+              >
+                {DOC_LABELS.map((d) => <option key={d.bn} value={d.bn}>{t(d.bn, d.en)}</option>)}
+              </select>
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={() => fileInputRef.current?.click()}
+                className="btn-outline text-xs px-3 py-2 disabled:opacity-60"
+              >
+                {uploading ? t('আপলোড হচ্ছে...', 'Uploading...') : `📤 ${t('ফাইল যুক্ত করুন', 'Add File')}`}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,application/pdf"
+                className="hidden"
+                onChange={(e) => onFileSelected(e.target.files?.[0] ?? null)}
+              />
+            </div>
+          )}
+
+          {uploadError && <p className="text-xs text-red-500">{uploadError}</p>}
+
+          {documents.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {documents.map((doc) => (
+                <DocumentCard key={doc.id} doc={doc} onDelete={() => onDelete(doc)} t={t} />
+              ))}
+            </div>
+          )}
+
+          {loggedIn && documents.length === 0 && (
+            <p className="text-center text-xs text-warm-muted py-4">
+              {t('এখনো কোনো ফাইল যুক্ত করা হয়নি', 'No files added yet')}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main page ────────────────────────────────────────────────────────────────
 
 export default function InfoStorePage() {
@@ -227,6 +389,62 @@ export default function InfoStorePage() {
       persist(next);
       return next;
     });
+  };
+
+  const setDocuments = (docs: InfoStoreDocument[]) => {
+    setInfo((prev) => {
+      const next = { ...prev, documents: docs };
+      persist(next);
+      return next;
+    });
+  };
+
+  // ── Document upload ─────────────────────────────────────────────────────────
+  const [uploadLabel, setUploadLabel] = useState(DOC_LABELS[0].bn);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+
+  const handleFileSelected = async (file: File | null) => {
+    if (!file) return;
+    setUploadError('');
+    if (!user?.token) {
+      setUploadError(t('ফাইল যুক্ত করতে লগইন করুন', 'Please log in to add files'));
+      return;
+    }
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setUploadError(t('শুধুমাত্র JPG, PNG, WEBP অথবা PDF ফাইল সমর্থিত', 'Only JPG, PNG, WEBP or PDF files are supported'));
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError(t('ফাইলের আকার সর্বোচ্চ ৫ মেগাবাইট হতে পারবে', 'File size must be under 5MB'));
+      return;
+    }
+    setUploading(true);
+    try {
+      const meta = await uploadInfoStoreDocument(user.token, file);
+      const doc: InfoStoreDocument = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        label: uploadLabel,
+        ...meta,
+      };
+      setDocuments([...info.documents, doc]);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : t('আপলোড ব্যর্থ হয়েছে', 'Upload failed'));
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDeleteDoc = (doc: InfoStoreDocument) => {
+    if (!confirm(t('এই ফাইলটি মুছে ফেলবেন?', 'Delete this file?'))) return;
+    setDocuments(info.documents.filter((d) => d.id !== doc.id));
+    if (user?.token) {
+      deleteInfoStoreDocument(user.token, doc.url).catch(() => {});
+    }
   };
 
   const handleClear = async () => {
@@ -331,6 +549,21 @@ export default function InfoStorePage() {
         )}
 
         {!loading && (<><div className="space-y-4">
+
+          {/* Documents & Photos */}
+          <DocumentsSection
+            documents={info.documents}
+            loggedIn={!!user}
+            uploadLabel={uploadLabel}
+            setUploadLabel={setUploadLabel}
+            uploading={uploading}
+            uploadError={uploadError}
+            fileInputRef={fileInputRef}
+            onFileSelected={handleFileSelected}
+            onDelete={handleDeleteDoc}
+            onLoginClick={() => openModal('login')}
+            t={t}
+          />
 
           {/* Personal */}
           <Section title={t('ব্যক্তিগত তথ্য', 'Personal Info')} icon="🧑">

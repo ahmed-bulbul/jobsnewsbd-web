@@ -326,3 +326,15 @@ export interface UserProfile {
     total: number;
   };
 }
+
+// ── Info Store documents (photo / signature / certificates) ───────────────────
+
+export interface InfoStoreDocument {
+  id: string;
+  label: string;
+  url: string;
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  uploadedAt: string;
+}
