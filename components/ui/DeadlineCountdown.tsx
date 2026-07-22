@@ -6,6 +6,10 @@ import { toBanglaDigits } from '@/lib/utils';
 
 interface Props {
   endDate: string;
+  titleBn?: string;
+  titleEn?: string;
+  expiredBn?: string;
+  expiredEn?: string;
 }
 
 interface TimeLeft {
@@ -15,7 +19,13 @@ interface TimeLeft {
   seconds: number;
 }
 
-export default function DeadlineCountdown({ endDate }: Props) {
+export default function DeadlineCountdown({
+  endDate,
+  titleBn = 'আবেদনের বাকি সময়',
+  titleEn = 'Time Remaining to Apply',
+  expiredBn = 'আবেদনের সময় শেষ হয়ে গেছে',
+  expiredEn = 'Application deadline has passed',
+}: Props) {
   const { lang, t } = useLanguage();
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
 
@@ -38,7 +48,7 @@ export default function DeadlineCountdown({ endDate }: Props) {
   if (!timeLeft) {
     return (
       <div className="inline-flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-2 text-sm font-medium">
-        🚫 {t('আবেদনের সময় শেষ হয়ে গেছে', 'Application deadline has passed')}
+        🚫 {t(expiredBn, expiredEn)}
       </div>
     );
   }
@@ -56,7 +66,7 @@ export default function DeadlineCountdown({ endDate }: Props) {
     <div className={`rounded-2xl p-4 border ${isUrgent ? 'bg-red-50 border-red-200' : 'bg-cream border-warm-border'}`}>
       <p className={`text-xs font-semibold mb-3 ${isUrgent ? 'text-red-700' : 'text-gray-600'}`}>
         {isUrgent && <span className="animate-pulse mr-1">⚡</span>}
-        {t('আবেদনের বাকি সময়', 'Time Remaining to Apply')}
+        {t(titleBn, titleEn)}
       </p>
       <div className="flex gap-3">
         {units.map((u) => (

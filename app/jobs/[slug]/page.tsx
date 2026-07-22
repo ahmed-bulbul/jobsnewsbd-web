@@ -90,6 +90,67 @@ export default async function JobDetailPage({ params }: Props) {
     { icon: '📅', bn: 'প্রকাশের তারিখ', en: 'Published Date', value: post.publishedAt ? new Date(post.publishedAt).toLocaleDateString('bn-BD') : null },
   ].filter((item) => item.value);
 
+  // Every post type frames "the CTA button", "the dates card", and "the countdown"
+  // differently — a result isn't something you "apply" to, an admit card isn't a
+  // "deadline", a question paper archive doesn't need a countdown at all.
+  interface PostTypeMeta {
+    cta: { bn: string; en: string };
+    cardTitle: { bn: string; en: string };
+    startLabel: { bn: string; en: string };
+    endLabel: { bn: string; en: string };
+    countdown: null | { titleBn: string; titleEn: string; expiredBn: string; expiredEn: string };
+  }
+
+  const POST_TYPE_META: Record<string, PostTypeMeta> = {
+    'job-circular': {
+      cta: { bn: 'অনলাইনে আবেদন করুন →', en: 'Apply Online →' },
+      cardTitle: { bn: 'আবেদনের সময়সীমা', en: 'Application Deadline' },
+      startLabel: { bn: 'আবেদন শুরু', en: 'Application Start' },
+      endLabel: { bn: 'আবেদনের শেষ তারিখ', en: 'Application End Date' },
+      countdown: {
+        titleBn: 'আবেদনের বাকি সময়', titleEn: 'Time Remaining to Apply',
+        expiredBn: 'আবেদনের সময় শেষ হয়ে গেছে', expiredEn: 'Application deadline has passed',
+      },
+    },
+    'admit-card': {
+      cta: { bn: 'প্রবেশপত্র ডাউনলোড করুন →', en: 'Download Admit Card →' },
+      cardTitle: { bn: 'ডাউনলোডের সময়সীমা', en: 'Download Period' },
+      startLabel: { bn: 'ডাউনলোড শুরু', en: 'Download Start' },
+      endLabel: { bn: 'ডাউনলোডের শেষ তারিখ', en: 'Download End Date' },
+      countdown: {
+        titleBn: 'ডাউনলোডের বাকি সময়', titleEn: 'Time Remaining to Download',
+        expiredBn: 'ডাউনলোডের সময় শেষ হয়ে গেছে', expiredEn: 'Download period has ended',
+      },
+    },
+    'exam-date': {
+      cta: { bn: 'সময়সূচী দেখুন →', en: 'See Exam Date →' },
+      cardTitle: { bn: 'পরীক্ষার সময়সূচী', en: 'Exam Schedule' },
+      startLabel: { bn: 'পরীক্ষা শুরু', en: 'Exam Start' },
+      endLabel: { bn: 'পরীক্ষার তারিখ', en: 'Exam Date' },
+      countdown: {
+        titleBn: 'পরীক্ষার বাকি সময়', titleEn: 'Time Until Exam',
+        expiredBn: 'পরীক্ষা অনুষ্ঠিত হয়ে গেছে', expiredEn: 'Exam has already taken place',
+      },
+    },
+    'job-result': {
+      cta: { bn: 'ফলাফল দেখুন →', en: 'See Result →' },
+      cardTitle: { bn: 'ফলাফল সংক্রান্ত তথ্য', en: 'Result Information' },
+      startLabel: { bn: 'পরীক্ষার তারিখ', en: 'Exam Date' },
+      endLabel: { bn: 'ফলাফল প্রকাশের তারিখ', en: 'Result Publish Date' },
+      countdown: null, // a published result doesn't need a ticking countdown
+    },
+    'exam-question': {
+      cta: { bn: 'প্রশ্নপত্র দেখুন →', en: 'See Question Paper →' },
+      cardTitle: { bn: 'পরীক্ষার তথ্য', en: 'Exam Information' },
+      startLabel: { bn: 'পরীক্ষার তারিখ', en: 'Exam Date' },
+      endLabel: { bn: 'প্রকাশের তারিখ', en: 'Published Date' },
+      countdown: null, // a static question-paper archive doesn't need a countdown
+    },
+  };
+
+  const typeMeta = POST_TYPE_META[post.postType?.slug ?? ''] ?? POST_TYPE_META['job-circular'];
+  const applyCta = typeMeta.cta;
+
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jobsnewsbd.com';
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -207,17 +268,23 @@ export default async function JobDetailPage({ params }: Props) {
 
             {/* Sidebar */}
             <div className="space-y-4">
-              {/* Countdown */}
-              {post.applicationEnd && (
-                <DeadlineCountdown endDate={post.applicationEnd} />
+              {/* Countdown — only for post types where a ticking countdown makes sense */}
+              {post.applicationEnd && typeMeta.countdown && (
+                <DeadlineCountdown
+                  endDate={post.applicationEnd}
+                  titleBn={typeMeta.countdown.titleBn}
+                  titleEn={typeMeta.countdown.titleEn}
+                  expiredBn={typeMeta.countdown.expiredBn}
+                  expiredEn={typeMeta.countdown.expiredEn}
+                />
               )}
 
-              {/* Application dates card */}
+              {/* Dates card — title/labels adapt to post type */}
               <div className="card p-5 space-y-4">
-                <h3 className="font-bold text-gray-900"><T bn="আবেদনের সময়সীমা" en="Application Deadline" /></h3>
+                <h3 className="font-bold text-gray-900"><T bn={typeMeta.cardTitle.bn} en={typeMeta.cardTitle.en} /></h3>
                 {post.applicationStart && (
                   <div>
-                    <p className="text-xs text-warm-muted mb-1"><T bn="আবেদন শুরু" en="Application Start" /></p>
+                    <p className="text-xs text-warm-muted mb-1"><T bn={typeMeta.startLabel.bn} en={typeMeta.startLabel.en} /></p>
                     <p className="text-sm font-semibold text-gray-800">
                       {new Date(post.applicationStart).toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </p>
@@ -225,7 +292,7 @@ export default async function JobDetailPage({ params }: Props) {
                 )}
                 {post.applicationEnd && (
                   <div>
-                    <p className="text-xs text-warm-muted mb-1"><T bn="আবেদনের শেষ তারিখ" en="Application End Date" /></p>
+                    <p className="text-xs text-warm-muted mb-1"><T bn={typeMeta.endLabel.bn} en={typeMeta.endLabel.en} /></p>
                     <p className="text-sm font-bold text-red-700">
                       {new Date(post.applicationEnd).toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </p>
@@ -241,7 +308,7 @@ export default async function JobDetailPage({ params }: Props) {
                   rel="noopener noreferrer"
                   className="btn-primary w-full justify-center py-3 text-base"
                 >
-                  <T bn="অনলাইনে আবেদন করুন →" en="Apply Online →" />
+                  <T bn={applyCta.bn} en={applyCta.en} />
                 </a>
               )}
 
