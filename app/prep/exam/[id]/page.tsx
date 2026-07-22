@@ -6,9 +6,16 @@ import { useSearchParams } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useLanguage } from '@/context/LanguageContext';
-import { getExamQuestions, submitExamAttempt } from '@/lib/api';
+import { getExamQuestions, getExamSets, getPrepTopic, submitExamAttempt } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
-import type { ExamQuestionPublic, ExamResult, QuestionResult } from '@/lib/types';
+import type { ExamQuestionPublic, ExamResult, ExamSet, QuestionResult } from '@/lib/types';
+
+function examStatus(s: Pick<ExamSet, 'startsAt' | 'endsAt'>): 'upcoming' | 'live' | 'ended' {
+  const now = new Date();
+  if (new Date(s.startsAt) > now) return 'upcoming';
+  if (new Date(s.endsAt) < now) return 'ended';
+  return 'live';
+}
 
 // ── Timer ────────────────────────────────────────────────────────────────────
 
@@ -153,6 +160,8 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<ExamResult | null>(null);
   const [error, setError] = useState('');
+  const [examSet, setExamSet] = useState<ExamSet | null>(null);
+  const [examSetChecked, setExamSetChecked] = useState(false);
 
   useEffect(() => {
     getExamQuestions(examSetId)
@@ -160,6 +169,20 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
       .catch(() => setError(t('প্রশ্ন লোড করা যায়নি', 'Failed to load questions')))
       .finally(() => setLoading(false));
   }, [examSetId, t]);
+
+  // Look up this exam set's own window/attempt-count so we can block a repeat
+  // live attempt client-side too (the backend rejects it either way — this is
+  // just so the user sees it before typing answers, not after submitting).
+  useEffect(() => {
+    if (!backSlug) { setExamSetChecked(true); return; }
+    getPrepTopic(backSlug)
+      .then((topic) => getExamSets(topic.id))
+      .then((sets) => setExamSet(sets.find((s) => s.id === examSetId) ?? null))
+      .catch(() => {})
+      .finally(() => setExamSetChecked(true));
+  }, [backSlug, examSetId]);
+
+  const alreadyAttemptedLive = !!examSet && examStatus(examSet) === 'live' && examSet.userAttemptCount > 0;
 
   const handleSubmit = async () => {
     if (!user?.token) { setError(t('পরীক্ষা দিতে লগইন করুন', 'Please login to submit')); return; }
@@ -173,8 +196,10 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
     try {
       const res = await submitExamAttempt(examSetId, payload, user.token);
       setResult(res);
-    } catch {
-      setError(t('জমা দিতে ব্যর্থ। আবার চেষ্টা করুন।', 'Submission failed. Please try again.'));
+    } catch (err) {
+      setError(err instanceof Error && err.message
+        ? err.message
+        : t('জমা দিতে ব্যর্থ। আবার চেষ্টা করুন।', 'Submission failed. Please try again.'));
     } finally {
       setSubmitting(false);
     }
@@ -200,7 +225,7 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
           {t('পরীক্ষার তালিকা', 'Exam list')}
         </Link>
 
-        {loading ? (
+        {loading || !examSetChecked ? (
           <div className="space-y-4 animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-2/3" />
             {[1,2,3].map((i) => <div key={i} className="h-40 bg-white rounded-2xl border border-warm-border" />)}
@@ -234,6 +259,22 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
           </div>
         ) : result ? (
           <ResultView result={result} backHref={backSlug ? `/prep/topics/${backSlug}/exam` : '/prep'} />
+        ) : alreadyAttemptedLive ? (
+          /* Blocked: already attempted this live exam once — no reattempt until it ends */
+          <div className="bg-white rounded-2xl border border-warm-border p-10 text-center">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 bg-gray-100">
+              <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">{t('ইতিমধ্যে পরীক্ষা দিয়েছেন', 'Already Attempted')}</h2>
+            <p className="text-sm text-warm-muted mb-6 max-w-xs mx-auto">
+              {t('এই পরীক্ষা চলাকালীন সময়ে আপনি একবার অংশ নিয়েছেন। সময়সীমা শেষ হলে অনুশীলন হিসেবে আবার দিতে পারবেন।', "You've already taken this exam during its live window. You'll be able to practice it again once the time period ends.")}
+            </p>
+            <Link href={backSlug ? `/prep/topics/${backSlug}/exam` : '/prep'}
+              className="inline-block px-8 py-3 rounded-xl text-white font-bold text-sm"
+              style={{ background: 'linear-gradient(135deg, #64748B, #475569)' }}>
+              {t('পরীক্ষার তালিকায় ফিরে যান', 'Back to exam list')}
+            </Link>
+          </div>
         ) : !started ? (
           /* Start screen */
           <div className="bg-white rounded-2xl border border-warm-border p-8 text-center">

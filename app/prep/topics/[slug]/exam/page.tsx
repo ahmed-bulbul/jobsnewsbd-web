@@ -78,6 +78,7 @@ export default function ExamListPage({ params }: { params: Promise<{ slug: strin
             {sets.map((s) => {
               const status = examStatus(s);
               const isLive = status === 'live';
+              const alreadyAttemptedLive = isLive && s.userAttemptCount > 0;
               return (
                 <div key={s.id} className="bg-white rounded-2xl border border-warm-border p-5">
                   <div className="flex items-start justify-between gap-3 mb-3">
@@ -113,6 +114,16 @@ export default function ExamListPage({ params }: { params: Promise<{ slug: strin
                     <div className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-bold text-purple-600 bg-purple-50 border border-purple-100">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                       {t('শীঘ্রই শুরু হবে', 'Starting soon')}
+                    </div>
+                  ) : alreadyAttemptedLive ? (
+                    <div className="flex flex-col items-center justify-center gap-1 w-full py-2.5 rounded-xl text-sm font-bold text-gray-500 bg-gray-100 border border-gray-200 cursor-not-allowed">
+                      <span className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        {t('ইতিমধ্যে পরীক্ষা দিয়েছেন', 'Already Attempted')}
+                      </span>
+                      <span className="text-xs font-normal text-gray-400">
+                        {t('সময়সীমা শেষ হলে অনুশীলন করতে পারবেন', 'You can practice once the time period ends')}
+                      </span>
                     </div>
                   ) : (
                     <Link
