@@ -576,5 +576,6 @@ export interface BookOrderBuyerInfo {
   buyerName: string;
   buyerEmail: string;
   buyerPhone: string | null;
+  status: BookOrderStatus;
   createdAt: string;
 }

@@ -153,7 +153,7 @@ export default function MyBookListingsPage() {
                         {listing.sold ? t('বিক্রি হয়নি চিহ্নিত করুন', 'Mark as available') : t('বিক্রি হয়েছে চিহ্নিত করুন', 'Mark as sold')}
                       </button>
                     )}
-                    {listing.status === 'APPROVED' && !listing.sold && (
+                    {listing.status === 'APPROVED' && (
                       <button onClick={() => toggleOrders(listing.id)} className="text-xs text-primary hover:underline font-semibold">
                         {expandedId === listing.id ? t('অনুরোধ লুকান', 'Hide requests') : t('ক্রয়ের অনুরোধ দেখুন', 'View buy requests')}
                       </button>
@@ -172,7 +172,15 @@ export default function MyBookListingsPage() {
                       ) : (
                         ordersMap[listing.id].map((o) => (
                           <div key={o.id} className="text-xs bg-white rounded-lg px-3 py-2 border border-warm-border">
-                            <p className="font-semibold text-gray-900">{o.buyerName}</p>
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="font-semibold text-gray-900">{o.buyerName}</p>
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0" style={{
+                                background: o.status === 'CLOSED' ? '#ECFDF5' : '#FFFBEB',
+                                color: o.status === 'CLOSED' ? '#059669' : '#B45309',
+                              }}>
+                                {o.status === 'CLOSED' ? t('বিক্রি সম্পন্ন', 'Sold') : t('সক্রিয়', 'Active')}
+                              </span>
+                            </div>
                             <p className="text-warm-muted">{o.buyerEmail}</p>
                             {o.buyerPhone && <p className="text-warm-muted">{o.buyerPhone}</p>}
                           </div>
