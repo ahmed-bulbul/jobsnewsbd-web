@@ -14,7 +14,9 @@ function CallbackHandler() {
   useEffect(() => {
     if (processed.current) return;
     processed.current = true;
-    const token  = searchParams.get('token');
+    const token        = searchParams.get('token');
+    const refreshToken = searchParams.get('refreshToken');
+    const expiresIn    = searchParams.get('expiresIn');
     const userId = searchParams.get('userId');
     const name   = searchParams.get('name');
     const email  = searchParams.get('email');
@@ -26,12 +28,20 @@ function CallbackHandler() {
       return;
     }
 
-    if (!token || !userId || !email || !role) {
+    if (!token || !refreshToken || !userId || !email || !role) {
       setError('Invalid OAuth response. Please try again.');
       return;
     }
 
-    login({ token, userId: Number(userId), name: name ?? '', email, role });
+    login({
+      token,
+      refreshToken,
+      expiresAt: Date.now() + Number(expiresIn ?? 3600) * 1000,
+      userId: Number(userId),
+      name: name ?? '',
+      email,
+      role,
+    });
     router.replace('/');
   }, [searchParams, login, router]);
 

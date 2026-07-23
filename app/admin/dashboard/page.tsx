@@ -124,6 +124,10 @@ export default function AdminDashboard() {
           <Link href="/admin/analytics" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">📊 অ্যানালিটিক্স</Link>
           <Link href="/admin/exam-centers" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">🏫 পরীক্ষা কেন্দ্র</Link>
           <Link href="/admin/prep" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">📚 প্রস্তুতি</Link>
+          <Link href="/admin/job-experiences" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">💬 চাকরির অভিজ্ঞতা</Link>
+          <Link href="/admin/institute-reviews" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">🏛️ ইনস্টিটিউট রিভিউ</Link>
+          <Link href="/admin/recommended-books" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">📚 প্রস্তাবিত বই</Link>
+          <Link href="/admin/book-listings" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">📦 বই কেনাবেচা</Link>
           <Link href="/" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">সাইটে যান →</Link>
           <button
             onClick={() => { localStorage.removeItem('admin_token'); router.push('/admin/login'); }}

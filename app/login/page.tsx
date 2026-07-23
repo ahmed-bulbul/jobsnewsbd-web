@@ -29,7 +29,15 @@ function LoginForm() {
         router.push('/admin/dashboard');
         return;
       }
-      authLogin({ token: result.token, userId: result.userId, name: result.name ?? '', email: result.email, role: result.role });
+      authLogin({
+        token: result.token,
+        refreshToken: result.refreshToken,
+        expiresAt: Date.now() + result.expiresIn * 1000,
+        userId: result.userId,
+        name: result.name ?? '',
+        email: result.email,
+        role: result.role,
+      });
       router.push(nextUrl);
     } catch (err: unknown) {
       setError((err as Error).message ?? t('লগইন ব্যর্থ হয়েছে', 'Login failed'));

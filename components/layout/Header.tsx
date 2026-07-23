@@ -42,7 +42,7 @@ export default function Header() {
     { href: '/',               label: t('হোম', 'Home') },
     { href: '/jobs',           label: t('সব চাকরি', 'All Jobs') },
     { href: '/exam-centers',   label: t('পরীক্ষা কেন্দ্র', 'Exam Centers') },
-    { href: '/prep',           label: t('প্রস্তুতি', 'Preparation') },
+    { href: '/study-corner',   label: t('স্টাডি কর্নার', 'Study Corner') },
     { href: '/tools',          label: t('টুলস', 'Tools') },
   ];
 

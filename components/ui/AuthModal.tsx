@@ -30,7 +30,15 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
         router.push('/admin/dashboard');
         return;
       }
-      login({ token: result.token, userId: result.userId, name: result.name ?? '', email: result.email, role: result.role });
+      login({
+        token: result.token,
+        refreshToken: result.refreshToken,
+        expiresAt: Date.now() + result.expiresIn * 1000,
+        userId: result.userId,
+        name: result.name ?? '',
+        email: result.email,
+        role: result.role,
+      });
       onSuccess();
     } catch (err: unknown) {
       setError((err as Error).message ?? t('লগইন ব্যর্থ হয়েছে', 'Login failed'));
@@ -203,7 +211,15 @@ function OtpForm({ email, onSuccess, onBack }: { email: string; onSuccess: () =>
     setError('');
     try {
       const result = await verifyOtp(email, otp);
-      login({ token: result.token, userId: result.userId, name: result.name ?? '', email: result.email, role: result.role });
+      login({
+        token: result.token,
+        refreshToken: result.refreshToken,
+        expiresAt: Date.now() + result.expiresIn * 1000,
+        userId: result.userId,
+        name: result.name ?? '',
+        email: result.email,
+        role: result.role,
+      });
       onSuccess();
     } catch (err: unknown) {
       setError((err as Error).message ?? t('যাচাই ব্যর্থ হয়েছে', 'Verification failed'));
