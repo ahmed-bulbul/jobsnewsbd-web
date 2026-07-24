@@ -18,6 +18,7 @@ export default function SubmitBookListingPage() {
   const [author, setAuthor] = useState('');
   const [condition, setCondition] = useState<BookCondition>('GOOD');
   const [price, setPrice] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
   const [description, setDescription] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -37,6 +38,7 @@ export default function SubmitBookListingPage() {
     if (!user?.token) { openModal('login'); return; }
     const priceNum = Number(price);
     if (!priceNum || priceNum <= 0) { setError(t('সঠিক দাম লিখুন', 'Please enter a valid price')); return; }
+    if (!contactNumber.trim()) { setError(t('যোগাযোগের নম্বর দিন', 'Please enter a contact number')); return; }
     setSubmitting(true);
     setError('');
     try {
@@ -46,6 +48,7 @@ export default function SubmitBookListingPage() {
         condition,
         price: priceNum,
         description: description.trim() || undefined,
+        contactNumber: contactNumber.trim(),
       });
       if (photoFile) {
         try { await uploadBookListingPhoto(user.token, created.id, photoFile); } catch { /* non-fatal */ }
@@ -146,6 +149,10 @@ export default function SubmitBookListingPage() {
                 <div>
                   <label className="label">{t('দাম (টাকা)', 'Price (BDT)')} *</label>
                   <input type="number" min={1} value={price} onChange={(e) => setPrice(e.target.value)} required className="input" placeholder="৳" />
+                </div>
+                <div>
+                  <label className="label">{t('যোগাযোগের নম্বর', 'Contact Number')} *</label>
+                  <input type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} required maxLength={20} className="input" placeholder={t('যেমনঃ ০১৭xxxxxxxx', 'e.g. 017xxxxxxxx')} />
                 </div>
               </div>
 

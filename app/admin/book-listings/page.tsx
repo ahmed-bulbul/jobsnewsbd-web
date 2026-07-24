@@ -158,6 +158,9 @@ export default function AdminBookListingsPage() {
                         ৳{item.price} • {CONDITION_LABEL[item.condition] ?? item.condition}
                         {item.sold && <> • বিক্রি হয়ে গেছে</>}
                       </p>
+                      {item.contactNumber && (
+                        <p className="text-xs text-warm-muted">যোগাযোগ: {item.contactNumber}</p>
+                      )}
                     </div>
                     <p className="text-xs text-warm-muted shrink-0">{new Date(item.createdAt).toLocaleString('bn-BD')}</p>
                   </div>

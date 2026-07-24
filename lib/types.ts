@@ -522,6 +522,7 @@ export interface MyBookListing {
   price: number;
   description: string | null;
   photoUrl: string | null;
+  contactNumber: string | null;
   status: BookListingStatus;
   sold: boolean;
   adminNote: string | null;
@@ -540,6 +541,7 @@ export interface AdminBookListing {
   price: number;
   description: string | null;
   photoUrl: string | null;
+  contactNumber: string | null;
   status: BookListingStatus;
   sold: boolean;
   adminNote: string | null;
@@ -554,6 +556,7 @@ export interface BookListingSubmission {
   condition: BookCondition;
   price: number;
   description?: string;
+  contactNumber: string;
 }
 
 export type BookOrderStatus = 'PENDING' | 'CANCELLED' | 'CLOSED';
