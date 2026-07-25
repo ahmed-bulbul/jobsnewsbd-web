@@ -79,7 +79,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-primary-700 mt-10 pt-6 text-center text-xs text-primary-400">
-          © {new Date().getFullYear()} চাকরির খবর — Jobs News BD.{' '}
+          © {new Date().getFullYear()} চাকরির খবর — Job Radar Bd.{' '}
           {t('সর্বস্বত্ব সংরক্ষিত।', 'All rights reserved.')}
         </div>
       </div>
