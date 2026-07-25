@@ -17,8 +17,8 @@ interface FeatureMeta {
 const FEATURES: Record<string, FeatureMeta> = {
   'job-experience': {
     icon: '💬',
-    titleBn: 'চাকরির অভিজ্ঞতা শেয়ার করুন',
-    titleEn: 'Share Job Experience',
+    titleBn: 'চাকরির/পরীক্ষার অভিজ্ঞতা শেয়ার করুন',
+    titleEn: 'Share Job/Exam Experience',
     descBn: 'আপনার চাকরির আবেদন থেকে শুরু করে ভাইভা পর্যন্ত পুরো যাত্রার অভিজ্ঞতা অন্যদের সাথে শেয়ার করতে পারবেন — শীঘ্রই আসছে।',
     descEn: "Share your full application-to-viva journey with other job seekers — coming soon.",
   },
