@@ -18,15 +18,63 @@ const inter = Inter({
   display: 'swap',
 });
 
+const siteUrl = 'https://jobradarbd.com';
+const siteTitle = 'চাকরির খবর | Job Radar BD';
+const siteDescription = 'বাংলাদেশের সরকারি ও বেসরকারি চাকরির বিজ্ঞপ্তি এক জায়গায়';
+
 export const metadata: Metadata = {
-  title: { default: 'চাকরির খবর | Job Radar BD', template: '%s | চাকরির খবর' },
-  description: 'বাংলাদেশের সরকারি ও বেসরকারি চাকরির বিজ্ঞপ্তি এক জায়গায়',
+  metadataBase: new URL(siteUrl),
+  title: { default: siteTitle, template: '%s | চাকরির খবর' },
+  description: siteDescription,
   keywords: ['সরকারি চাকরি', 'বাংলাদেশ ব্যাংক চাকরি', 'job circular bangladesh', 'bd jobs'],
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    locale: 'bn_BD',
+    url: siteUrl,
+    siteName: 'চাকরির খবর — Job Radar BD',
+    title: siteTitle,
+    description: siteDescription,
+  },
+  twitter: {
+    card: 'summary',
+    title: siteTitle,
+    description: siteDescription,
+  },
+};
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      name: 'চাকরির খবর — Job Radar BD',
+      url: siteUrl,
+      sameAs: ['https://www.facebook.com/profile.php?id=61592111810490'],
+      contactPoint: {
+        '@type': 'ContactPoint',
+        email: 'support@jobradarbd.com',
+        contactType: 'customer support',
+      },
+    },
+    {
+      '@type': 'WebSite',
+      name: 'চাকরির খবর — Job Radar BD',
+      url: siteUrl,
+      inLanguage: 'bn',
+    },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="bn" className={`${notoSansBengali.variable} ${inter.variable}`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body>
         <AuthProvider>
           <LanguageProvider>
