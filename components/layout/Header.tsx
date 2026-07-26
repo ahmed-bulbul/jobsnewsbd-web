@@ -56,13 +56,13 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-lg overflow-hidden shadow-sm shrink-0">
+          <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group min-w-0 shrink">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg overflow-hidden shadow-sm shrink-0">
               <Image src="/logo-mark.svg" alt="Job Radar BD" width={36} height={36} className="w-full h-full" />
             </div>
-            <div className="leading-tight">
-              <span className="block font-bold text-primary text-lg">জব রাডার বাংলাদেশ</span>
-              <span className="block text-[10px] text-warm-muted -mt-0.5 font-sans">Job Radar BD</span>
+            <div className="leading-tight min-w-0">
+              <span className="block font-bold text-primary text-sm sm:text-lg whitespace-nowrap">জব রাডার বাংলাদেশ</span>
+              <span className="hidden sm:block text-[10px] text-warm-muted -mt-0.5 font-sans">Job Radar BD</span>
             </div>
           </Link>
 
@@ -162,12 +162,12 @@ export default function Header() {
                 )}
               </div>
             ) : (
-              /* Guest: login + register */
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <button onClick={() => openModal('login')} className="btn-outline text-xs sm:text-sm px-2.5 sm:px-4 py-1.5 sm:py-2 whitespace-nowrap">
+              /* Guest: login + register — hidden on narrow mobile, moved into the hamburger panel there */
+              <div className="hidden md:flex items-center gap-2">
+                <button onClick={() => openModal('login')} className="btn-outline text-sm px-4 py-2 whitespace-nowrap">
                   {t('লগইন', 'Login')}
                 </button>
-                <button onClick={() => openModal('register')} className="btn-primary text-xs sm:text-sm px-2.5 sm:px-4 py-1.5 sm:py-2 whitespace-nowrap">
+                <button onClick={() => openModal('register')} className="btn-primary text-sm px-4 py-2 whitespace-nowrap">
                   {t('নিবন্ধন', 'Register')}
                 </button>
               </div>
@@ -192,6 +192,24 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
+
+            {/* Guest auth actions — only shown here on mobile, where the top row hides them */}
+            {!user && (
+              <div className="flex items-center gap-2 mt-2 pt-3 border-t border-warm-border">
+                <button
+                  onClick={() => { setMobileMenuOpen(false); openModal('login'); }}
+                  className="btn-outline flex-1 justify-center text-sm py-2"
+                >
+                  {t('লগইন', 'Login')}
+                </button>
+                <button
+                  onClick={() => { setMobileMenuOpen(false); openModal('register'); }}
+                  className="btn-primary flex-1 justify-center text-sm py-2"
+                >
+                  {t('নিবন্ধন', 'Register')}
+                </button>
+              </div>
+            )}
           </nav>
         )}
       </div>
