@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
 import { Noto_Sans_Bengali, Inter } from 'next/font/google';
+import { GoogleTagManager } from '@next/third-parties/google';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { AuthProvider } from '@/context/AuthContext';
 import AuthModal from '@/components/ui/AuthModal';
 import './globals.css';
+
+const GTM_ID = 'GTM-KGKDQL6V';
 
 const notoSansBengali = Noto_Sans_Bengali({
   subsets: ['bengali', 'latin'],
@@ -80,6 +83,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
+        {/* Google Tag Manager (noscript) */}
+        <noscript>
+          <iframe
+            src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+            height="0"
+            width="0"
+            style={{ display: 'none', visibility: 'hidden' }}
+          />
+        </noscript>
         <AuthProvider>
           <LanguageProvider>
             {children}
@@ -87,6 +99,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </LanguageProvider>
         </AuthProvider>
       </body>
+      <GoogleTagManager gtmId={GTM_ID} />
     </html>
   );
 }

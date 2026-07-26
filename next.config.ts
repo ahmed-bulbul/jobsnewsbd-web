@@ -15,8 +15,8 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: https: blob:",
-      "connect-src 'self' https://api.jobradarbd.com https://www.google-analytics.com https://unpkg.com",
-      "frame-src 'self' https://accounts.google.com https://googleads.g.doubleclick.net",
+      "connect-src 'self' https://api.jobradarbd.com https://www.google-analytics.com https://www.googletagmanager.com https://unpkg.com",
+      "frame-src 'self' https://accounts.google.com https://googleads.g.doubleclick.net https://www.googletagmanager.com",
     ].join('; '),
   },
 ];
