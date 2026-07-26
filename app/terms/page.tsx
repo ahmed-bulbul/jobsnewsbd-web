@@ -61,13 +61,13 @@ export default function TermsPage() {
             )}
           </p>
 
-          <h2 className="text-lg font-bold text-gray-900 mt-8 mb-2">{t('৫. পেমেন্ট ও ভর্তি', '5. Payments & Enrollment')}</h2>
-          <p className="text-sm text-gray-700 leading-relaxed mb-4">
-            {t(
-              'পেইড প্রস্তুতি কোর্সে ভর্তির জন্য পেমেন্ট প্রযোজ্য পেমেন্ট চ্যানেলের (যেমন bKash/Nagad) মাধ্যমে সম্পন্ন হয়। ভর্তি এডমিন কর্তৃক যাচাই ও অনুমোদনের পর কার্যকর হয়। রিফান্ড নীতি নির্দিষ্ট কোর্স অনুযায়ী ভিন্ন হতে পারে — বিস্তারিত জানতে যোগাযোগ করুন।',
-              'payment for paid preparation courses is made through the applicable payment channel (e.g. bKash/Nagad). Enrollment takes effect once verified and approved by an admin. Refund policies may vary by course — contact us for details.'
-            )}
-          </p>
+          {/*<h2 className="text-lg font-bold text-gray-900 mt-8 mb-2">{t('৫. পেমেন্ট ও ভর্তি', '5. Payments & Enrollment')}</h2>*/}
+          {/*<p className="text-sm text-gray-700 leading-relaxed mb-4">*/}
+          {/*  {t(*/}
+          {/*    'পেইড প্রস্তুতি কোর্সে ভর্তির জন্য পেমেন্ট প্রযোজ্য পেমেন্ট চ্যানেলের (যেমন bKash/Nagad) মাধ্যমে সম্পন্ন হয়। ভর্তি এডমিন কর্তৃক যাচাই ও অনুমোদনের পর কার্যকর হয়। রিফান্ড নীতি নির্দিষ্ট কোর্স অনুযায়ী ভিন্ন হতে পারে — বিস্তারিত জানতে যোগাযোগ করুন।',*/}
+          {/*    'payment for paid preparation courses is made through the applicable payment channel (e.g. bKash/Nagad). Enrollment takes effect once verified and approved by an admin. Refund policies may vary by course — contact us for details.'*/}
+          {/*  )}*/}
+          {/*</p>*/}
 
           <h2 className="text-lg font-bold text-gray-900 mt-8 mb-2">{t('৬. নিষিদ্ধ কার্যক্রম', '6. Prohibited Activities')}</h2>
           <p className="text-sm text-gray-700 leading-relaxed mb-4">
