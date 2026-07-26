@@ -43,6 +43,28 @@ const TOOLS = [
     badgeBn: 'নতুন',
     badgeEn: 'New',
   },
+  {
+    href: '/tools/image-to-pdf',
+    icon: '📄',
+    titleBn: 'ছবি থেকে PDF',
+    titleEn: 'Image to PDF',
+    descBn: 'JPG, PNG বা WEBP ছবি একসাথে PDF ফাইলে রূপান্তর করুন — আবেদনপত্রের সাথে একটি ফাইলে সব ডকুমেন্ট জমা দিন',
+    descEn: 'Combine JPG, PNG or WEBP images into one PDF — perfect for submitting all your documents as a single file',
+    available: true,
+    badgeBn: 'নতুন',
+    badgeEn: 'New',
+  },
+  {
+    href: '/tools/pdf-to-jpg',
+    icon: '🖼️',
+    titleBn: 'PDF থেকে JPG',
+    titleEn: 'PDF to JPG',
+    descBn: 'PDF-এর প্রতিটি পৃষ্ঠা JPG বা PNG ছবিতে রূপান্তর করুন — একাধিক পৃষ্ঠা হলে ZIP ফাইলে ডাউনলোড করুন',
+    descEn: 'Turn every page of a PDF into a JPG or PNG image — multi-page files download as a single ZIP',
+    available: true,
+    badgeBn: 'নতুন',
+    badgeEn: 'New',
+  },
 ];
 
 export default function ToolsPage() {

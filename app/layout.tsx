@@ -37,9 +37,13 @@ export const metadata: Metadata = {
     description: siteDescription,
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: siteTitle,
     description: siteDescription,
+  },
+  icons: {
+    icon: '/icon.png',
+    apple: '/apple-icon.png',
   },
 };
 

@@ -57,8 +57,8 @@ export default function Header() {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm group-hover:bg-primary-600 transition-colors">
-                🎯
+            <div className="w-9 h-9 rounded-lg overflow-hidden shadow-sm shrink-0">
+              <Image src="/logo-mark.svg" alt="Job Radar BD" width={36} height={36} className="w-full h-full" />
             </div>
             <div className="leading-tight">
               <span className="block font-bold text-primary text-lg">জব রাডার বাংলাদেশ</span>

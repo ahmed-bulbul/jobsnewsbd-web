@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function Footer() {
@@ -11,7 +12,9 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-primary font-bold text-sm">চ</div>
+              <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0">
+                <Image src="/logo-mark.svg" alt="Job Radar BD" width={36} height={36} className="w-full h-full" />
+              </div>
               <span className="font-bold text-white text-lg">চাকরির খবর</span>
             </div>
             <p className="text-sm text-primary-300 leading-relaxed mb-4">
