@@ -10,7 +10,9 @@ const GTM_ID = 'GTM-KGKDQL6V';
 
 const notoSansBengali = Noto_Sans_Bengali({
   subsets: ['bengali', 'latin'],
-  weight: ['300', '400', '500', '600', '700'],
+  // 300 (font-light) is never actually used anywhere in the codebase — dropping it
+  // cuts one full weight file of this (large, complex-script) font from every page load.
+  weight: ['400', '500', '600', '700'],
   variable: '--font-hind',
   display: 'swap',
 });
@@ -77,6 +79,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="bn" className={`${notoSansBengali.variable} ${inter.variable}`}>
       <head>
+        {/* Warm the connection to the API host early — shaves the TLS/DNS
+            handshake off the first client-side data fetch on every page. */}
+        <link rel="preconnect" href="https://api.jobradarbd.com" />
+        <link rel="dns-prefetch" href="https://api.jobradarbd.com" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
