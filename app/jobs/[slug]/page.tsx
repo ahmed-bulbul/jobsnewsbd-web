@@ -12,6 +12,7 @@ import SaveJobButton from '@/components/profile/SaveJobButton';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { buildPostSummary } from '@/lib/postSummary';
 
 interface Props { params: Promise<{ slug: string }> }
 
@@ -150,6 +151,7 @@ export default async function JobDetailPage({ params }: Props) {
 
   const typeMeta = POST_TYPE_META[post.postType?.slug ?? ''] ?? POST_TYPE_META['job-circular'];
   const applyCta = typeMeta.cta;
+  const autoSummary = buildPostSummary(post);
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jobsnewsbd.com';
   const jsonLd = {
@@ -232,6 +234,12 @@ export default async function JobDetailPage({ params }: Props) {
                     <span className="text-sm font-semibold text-gray-900">{item.value}</span>
                   </div>
                 ))}
+              </div>
+
+              {/* Auto-generated overview — always present, built from this post's own data */}
+              <div className="card p-6">
+                <h2 className="font-bold text-gray-900 mb-3 text-lg"><T bn="সংক্ষিপ্ত বিবরণ" en="Overview" /></h2>
+                <p className="text-sm text-gray-700 leading-relaxed">{autoSummary}</p>
               </div>
 
               {/* Description */}

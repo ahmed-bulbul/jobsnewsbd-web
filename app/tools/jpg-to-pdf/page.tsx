@@ -3,6 +3,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import T from '@/components/ui/T';
 import ImageToPdfConverter from '@/components/tools/ImageToPdfConverter';
+import ToolFaq from '@/components/tools/ToolFaq';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -10,6 +11,27 @@ export const metadata: Metadata = {
   description: 'JPG বা JPEG ছবি সহজে PDF ফাইলে রূপান্তর করুন — একাধিক ছবি এক PDF-এ, সম্পূর্ণ বিনামূল্যে | Convert JPG or JPEG images to a PDF file — combine multiple photos into one PDF, completely free.',
   alternates: { canonical: '/tools/jpg-to-pdf' },
 };
+
+const faqItems = [
+  {
+    qBn: 'JPEG আর JPG কি একই ফরম্যাট?',
+    qEn: 'Are JPEG and JPG the same format?',
+    aBn: 'হ্যাঁ, দুটোই একই ইমেজ ফরম্যাট — পুরনো উইন্ডোজ সিস্টেমে ৩-অক্ষরের এক্সটেনশন সীমাবদ্ধতার কারণে .jpg নামটি প্রচলিত হয়ে যায়। এই টুল দুটোই সমানভাবে সাপোর্ট করে।',
+    aEn: 'Yes — they\'re the same image format. The .jpg spelling became common due to old Windows systems\' 3-character file extension limit. This tool supports both identically.',
+  },
+  {
+    qBn: 'আমার ছবি কি কোথাও আপলোড বা সংরক্ষিত হয়?',
+    qEn: 'Are my photos uploaded or stored anywhere?',
+    aBn: 'না — সব রূপান্তর আপনার ব্রাউজারের ভেতরেই হয়। ছবি কখনো আমাদের সার্ভারে যায় না, তাই সম্পূর্ণ ব্যক্তিগত থাকে।',
+    aEn: 'No — the entire conversion happens inside your browser. Your photos never reach our servers, so they stay completely private.',
+  },
+  {
+    qBn: 'একাধিক JPG ছবি কি একই PDF-এ যোগ করা যাবে?',
+    qEn: 'Can multiple JPG photos go into the same PDF?',
+    aBn: 'হ্যাঁ — একসাথে অনেকগুলো JPG ছবি বেছে নিন, প্রতিটি ছবি PDF-এর একটি আলাদা পৃষ্ঠা হবে, এবং উপরে/নিচে বাটন দিয়ে পৃষ্ঠার ক্রম সাজাতে পারবেন।',
+    aEn: 'Yes — select multiple JPG photos at once, each becomes its own page in the PDF, and you can reorder pages with the up/down arrows before converting.',
+  },
+];
 
 export default function JpgToPdfPage() {
   return (
@@ -43,6 +65,8 @@ export default function JpgToPdfPage() {
           />{' '}
           <Link href="/tools/png-to-pdf" className="text-primary hover:underline"><T bn="PNG থেকে PDF টুল" en="PNG to PDF tool" /></Link>।
         </p>
+
+        <ToolFaq items={faqItems} />
       </main>
       <Footer />
     </>

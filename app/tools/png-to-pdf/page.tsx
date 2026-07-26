@@ -3,6 +3,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import T from '@/components/ui/T';
 import ImageToPdfConverter from '@/components/tools/ImageToPdfConverter';
+import ToolFaq from '@/components/tools/ToolFaq';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -10,6 +11,27 @@ export const metadata: Metadata = {
   description: 'PNG ছবি সহজে PDF ফাইলে রূপান্তর করুন — একাধিক ছবি এক PDF-এ, স্বচ্ছ ব্যাকগ্রাউন্ড সাপোর্টেড, সম্পূর্ণ বিনামূল্যে | Convert PNG images to a PDF file — transparent backgrounds supported, completely free.',
   alternates: { canonical: '/tools/png-to-pdf' },
 };
+
+const faqItems = [
+  {
+    qBn: 'PNG ছবির স্বচ্ছ (transparent) ব্যাকগ্রাউন্ড PDF-এ কেমন দেখাবে?',
+    qEn: 'How will a PNG\'s transparent background look in the PDF?',
+    aBn: 'PDF পৃষ্ঠা সবসময় সাদা ব্যাকগ্রাউন্ডের হয়, তাই ছবির স্বচ্ছ অংশগুলো PDF-এ সাদা রঙ হিসেবে দেখাবে — এটি স্বাভাবিক আচরণ, কোনো ত্রুটি নয়।',
+    aEn: 'PDF pages always have a white background, so the transparent parts of your PNG will appear as white in the PDF — this is expected behavior, not a bug.',
+  },
+  {
+    qBn: 'আমার ছবি কি কোথাও আপলোড বা সংরক্ষিত হয়?',
+    qEn: 'Are my images uploaded or stored anywhere?',
+    aBn: 'না — পুরো রূপান্তর প্রক্রিয়া আপনার ব্রাউজারের ভেতরেই সম্পন্ন হয়, ছবি কখনো কোনো সার্ভারে পাঠানো হয় না।',
+    aEn: 'No — the whole conversion happens right inside your browser; your images are never sent to any server.',
+  },
+  {
+    qBn: 'স্ক্রিনশট বা স্ক্যান করা PNG ফাইলও কি PDF-এ রূপান্তর করা যাবে?',
+    qEn: 'Can I convert screenshots or scanned PNG files too?',
+    aBn: 'হ্যাঁ — যেকোনো PNG ফাইল কাজ করবে, সেটা স্ক্রিনশট, স্ক্যান করা কাগজ বা ডিজাইন ফাইল যাই হোক না কেন।',
+    aEn: 'Yes — any PNG works, whether it\'s a screenshot, a scanned document, or a design export.',
+  },
+];
 
 export default function PngToPdfPage() {
   return (
@@ -43,6 +65,8 @@ export default function PngToPdfPage() {
           />{' '}
           <Link href="/tools/jpg-to-pdf" className="text-primary hover:underline"><T bn="JPG থেকে PDF টুল" en="JPG to PDF tool" /></Link>।
         </p>
+
+        <ToolFaq items={faqItems} />
       </main>
       <Footer />
     </>

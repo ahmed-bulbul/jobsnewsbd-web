@@ -71,6 +71,35 @@ export default async function HomePage() {
             nameToTypeSlug={nameToTypeSlug}
           />
         </section>
+
+        {/* About / intro — real content about the site for visitors and search engines */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14">
+          <div className="card p-6 sm:p-8">
+            <h2 className="text-lg font-bold text-gray-900 mb-3">
+              <T bn="জব রাডার বাংলাদেশ কী এবং কেন ব্যবহার করবেন" en="What is Job Radar BD, and why use it" />
+            </h2>
+            <div className="text-sm text-gray-700 leading-relaxed space-y-3">
+              <p>
+                <T
+                  bn="জব রাডার বাংলাদেশ (আগে চাকরির খবর নামে পরিচিত) বাংলাদেশের সরকারি, বেসরকারি, ব্যাংক ও এনজিও প্রতিষ্ঠানের চাকরির বিজ্ঞপ্তি প্রতিদিন সংগ্রহ করে এক জায়গায় নিয়ে আসে। প্রতিটি বিজ্ঞপ্তির সাথে মূল সার্কুলার (PDF), গুরুত্বপূর্ণ তারিখ, আবেদনের যোগ্যতা ও শেষ সময়সীমার কাউন্টডাউন যুক্ত থাকে, যাতে কোনো সুযোগ হাতছাড়া না হয়।"
+                  en="Job Radar BD (formerly চাকরির খবর) collects government, private, bank and NGO job circulars from across Bangladesh every day and brings them into one place. Each listing includes the official circular (PDF), key dates, eligibility details, and a countdown to the application deadline so nothing slips by."
+                />
+              </p>
+              <p>
+                <T
+                  bn="বিজ্ঞপ্তি ছাড়াও, স্টাডি কর্নার বিভাগে রয়েছে প্রকৃত প্রার্থীদের লেখা চাকরির অভিজ্ঞতা, প্রতিষ্ঠান রিভিউ, রিকমেন্ডেড বই তালিকা এবং একটি বই মার্কেটপ্লেস যেখানে ব্যবহারকারীরা নিজেদের মধ্যে পুরনো বই কেনাবেচা করতে পারেন। টুলস বিভাগে আছে ছবি রিসাইজার, বয়স ক্যালকুলেটর এবং ছবি-PDF কনভার্টার — আবেদন ফর্ম পূরণের সময় যা যা লাগে, তার সবকিছু।"
+                  en="Beyond circulars, the Study Corner section has real candidates' interview and exam experiences, institute reviews, a recommended-books list, and a book marketplace where users buy and sell used books directly with each other. The Tools section has an image resizer, an age calculator, and image/PDF converters — everything needed while filling out an application form."
+                />
+              </p>
+              <p>
+                <T
+                  bn="সাইটের সব সুবিধা সম্পূর্ণ বিনামূল্যে এবং কোনো নিবন্ধন ছাড়াই ব্যবহার করা যায়; অ্যাকাউন্ট তৈরি করলে অতিরিক্ত সুবিধা যেমন প্রিয় বিজ্ঞপ্তি সংরক্ষণ ও তথ্য সংরক্ষণের সুযোগ পাওয়া যায়।"
+                  en="Every feature is free to use and most require no account at all; creating one unlocks extras like saving favorite listings and storing your personal details for quick reuse on application forms."
+                />
+              </p>
+            </div>
+          </div>
+        </section>
       </main>
       <Footer />
     </>
