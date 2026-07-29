@@ -16,6 +16,14 @@ import { buildPostSummary } from '@/lib/postSummary';
 
 interface Props { params: Promise<{ slug: string }> }
 
+// This is the page people actually land on from shared links (exactly the traffic
+// that prompted the OG-image fix), and unlike the homepage it had no revalidate
+// set — every single visit forced a full server-side render on the Worker, with
+// no caching at all. This puts it on the same 60s ISR cache as the homepage, so
+// repeat visits to the same post serve cached HTML instead of paying full CPU
+// again — a direct lever on the "Worker exceeded resource limits" (1102) errors.
+export const revalidate = 60;
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPostBySlug(slug).catch(() => null);
