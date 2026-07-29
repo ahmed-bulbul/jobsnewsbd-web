@@ -27,19 +27,16 @@ interface Props {
 export default function PdfCircularSection({ url }: Props) {
   const { t } = useLanguage();
   const [loaded, setLoaded] = useState(false);
-  const [pending, setPending] = useState(false);
   const prefetched = useRef(false);
 
+  // Warm the code-split chunk on hover/focus — cheap (JS only, no PDF bytes,
+  // no render) and means the click below usually resolves from cache instead
+  // of kicking off a fresh network fetch.
   const prefetch = useCallback(() => {
     if (prefetched.current) return;
     prefetched.current = true;
     import('./PdfViewer');
   }, []);
-
-  const load = () => {
-    setPending(true);
-    setLoaded(true);
-  };
 
   if (loaded) {
     return (
@@ -52,12 +49,11 @@ export default function PdfCircularSection({ url }: Props) {
   return (
     <div className="card w-full flex items-center justify-between gap-3 p-5">
       <button
-        onClick={load}
+        onClick={() => setLoaded(true)}
         onMouseEnter={prefetch}
         onFocus={prefetch}
-        disabled={pending}
         aria-expanded={loaded}
-        className="flex-1 flex items-center gap-3 text-left disabled:opacity-70"
+        className="flex-1 flex items-center gap-3 text-left"
       >
         <span className="text-2xl shrink-0">📄</span>
         <span className="min-w-0">
@@ -65,13 +61,11 @@ export default function PdfCircularSection({ url }: Props) {
             {t('মূল বিজ্ঞপ্তি (PDF) দেখুন', 'View official circular (PDF)')}
           </span>
           <span className="block text-xs text-warm-muted mt-0.5">
-            {pending
-              ? t('লোড হচ্ছে...', 'Loading...')
-              : t('ক্লিক করলে PDF লোড হবে', 'Click to load the PDF')}
+            {t('ক্লিক করলে PDF লোড হবে', 'Click to load the PDF')}
           </span>
         </span>
         <span className="text-primary-600 text-sm font-medium shrink-0 ml-auto">
-          {pending ? '…' : t('দেখুন →', 'View →')}
+          {t('দেখুন →', 'View →')}
         </span>
       </button>
 
