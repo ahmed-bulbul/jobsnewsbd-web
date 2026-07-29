@@ -6,7 +6,7 @@ import CommentsSection from './CommentsSection';
 import DeadlineCountdown from '@/components/ui/DeadlineCountdown';
 import StatusBadge from '@/components/ui/StatusBadge';
 import CopyLinkButton from '@/components/ui/CopyLinkButton';
-import PdfViewerDynamic from '@/components/ui/PdfViewerDynamic';
+import PdfCircularSection from '@/components/ui/PdfCircularSection';
 import T from '@/components/ui/T';
 import SaveJobButton from '@/components/profile/SaveJobButton';
 import Image from 'next/image';
@@ -346,7 +346,7 @@ export default async function JobDetailPage({ params }: Props) {
         {post.circularPdfUrl && (
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
             <h2 className="font-bold text-gray-900 text-lg mb-3"><T bn="মূল বিজ্ঞপ্তি (PDF)" en="Official Circular (PDF)" /></h2>
-            <PdfViewerDynamic url={post.circularPdfUrl} />
+            <PdfCircularSection url={post.circularPdfUrl} />
           </div>
         )}
 
