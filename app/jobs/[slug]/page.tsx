@@ -29,9 +29,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     post.titleEn,
   ].filter(Boolean).join(' | ');
   const url = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jobradarbd.com'}/jobs/${slug}`;
+  // Bug fix: this used to fall back to the API subdomain (https://api.jobradarbd.com)
+  // for the default share image instead of the site domain — and that file never
+  // existed there anyway (og-default.png lives in the web app's public/ folder).
+  // That meant any post with no uploaded circular image got a broken/404 og:image,
+  // so social platforms showed no thumbnail at all when the link was shared.
   const ogImage = post.images?.[0]?.url
     ? `${process.env.NEXT_PUBLIC_API_URL ?? 'https://api.jobradarbd.com'}${post.images[0].url}`
-    : `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://api.jobradarbd.com'}/og-default.png`;
+    : `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jobradarbd.com'}/og-default.png`;
 
   return {
     title,
@@ -153,7 +158,7 @@ export default async function JobDetailPage({ params }: Props) {
   const applyCta = typeMeta.cta;
   const autoSummary = buildPostSummary(post);
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jobsnewsbd.com';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jobradarbd.com';
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'JobPosting',
