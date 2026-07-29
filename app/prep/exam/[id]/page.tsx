@@ -46,13 +46,23 @@ function useTimer(totalSeconds: number, active: boolean, onExpire: () => void) {
 
 // ── Result view ───────────────────────────────────────────────────────────────
 
-function ResultView({ result, backHref }: { result: ExamResult; backHref: string }) {
+function ResultView({ result, backHref, examTitle }: { result: ExamResult; backHref: string; examTitle: string }) {
   const { t } = useLanguage();
   const [expanded, setExpanded] = useState<number | null>(null);
+  const [downloading, setDownloading] = useState(false);
   const wrong = result.questions.filter((q) => q.selectedOption !== null && !q.correct).length;
   const skipped = result.questions.filter((q) => q.selectedOption === null).length;
   const pct = result.totalQuestions > 0 ? Math.round((result.score / result.totalQuestions) * 100) : 0;
   const scoreColor = pct >= 80 ? '#059669' : pct >= 50 ? '#D97706' : '#DC2626';
+
+  const handleDownloadPdf = async () => {
+    setDownloading(true);
+    try {
+      const { downloadExamResultPdf } = await import('@/lib/examPdf');
+      await downloadExamResultPdf(result, examTitle);
+    } catch { /* best-effort — a failed export shouldn't block the rest of the page */ }
+    finally { setDownloading(false); }
+  };
 
   const optionText = (q: QuestionResult, opt: string) =>
     ({ A: q.optionA, B: q.optionB, C: q.optionC, D: q.optionD }[opt] ?? '');
@@ -70,6 +80,14 @@ function ResultView({ result, backHref }: { result: ExamResult; backHref: string
           <div className="w-px bg-warm-border" />
           <div><p className="font-bold text-gray-400">{skipped}</p><p className="text-warm-muted text-xs">{t('এড়িয়ে', 'Skipped')}</p></div>
         </div>
+
+        <button onClick={handleDownloadPdf} disabled={downloading}
+          className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-primary-300 text-primary font-semibold text-sm hover:bg-primary-50 transition-colors disabled:opacity-60">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+          </svg>
+          {downloading ? t('PDF তৈরি হচ্ছে...', 'Preparing PDF...') : t('প্রশ্নপত্র PDF ডাউনলোড করুন', 'Download question paper (PDF)')}
+        </button>
       </div>
 
       {/* Per-question review */}
@@ -258,7 +276,7 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
             <p className="text-red-500 font-medium mb-4">{error}</p>
           </div>
         ) : result ? (
-          <ResultView result={result} backHref={backSlug ? `/prep/topics/${backSlug}/exam` : '/prep'} />
+          <ResultView result={result} backHref={backSlug ? `/prep/topics/${backSlug}/exam` : '/prep'} examTitle={examTitle} />
         ) : alreadyAttemptedLive ? (
           /* Blocked: already attempted this live exam once — no reattempt until it ends */
           <div className="bg-white rounded-2xl border border-warm-border p-10 text-center">

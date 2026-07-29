@@ -278,6 +278,176 @@ function QuestionEditor({
 
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ── Bulk-import questions from an AI-generated JSON payload ──────────────────
+// Workflow: admin picks a topic + copies a ready-made prompt → pastes it into
+// any AI chat (ChatGPT/Claude/Gemini) → pastes the AI's JSON array back here →
+// one click posts every question via the existing single-create endpoint.
+function BulkQuestionImport({
+  token,
+  examSetId,
+  existingCount,
+  onDone,
+}: {
+  token: string;
+  examSetId: number;
+  existingCount: number;
+  onDone: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [topicHint, setTopicHint] = useState('');
+  const [raw, setRaw] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  const promptTemplate = (topic: string) => `তুমি একজন পরীক্ষা প্রস্তুতি প্রশ্ন তৈরিকারী। বিষয়: ${topic ? `"${topic}"` : '[বিষয়ের নাম এখানে লিখুন]'} — এই বিষয়ে ১০টি মাল্টিপল চয়েস (MCQ) প্রশ্ন তৈরি করো, বাংলাদেশি চাকরির পরীক্ষার (BCS/ব্যাংক/সরকারি চাকরি) মানের।
+
+শুধুমাত্র নিচের ফরম্যাটে একটি JSON অ্যারে দাও — অন্য কোনো লেখা, ভূমিকা, ব্যাখ্যা বা \`\`\` কোড ফেন্স ছাড়া:
+
+[
+  {
+    "questionText": "প্রশ্নের লেখা",
+    "optionA": "অপশন ১",
+    "optionB": "অপশন ২",
+    "optionC": "অপশন ৩",
+    "optionD": "অপশন ৪",
+    "correctOption": "A",
+    "explanationText": "সংক্ষিপ্ত ব্যাখ্যা (ঐচ্ছিক)"
+  }
+]
+
+নিয়ম:
+- correctOption অবশ্যই "A", "B", "C" অথবা "D" এর একটি হতে হবে (সঠিক উত্তরের অক্ষর, একেবারে ক্যাপিটাল)।
+- প্রতিটি প্রশ্নে চারটি ভিন্ন, বাস্তবসম্মত অপশন থাকতে হবে, নকল বা অস্পষ্ট নয়।
+- explanationText না দিতে চাইলে খালি স্ট্রিং দাও।
+- আউটপুট শুধু JSON অ্যারে — কোনো ভূমিকা, উপসংহার বা কোড ব্লক মার্কার নয়।`;
+
+  const copyPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(promptTemplate(topicHint));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* clipboard unavailable — ignore */ }
+  };
+
+  const parseQuestions = (): Array<Record<string, unknown>> | null => {
+    // AI output sometimes still comes wrapped in ```json fences despite instructions — strip them.
+    const cleaned = raw.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+    try {
+      const data = JSON.parse(cleaned);
+      return Array.isArray(data) ? data : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const submitAll = async () => {
+    setError('');
+    const items = parseQuestions();
+    if (!items || items.length === 0) {
+      setError('বৈধ JSON অ্যারে পাওয়া যায়নি — AI-এর আউটপুট আবার চেক করুন।');
+      return;
+    }
+
+    // Validate every item's shape before posting anything.
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i] as Record<string, unknown>;
+      const missing = ['questionText', 'optionA', 'optionB', 'optionC', 'optionD', 'correctOption']
+        .filter((k) => typeof it[k] !== 'string' || !(it[k] as string).trim());
+      if (missing.length > 0) {
+        setError(`প্রশ্ন ${i + 1}: এই ফিল্ডগুলো নেই বা খালি — ${missing.join(', ')}`);
+        return;
+      }
+      if (!['A', 'B', 'C', 'D'].includes((it.correctOption as string).trim().toUpperCase())) {
+        setError(`প্রশ্ন ${i + 1}: correctOption অবশ্যই A/B/C/D এর একটি হতে হবে`);
+        return;
+      }
+    }
+
+    setBusy(true);
+    setProgress({ done: 0, total: items.length });
+    let successCount = 0;
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i] as Record<string, unknown>;
+      const body = {
+        questionText: String(it.questionText).trim(),
+        optionA: String(it.optionA).trim(),
+        optionB: String(it.optionB).trim(),
+        optionC: String(it.optionC).trim(),
+        optionD: String(it.optionD).trim(),
+        correctOption: String(it.correctOption).trim().toUpperCase(),
+        explanationText: it.explanationText ? String(it.explanationText).trim() : null,
+        explanationImageUrl: it.explanationImageUrl ? String(it.explanationImageUrl).trim() : null,
+        displayOrder: existingCount + i,
+      };
+      try {
+        await adminCreateQuestion(token, examSetId, body);
+        successCount++;
+        setProgress({ done: i + 1, total: items.length });
+      } catch {
+        setBusy(false);
+        setError(`প্রশ্ন ${i + 1} সংরক্ষণ ব্যর্থ হয়েছে — এর আগের ${successCount}টি ঠিকভাবে যোগ হয়েছে, বাকিগুলো আবার চেষ্টা করুন।`);
+        if (successCount > 0) onDone();
+        return;
+      }
+    }
+    setBusy(false);
+    setProgress(null);
+    setRaw('');
+    onDone();
+  };
+
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)}
+        className="w-full border-2 border-dashed border-primary-200 bg-primary-50/60 rounded-xl py-2.5 text-sm text-primary font-semibold hover:bg-primary-50 transition-colors">
+        ✨ AI দিয়ে বাল্ক প্রশ্ন যোগ করুন
+      </button>
+    );
+  }
+
+  return (
+    <div className="bg-primary-50/40 border border-primary-100 rounded-2xl p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="font-bold text-gray-800 text-sm">✨ AI দিয়ে বাল্ক প্রশ্ন যোগ করুন</h3>
+        <button onClick={() => { setOpen(false); setRaw(''); setError(''); }} className="text-xs text-warm-muted hover:text-gray-700">বন্ধ করুন</button>
+      </div>
+
+      <p className="text-xs text-warm-muted leading-relaxed">
+        ১) বিষয় লিখে প্রম্পট কপি করুন → ২) যেকোনো AI চ্যাটে (ChatGPT/Claude/Gemini) পেস্ট করুন → ৩) AI-এর JSON আউটপুট নিচে পেস্ট করে একবারে সব প্রশ্ন যোগ করুন।
+      </p>
+
+      <div className="flex gap-2">
+        <input type="text" value={topicHint} onChange={(e) => setTopicHint(e.target.value)}
+          placeholder="বিষয় (যেমন: কম্পিউটার অর্গানাইজেশন ও আর্কিটেকচার)"
+          className="flex-1 border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" />
+        <button type="button" onClick={copyPrompt}
+          className="shrink-0 px-3 py-2 text-xs font-semibold border border-primary-300 text-primary rounded-lg hover:bg-primary-50">
+          {copied ? '✓ কপি হয়েছে' : '📋 প্রম্পট কপি করুন'}
+        </button>
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-gray-600 mb-1">AI-এর JSON আউটপুট এখানে পেস্ট করুন</label>
+        <textarea value={raw} onChange={(e) => setRaw(e.target.value)} rows={8}
+          placeholder='[{"questionText": "...", "optionA": "...", "optionB": "...", "optionC": "...", "optionD": "...", "correctOption": "A"}]'
+          className="w-full border border-warm-border rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:border-primary resize-y" />
+      </div>
+
+      {error && <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>}
+      {progress && <p className="text-xs text-primary font-medium">{progress.done}/{progress.total} প্রশ্ন যোগ হয়েছে...</p>}
+
+      <button onClick={submitAll} disabled={busy || !raw.trim()}
+        className="w-full bg-primary text-white rounded-xl py-2 text-sm font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50">
+        {busy ? 'যোগ হচ্ছে...' : 'সব প্রশ্ন এক ক্লিকে যোগ করুন'}
+      </button>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function AdminPrepPage() {
   const router = useRouter();
   const [token, setToken] = useState('');
@@ -1049,6 +1219,15 @@ export default function AdminPrepPage() {
                                 </div>
                               ))}
 
+                              {editingQuestion === null && !showQuestionEditor && (
+                                <BulkQuestionImport
+                                  token={token}
+                                  examSetId={s.id}
+                                  existingCount={questions.length}
+                                  onDone={() => loadQuestions(s.id)}
+                                />
+                              )}
+
                               {showQuestionEditor && editingQuestion === null ? (
                                 <QuestionEditor token={token} examSetId={s.id} editing={null}
                                   onSaved={async () => { await loadQuestions(s.id); setShowQuestionEditor(false); flash('প্রশ্ন যোগ হয়েছে'); }}
@@ -1056,7 +1235,7 @@ export default function AdminPrepPage() {
                               ) : editingQuestion === null && (
                                 <button onClick={() => setShowQuestionEditor(true)}
                                   className="w-full border-2 border-dashed border-warm-border rounded-xl py-3 text-sm text-warm-muted hover:border-primary hover:text-primary transition-colors">
-                                  + নতুন প্রশ্ন যোগ করুন
+                                  + নতুন প্রশ্ন যোগ করুন (একটি একটি করে)
                                 </button>
                               )}
                             </>
