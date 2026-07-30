@@ -35,6 +35,7 @@ import type {
   RecommendedBook,
   RecommendedBookRequest,
   MyBookListing,
+  NotificationPreference,
   TipCategory,
   UserProfile,
   UserSavedJob,
@@ -375,6 +376,14 @@ export const removeSavedJob = (token: string, id: number) =>
 
 export const checkJobSaved = (token: string, postId: number) =>
   authGet<{ saved: boolean }>(`/api/user/saved-jobs/check/${postId}`, token);
+
+export const getNotificationPreferences = (token: string) =>
+  authGet<NotificationPreference[]>('/api/user/notification-preferences', token);
+
+export const updateNotificationPreferences = (
+  token: string,
+  updates: Array<Pick<NotificationPreference, 'topic' | 'pushEnabled' | 'emailEnabled'>>,
+) => authPut<NotificationPreference[]>('/api/user/notification-preferences', updates, token);
 
 export async function uploadProfilePhoto(token: string, file: File): Promise<UserProfile> {
   const form = new FormData();

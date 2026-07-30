@@ -429,12 +429,20 @@ export default function ProfilePage() {
                   {t('ছবিতে ক্লিক করে ফটো আপলোড করুন', 'Click photo to upload')}
                 </p>
               </div>
-              <button
-                onClick={() => setEditOpen(true)}
-                className="shrink-0 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-medium transition-colors"
-              >
-                ✏️ {t('সম্পাদনা', 'Edit')}
-              </button>
+              <div className="flex gap-2 shrink-0">
+                <Link
+                  href="/profile/notifications"
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-medium transition-colors"
+                >
+                  🔔 {t('নোটিফিকেশন', 'Notifications')}
+                </Link>
+                <button
+                  onClick={() => setEditOpen(true)}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-medium transition-colors"
+                >
+                  ✏️ {t('সম্পাদনা', 'Edit')}
+                </button>
+              </div>
             </div>
           </div>
         </div>

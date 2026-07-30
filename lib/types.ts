@@ -304,6 +304,13 @@ export interface ExamResult {
   questions: QuestionResult[];
 }
 
+export interface NotificationPreference {
+  topic: 'JOB_CIRCULAR' | 'EXAM_SET' | 'DEADLINE_REMINDER';
+  description: string;
+  pushEnabled: boolean;
+  emailEnabled: boolean;
+}
+
 export interface Comment {
   id: number;
   body: string;
