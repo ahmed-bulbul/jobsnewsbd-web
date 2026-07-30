@@ -4,6 +4,13 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 
+// Only ever follow a same-origin relative path — never trust this as an
+// external/absolute redirect target, even though it comes from our own
+// backend (defense in depth, mirrors the check made server-side).
+function isSafeRelativePath(path: string): boolean {
+  return path.startsWith('/') && !path.startsWith('//') && !path.includes('://');
+}
+
 function CallbackHandler() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -22,6 +29,7 @@ function CallbackHandler() {
     const email  = searchParams.get('email');
     const role   = searchParams.get('role');
     const err    = searchParams.get('error');
+    const redirectTo = searchParams.get('redirectTo');
 
     if (err) {
       setError(decodeURIComponent(err));
@@ -42,7 +50,7 @@ function CallbackHandler() {
       email,
       role,
     });
-    router.replace('/');
+    router.replace(redirectTo && isSafeRelativePath(redirectTo) ? redirectTo : '/');
   }, [searchParams, login, router]);
 
   if (error) {
