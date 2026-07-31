@@ -474,6 +474,9 @@ export default function AdminPrepPage() {
   const [catCurrency, setCatCurrency] = useState('BDT');
   const [catDescription, setCatDescription] = useState('');
   const [catContactPhone, setCatContactPhone] = useState('');
+  const [catFacebookGroupUrl, setCatFacebookGroupUrl] = useState('');
+  const [catFacebookPageUrl, setCatFacebookPageUrl] = useState('');
+  const [catWhatsappGroupUrl, setCatWhatsappGroupUrl] = useState('');
 
   // Enrollment management
   const [enrollCatId, setEnrollCatId] = useState<number | null>(null);
@@ -610,6 +613,7 @@ export default function AdminPrepPage() {
     setCatSlug(''); setCatIcon(''); setCatColor('#1D4ED8'); setCatOrder('0');
     setCatEnrollmentType('FREE'); setCatPrice(''); setCatCurrency('BDT');
     setCatDescription(''); setCatContactPhone('');
+    setCatFacebookGroupUrl(''); setCatFacebookPageUrl(''); setCatWhatsappGroupUrl('');
   };
 
   const editCat = (c: PrepCategory) => {
@@ -621,6 +625,9 @@ export default function AdminPrepPage() {
     setCatCurrency(c.currency ?? 'BDT');
     setCatDescription(c.description ?? '');
     setCatContactPhone(c.contactPhone ?? '');
+    setCatFacebookGroupUrl(c.facebookGroupUrl ?? '');
+    setCatFacebookPageUrl(c.facebookPageUrl ?? '');
+    setCatWhatsappGroupUrl(c.whatsappGroupUrl ?? '');
   };
 
   const saveCat = async () => {
@@ -632,6 +639,9 @@ export default function AdminPrepPage() {
       currency: catCurrency || 'BDT',
       description: catDescription || null,
       contactPhone: catContactPhone || null,
+      facebookGroupUrl: catFacebookGroupUrl || null,
+      facebookPageUrl: catFacebookPageUrl || null,
+      whatsappGroupUrl: catWhatsappGroupUrl || null,
     };
     try {
       if (catId) await adminUpdatePrepCategory(token, catId, body);
@@ -890,6 +900,9 @@ export default function AdminPrepPage() {
               </div>
 
               <Field label="WhatsApp নম্বর (যোগাযোগ)" value={catContactPhone} onChange={setCatContactPhone} placeholder="+8801XXXXXXXXX" />
+              <Field label="ফেসবুক গ্রুপ লিংক" value={catFacebookGroupUrl} onChange={setCatFacebookGroupUrl} placeholder="https://facebook.com/groups/..." />
+              <Field label="ফেসবুক পেজ লিংক" value={catFacebookPageUrl} onChange={setCatFacebookPageUrl} placeholder="https://facebook.com/..." />
+              <Field label="হোয়াটসঅ্যাপ গ্রুপ লিংক" value={catWhatsappGroupUrl} onChange={setCatWhatsappGroupUrl} placeholder="https://chat.whatsapp.com/..." />
 
               <div className="flex gap-2 pt-1">
                 <button onClick={saveCat} className="flex-1 bg-primary text-white rounded-xl py-2 text-sm font-semibold hover:bg-primary-dark transition-colors">

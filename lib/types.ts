@@ -204,6 +204,9 @@ export interface PrepCategory {
   isEnrolled: boolean;
   description: string | null;
   contactPhone: string | null;
+  facebookGroupUrl: string | null;
+  facebookPageUrl: string | null;
+  whatsappGroupUrl: string | null;
 }
 
 export interface PrepTopic {

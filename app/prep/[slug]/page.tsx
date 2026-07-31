@@ -238,6 +238,97 @@ function RejectedCard({ req, onRetry }: { req: EnrollmentRequest; onRetry: () =>
   );
 }
 
+// ── Community panel ───────────────────────────────────────────────────────────
+
+function CommunityPanel({ data, color }: { data: PrepCategoryDetail; color: string }) {
+  const { t } = useLanguage();
+
+  const waNumberDigits = data.contactPhone
+    ? data.contactPhone.replace(/[^\d+]/g, '').replace(/^\+/, '')
+    : null;
+
+  const links = [
+    data.facebookGroupUrl && {
+      key: 'fb-group',
+      href: data.facebookGroupUrl,
+      label: t('ফেসবুক গ্রুপে যোগ দিন', 'Join Facebook Group'),
+      color: '#1877F2',
+      bg: '#EFF6FF',
+      icon: (
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2C6.477 2 2 6.477 2 12c0 5 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 17 22 12c0-5.523-4.477-10-10-10z" />
+        </svg>
+      ),
+    },
+    data.facebookPageUrl && {
+      key: 'fb-page',
+      href: data.facebookPageUrl,
+      label: t('ফেসবুক পেজ ফলো করুন', 'Follow Facebook Page'),
+      color: '#1877F2',
+      bg: '#EFF6FF',
+      icon: (
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2C6.477 2 2 6.477 2 12c0 5 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 17 22 12c0-5.523-4.477-10-10-10z" />
+        </svg>
+      ),
+    },
+    data.whatsappGroupUrl && {
+      key: 'wa-group',
+      href: data.whatsappGroupUrl,
+      label: t('হোয়াটসঅ্যাপ গ্রুপে যোগ দিন', 'Join WhatsApp Group'),
+      color: '#25D366',
+      bg: '#F0FDF4',
+      icon: (
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+          <path d="M12.004 2c-5.523 0-10 4.477-10 10 0 1.767.464 3.5 1.345 5.023L2 22l5.128-1.345A9.955 9.955 0 0012.004 22c5.523 0 10-4.477 10-10s-4.477-10-10-10zm0 18.246a8.2 8.2 0 01-4.184-1.142l-.3-.178-3.043.798.812-2.966-.195-.305a8.222 8.222 0 01-1.263-4.397c0-4.542 3.696-8.238 8.177-8.238 4.482 0 8.178 3.696 8.178 8.238 0 4.542-3.696 8.19-8.178 8.19z" />
+        </svg>
+      ),
+    },
+    waNumberDigits && {
+      key: 'wa-dm',
+      href: `https://wa.me/${waNumberDigits}`,
+      label: t('সরাসরি হোয়াটসঅ্যাপে মেসেজ করুন', 'Message us on WhatsApp'),
+      color: '#25D366',
+      bg: '#F0FDF4',
+      icon: (
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+          <path d="M12.004 2c-5.523 0-10 4.477-10 10 0 1.767.464 3.5 1.345 5.023L2 22l5.128-1.345A9.955 9.955 0 0012.004 22c5.523 0 10-4.477 10-10s-4.477-10-10-10zm0 18.246a8.2 8.2 0 01-4.184-1.142l-.3-.178-3.043.798.812-2.966-.195-.305a8.222 8.222 0 01-1.263-4.397c0-4.542 3.696-8.238 8.177-8.238 4.482 0 8.178 3.696 8.178 8.238 0 4.542-3.696 8.19-8.178 8.19z" />
+        </svg>
+      ),
+    },
+  ].filter(Boolean) as { key: string; href: string; label: string; color: string; bg: string; icon: React.ReactNode }[];
+
+  if (links.length === 0) return null;
+
+  return (
+    <div className="rounded-2xl border border-warm-border bg-white p-5">
+      <h2 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+        </svg>
+        {t('কমিউনিটিতে যোগ দিন', 'Join the Community')}
+      </h2>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {links.map(l => (
+          <a
+            key={l.key}
+            href={l.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 rounded-xl border border-warm-border px-4 py-3 hover:shadow-sm transition-all"
+            style={{ background: l.bg }}
+          >
+            <span className="shrink-0" style={{ color: l.color }}>{l.icon}</span>
+            <span className="text-sm font-semibold text-gray-800">{l.label}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function PrepCategoryPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -441,6 +532,9 @@ export default function PrepCategoryPage({ params }: { params: Promise<{ slug: s
                 )}
               </div>
             </div>
+
+            {/* ── Community panel ── */}
+            <CommunityPanel data={data} color={color} />
 
             {/* ── CTA ── */}
             {renderCTA()}
