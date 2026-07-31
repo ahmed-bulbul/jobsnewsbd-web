@@ -32,10 +32,14 @@ import {
   adminGetEnrollmentRequests,
   adminApproveEnrollmentRequest,
   adminRejectEnrollmentRequest,
+  adminGetRoutineForCategory,
+  adminCreateRoutineEntry,
+  adminUpdateRoutineEntry,
+  adminDeleteRoutineEntry,
 } from '@/lib/api';
-import type { AdminExamAttempt, EnrollmentRequest, ExamQuestion, ExamSet, PaymentConfig, PrepCategory, PrepCategoryDetail, PrepContent, PrepTopic } from '@/lib/types';
+import type { AdminExamAttempt, EnrollmentRequest, ExamQuestion, ExamRoutineEntry, ExamSet, PaymentConfig, PrepCategory, PrepCategoryDetail, PrepContent, PrepTopic } from '@/lib/types';
 
-type Tab = 'categories' | 'topics' | 'content' | 'exam' | 'payment';
+type Tab = 'categories' | 'topics' | 'content' | 'exam' | 'routine' | 'payment';
 
 // Flat topic record enriched with its category name
 interface FlatTopic extends PrepTopic { categoryNameBn: string }
@@ -533,6 +537,21 @@ export default function AdminPrepPage() {
   const [setDuration, setSetDuration] = useState('30');
   const [setPublished, setSetPublished] = useState(false);
 
+  // Exam routine state
+  const [routineCatId, setRoutineCatId] = useState('');
+  const [routineEntries, setRoutineEntries] = useState<ExamRoutineEntry[]>([]);
+  const [routineLoading, setRoutineLoading] = useState(false);
+  const [editingRoutine, setEditingRoutine] = useState<ExamRoutineEntry | null>(null);
+  const [routineTopicId, setRoutineTopicId] = useState('');
+  const [routineExamSetId, setRoutineExamSetId] = useState('');
+  const [routineExamSets, setRoutineExamSets] = useState<ExamSet[]>([]);
+  const [routineTitleBn, setRoutineTitleBn] = useState('');
+  const [routineTitleEn, setRoutineTitleEn] = useState('');
+  const [routineDescription, setRoutineDescription] = useState('');
+  const [routineScheduledAt, setRoutineScheduledAt] = useState('');
+  const [routineOrder, setRoutineOrder] = useState('0');
+  const [routinePublished, setRoutinePublished] = useState(true);
+
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(''), 3000); };
 
   const loadCategories = useCallback(async () => {
@@ -793,6 +812,70 @@ export default function AdminPrepPage() {
     setSetStartsAt(''); setSetEndsAt(''); setSetDuration('30'); setSetPublished(false);
   };
 
+  // ── Exam routine ──────────────────────────────────────────────────────────
+
+  const loadRoutine = async (categoryId: string) => {
+    if (!categoryId) return;
+    setRoutineLoading(true);
+    try {
+      const entries = await adminGetRoutineForCategory(token, Number(categoryId));
+      setRoutineEntries(entries);
+    } finally { setRoutineLoading(false); }
+  };
+
+  const loadRoutineExamSets = async (topicId: string) => {
+    if (!topicId) { setRoutineExamSets([]); return; }
+    const sets = await adminGetExamSets(token, Number(topicId));
+    setRoutineExamSets(sets);
+  };
+
+  const resetRoutineForm = () => {
+    setEditingRoutine(null); setRoutineTopicId(''); setRoutineExamSetId(''); setRoutineExamSets([]);
+    setRoutineTitleBn(''); setRoutineTitleEn(''); setRoutineDescription('');
+    setRoutineScheduledAt(''); setRoutineOrder('0'); setRoutinePublished(true);
+  };
+
+  const editRoutine = (e: ExamRoutineEntry) => {
+    setEditingRoutine(e);
+    setRoutineTopicId(e.topicId ? String(e.topicId) : '');
+    setRoutineExamSetId(e.examSetId ? String(e.examSetId) : '');
+    if (e.topicId) loadRoutineExamSets(String(e.topicId));
+    setRoutineTitleBn(e.titleBn); setRoutineTitleEn(e.titleEn ?? ''); setRoutineDescription(e.description ?? '');
+    setRoutineScheduledAt(e.scheduledAt.slice(0, 16));
+    setRoutineOrder(String(e.displayOrder)); setRoutinePublished(e.published);
+  };
+
+  const saveRoutine = async () => {
+    if (!routineCatId || !routineTitleBn || !routineScheduledAt) { flash('সব ঘর পূরণ করুন'); return; }
+    const body = {
+      categoryId: Number(routineCatId),
+      topicId: routineTopicId ? Number(routineTopicId) : null,
+      examSetId: routineExamSetId ? Number(routineExamSetId) : null,
+      titleBn: routineTitleBn,
+      titleEn: routineTitleEn || null,
+      description: routineDescription || null,
+      scheduledAt: routineScheduledAt,
+      displayOrder: Number(routineOrder),
+      published: routinePublished,
+    };
+    try {
+      if (editingRoutine) await adminUpdateRoutineEntry(token, editingRoutine.id, body);
+      else await adminCreateRoutineEntry(token, body);
+      await loadRoutine(routineCatId);
+      resetRoutineForm();
+      flash(editingRoutine ? 'আপডেট হয়েছে' : 'রুটিন এন্ট্রি তৈরি হয়েছে');
+    } catch { flash('ত্রুটি হয়েছে'); }
+  };
+
+  const deleteRoutine = async (id: number) => {
+    if (!confirm('রুটিন এন্ট্রি মুছে ফেলবেন?')) return;
+    try {
+      await adminDeleteRoutineEntry(token, id);
+      await loadRoutine(routineCatId);
+      flash('মুছে ফেলা হয়েছে');
+    } catch { flash('মুছতে ব্যর্থ'); }
+  };
+
   const editSet = (s: ExamSet) => {
     setEditingSet(s); setSetTitleBn(s.titleBn); setSetDescBn(s.descriptionBn ?? '');
     setSetStartsAt(s.startsAt.slice(0, 16)); setSetEndsAt(s.endsAt.slice(0, 16));
@@ -838,7 +921,7 @@ export default function AdminPrepPage() {
       <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Tabs */}
         <div className="flex gap-1 bg-white border border-warm-border rounded-xl p-1 mb-6 w-fit flex-wrap">
-          {(['categories', 'topics', 'content', 'exam', 'payment'] as Tab[]).map((t) => (
+          {(['categories', 'topics', 'content', 'exam', 'routine', 'payment'] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => {
@@ -847,7 +930,7 @@ export default function AdminPrepPage() {
               }}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${tab === t ? 'bg-primary text-white shadow-sm' : 'text-gray-600 hover:text-primary'}`}
             >
-              {t === 'categories' ? 'ক্যাটাগরি' : t === 'topics' ? 'বিষয়' : t === 'content' ? 'কন্টেন্ট' : t === 'exam' ? '📝 পরীক্ষা' : '💳 পেমেন্ট'}
+              {t === 'categories' ? 'ক্যাটাগরি' : t === 'topics' ? 'বিষয়' : t === 'content' ? 'কন্টেন্ট' : t === 'exam' ? '📝 পরীক্ষা' : t === 'routine' ? '🗓 রুটিন' : '💳 পেমেন্ট'}
             </button>
           ))}
         </div>
@@ -1342,6 +1425,125 @@ export default function AdminPrepPage() {
                       )}
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Exam Routine ───────────────────────────────────────────────── */}
+        {tab === 'routine' && (
+          <div className="space-y-6">
+            {/* Step 1: pick category */}
+            <div className="bg-white rounded-2xl border border-warm-border p-5">
+              <label className="block text-xs font-semibold text-gray-600 mb-1">ক্যাটাগরি বেছে নিন</label>
+              <select
+                value={routineCatId}
+                onChange={(e) => { setRoutineCatId(e.target.value); loadRoutine(e.target.value); resetRoutineForm(); }}
+                className="w-full sm:w-96 border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
+              >
+                <option value="">বেছে নিন</option>
+                {categories.map((c) => <option key={c.id} value={c.id}>{c.nameBn}</option>)}
+              </select>
+            </div>
+
+            {routineCatId && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Routine entry form */}
+                <div className="bg-white rounded-2xl border border-warm-border p-5 space-y-3 h-fit">
+                  <h2 className="font-bold text-gray-900">{editingRoutine ? 'এন্ট্রি এডিট করুন' : 'নতুন রুটিন এন্ট্রি'}</h2>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">বিষয় (ঐচ্ছিক)</label>
+                    <select
+                      value={routineTopicId}
+                      onChange={(e) => { setRoutineTopicId(e.target.value); setRoutineExamSetId(''); loadRoutineExamSets(e.target.value); }}
+                      className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
+                    >
+                      <option value="">নির্দিষ্ট করবেন না</option>
+                      {allTopics.filter((t) => t.categoryId === Number(routineCatId)).map((t) => (
+                        <option key={t.id} value={t.id}>{t.nameBn}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {routineTopicId && (
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">পরীক্ষা সেট (ঐচ্ছিক — লিংক করতে)</label>
+                      <select
+                        value={routineExamSetId}
+                        onChange={(e) => setRoutineExamSetId(e.target.value)}
+                        className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
+                      >
+                        <option value="">শুধু তথ্যমূলক এন্ট্রি (কোনো লিংক নেই)</option>
+                        {routineExamSets.map((s) => (
+                          <option key={s.id} value={s.id}>{s.titleBn} {s.published ? '(প্রকাশিত)' : '(ড্রাফট)'}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <Field label="শিরোনাম (বাংলা) *" value={routineTitleBn} onChange={setRoutineTitleBn} placeholder="যেমন: ১ম সাপ্তাহিক পরীক্ষা" />
+                  <Field label="শিরোনাম (ইংরেজি)" value={routineTitleEn} onChange={setRoutineTitleEn} />
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">বিবরণ</label>
+                    <textarea value={routineDescription} onChange={(e) => setRoutineDescription(e.target.value)} rows={2}
+                      className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none" />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">তারিখ ও সময় *</label>
+                    <input type="datetime-local" value={routineScheduledAt} onChange={(e) => setRoutineScheduledAt(e.target.value)}
+                      className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" />
+                  </div>
+
+                  <Field label="ক্রম" value={routineOrder} onChange={setRoutineOrder} type="number" />
+
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" checked={routinePublished} onChange={(e) => setRoutinePublished(e.target.checked)} className="rounded accent-primary w-4 h-4" />
+                    <span className="font-medium text-gray-700">প্রকাশিত (ইউজার দেখতে পাবে)</span>
+                  </label>
+
+                  <div className="flex gap-2 pt-1">
+                    <button onClick={saveRoutine} className="flex-1 bg-primary text-white rounded-xl py-2 text-sm font-semibold hover:bg-primary-dark transition-colors">
+                      {editingRoutine ? 'আপডেট' : 'তৈরি করুন'}
+                    </button>
+                    {editingRoutine && <button onClick={resetRoutineForm} className="px-3 text-warm-muted hover:text-gray-700 text-sm border border-warm-border rounded-xl">বাতিল</button>}
+                  </div>
+                </div>
+
+                {/* Routine list */}
+                <div className="lg:col-span-2 space-y-3">
+                  {routineLoading ? (
+                    <p className="text-sm text-warm-muted">লোড হচ্ছে...</p>
+                  ) : routineEntries.length === 0 ? (
+                    <p className="text-sm text-warm-muted">এখনো কোনো রুটিন এন্ট্রি নেই</p>
+                  ) : (
+                    routineEntries.map((e) => (
+                      <div key={e.id} className="bg-white rounded-xl border border-warm-border p-4 flex items-center gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-gray-900 text-sm">{e.titleBn}</span>
+                            {e.published
+                              ? <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">প্রকাশিত</span>
+                              : <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">ড্রাফট</span>}
+                            {e.examSetId && (
+                              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                                লিংকড {e.examSetPublished ? '✓' : '(অপ্রকাশিত)'}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-warm-muted mt-0.5">
+                            {new Date(e.scheduledAt).toLocaleString('bn-BD')}
+                            {e.topicNameBn && ` • ${e.topicNameBn}`}
+                          </p>
+                        </div>
+                        <button onClick={() => { editRoutine(e); window.scrollTo(0, 0); }} className="text-xs text-blue-600 hover:underline shrink-0">এডিট</button>
+                        <button onClick={() => deleteRoutine(e.id)} className="text-xs text-red-500 hover:underline shrink-0">মুছুন</button>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}

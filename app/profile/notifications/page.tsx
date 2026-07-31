@@ -36,9 +36,16 @@ const TOPIC_COPY: Record<NotificationPreference['topic'], { titleBn: string; tit
     descEn: 'When a job you saved is close to its application deadline',
     hasEmail: false,
   },
+  EXAM_ROUTINE: {
+    titleBn: 'পরীক্ষার রুটিন',
+    titleEn: 'Exam Routine Updates',
+    descBn: 'আপনার এনরোল করা কোর্সের পরীক্ষার রুটিন প্রকাশ বা পরিবর্তন হলে জানানো হবে',
+    descEn: 'When the exam routine is published or changed for a category you’re enrolled in',
+    hasEmail: true,
+  },
 };
 
-const TOPIC_ORDER: NotificationPreference['topic'][] = ['JOB_CIRCULAR', 'EXAM_SET', 'DEADLINE_REMINDER'];
+const TOPIC_ORDER: NotificationPreference['topic'][] = ['JOB_CIRCULAR', 'EXAM_SET', 'EXAM_ROUTINE', 'DEADLINE_REMINDER'];
 
 function Switch({ checked, onChange, disabled }: { checked: boolean; onChange: () => void; disabled?: boolean }) {
   return (

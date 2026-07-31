@@ -224,6 +224,23 @@ export interface PrepTopic {
 export interface PrepCategoryDetail extends PrepCategory {
   topics: PrepTopic[];
   totalContents: number;
+  routine: ExamRoutineEntry[];
+}
+
+export interface ExamRoutineEntry {
+  id: number;
+  categoryId: number;
+  topicId: number | null;
+  topicNameBn: string | null;
+  topicSlug: string | null;
+  examSetId: number | null;
+  examSetPublished: boolean;
+  titleBn: string;
+  titleEn: string | null;
+  description: string | null;
+  scheduledAt: string;
+  displayOrder: number;
+  published: boolean;
 }
 
 export interface PrepContent {
@@ -321,7 +338,7 @@ export interface ExamResult {
 }
 
 export interface NotificationPreference {
-  topic: 'JOB_CIRCULAR' | 'EXAM_SET' | 'DEADLINE_REMINDER';
+  topic: 'JOB_CIRCULAR' | 'EXAM_SET' | 'DEADLINE_REMINDER' | 'EXAM_ROUTINE';
   description: string;
   pushEnabled: boolean;
   emailEnabled: boolean;

@@ -238,6 +238,73 @@ function RejectedCard({ req, onRetry }: { req: EnrollmentRequest; onRetry: () =>
   );
 }
 
+// ── Exam routine panel ────────────────────────────────────────────────────────
+
+function RoutinePanel({ data, color, locked }: { data: PrepCategoryDetail; color: string; locked: boolean }) {
+  const { t } = useLanguage();
+
+  if (!data.routine || data.routine.length === 0) return null;
+
+  const now = Date.now();
+
+  return (
+    <div className="rounded-2xl border border-warm-border bg-white p-5">
+      <h2 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+        </svg>
+        {t('পরীক্ষার রুটিন', 'Exam Routine')}
+      </h2>
+      <div className="space-y-2">
+        {data.routine.map((entry) => {
+          const scheduled = new Date(entry.scheduledAt);
+          const isPast = scheduled.getTime() < now;
+          const clickable = !locked && !!(entry.examSetId && entry.examSetPublished && entry.topicSlug);
+
+          const dateBn = scheduled.toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' });
+          const timeBn = scheduled.toLocaleTimeString('bn-BD', { hour: 'numeric', minute: '2-digit' });
+
+          const inner = (
+            <div className={`flex items-center gap-3 rounded-xl border border-warm-border p-3.5 transition-all ${isPast ? 'opacity-60' : clickable ? 'hover:border-primary hover:shadow-sm' : ''}`}>
+              <div className="w-11 h-11 rounded-lg flex flex-col items-center justify-center shrink-0 leading-none"
+                style={{ background: isPast ? '#F3F4F6' : `${color}22`, color: isPast ? '#9CA3AF' : color }}>
+                <span className="text-[10px] font-semibold">{scheduled.toLocaleDateString('bn-BD', { month: 'short' })}</span>
+                <span className="text-base font-black">{scheduled.getDate()}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className={`font-semibold text-sm leading-snug ${isPast ? 'text-gray-500' : 'text-gray-900'}`}>{entry.titleBn}</p>
+                  {isPast && (
+                    <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                      {t('সম্পন্ন', 'Done')}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-warm-muted mt-0.5">
+                  {dateBn} • {timeBn}
+                  {entry.topicNameBn && ` • ${entry.topicNameBn}`}
+                </p>
+                {entry.description && <p className="text-xs text-gray-500 mt-1 leading-relaxed">{entry.description}</p>}
+              </div>
+              {clickable && !isPast && (
+                <svg className="w-4 h-4 text-warm-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              )}
+            </div>
+          );
+
+          return clickable ? (
+            <Link key={entry.id} href={`/prep/topics/${entry.topicSlug}/exam`}>{inner}</Link>
+          ) : (
+            <div key={entry.id}>{inner}</div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Community panel ───────────────────────────────────────────────────────────
 
 function CommunityPanel({ data, color }: { data: PrepCategoryDetail; color: string }) {
@@ -532,6 +599,9 @@ export default function PrepCategoryPage({ params }: { params: Promise<{ slug: s
                 )}
               </div>
             </div>
+
+            {/* ── Exam routine ── */}
+            <RoutinePanel data={data} color={color} locked={isLocked} />
 
             {/* ── Community panel ── */}
             <CommunityPanel data={data} color={color} />

@@ -645,6 +645,20 @@ export const adminUpdateQuestion = (token: string, id: number, body: unknown) =>
 export const adminDeleteQuestion = (token: string, id: number) =>
   authDelete(`/api/admin/exam/questions/${id}`, token);
 
+// ── Admin Exam Routine ────────────────────────────────────────────────────────
+
+export const adminGetRoutineForCategory = (token: string, categoryId: number) =>
+  authGet<import('./types').ExamRoutineEntry[]>(`/api/admin/prep/routine/categories/${categoryId}`, token);
+
+export const adminCreateRoutineEntry = (token: string, body: unknown) =>
+  authPost<import('./types').ExamRoutineEntry>('/api/admin/prep/routine', body, token);
+
+export const adminUpdateRoutineEntry = (token: string, id: number, body: unknown) =>
+  authPut<import('./types').ExamRoutineEntry>(`/api/admin/prep/routine/${id}`, body, token);
+
+export const adminDeleteRoutineEntry = (token: string, id: number) =>
+  authDelete(`/api/admin/prep/routine/${id}`, token);
+
 // ── Comments ──────────────────────────────────────────────────────────────────
 export const getComments = (slug: string) =>
   get<Comment[]>(`/api/posts/${slug}/comments`);
