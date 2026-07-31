@@ -23,6 +23,7 @@ import {
   adminCreateQuestion,
   adminUpdateQuestion,
   adminDeleteQuestion,
+  adminGetExamAttempts,
   adminUploadImage,
   adminEnrollUser,
   adminUnenrollUser,
@@ -32,7 +33,7 @@ import {
   adminApproveEnrollmentRequest,
   adminRejectEnrollmentRequest,
 } from '@/lib/api';
-import type { EnrollmentRequest, ExamQuestion, ExamSet, PaymentConfig, PrepCategory, PrepCategoryDetail, PrepContent, PrepTopic } from '@/lib/types';
+import type { AdminExamAttempt, EnrollmentRequest, ExamQuestion, ExamSet, PaymentConfig, PrepCategory, PrepCategoryDetail, PrepContent, PrepTopic } from '@/lib/types';
 
 type Tab = 'categories' | 'topics' | 'content' | 'exam' | 'payment';
 
@@ -516,6 +517,11 @@ export default function AdminPrepPage() {
   const [editingQuestion, setEditingQuestion] = useState<ExamQuestion | null>(null);
   const [showQuestionEditor, setShowQuestionEditor] = useState(false);
   const [examLoadingQ, setExamLoadingQ] = useState(false);
+  // Marks sheet state
+  const [marksSetId, setMarksSetId] = useState<number | null>(null);
+  const [attempts, setAttempts] = useState<AdminExamAttempt[]>([]);
+  const [marksLoading, setMarksLoading] = useState(false);
+  const [marksDownloading, setMarksDownloading] = useState(false);
   // Exam set form fields
   const [setTitleBn, setSetTitleBn] = useState('');
   const [setDescBn, setSetDescBn] = useState('');
@@ -752,6 +758,24 @@ export default function AdminPrepPage() {
       const qs = await adminGetQuestions(token, setId);
       setQuestions(qs);
     } finally { setExamLoadingQ(false); }
+  };
+
+  const loadAttempts = async (setId: number) => {
+    setMarksLoading(true);
+    setMarksSetId(setId);
+    try {
+      const a = await adminGetExamAttempts(token, setId);
+      setAttempts(a);
+    } finally { setMarksLoading(false); }
+  };
+
+  const handleDownloadMarksheet = async (examTitle: string) => {
+    setMarksDownloading(true);
+    try {
+      const { downloadExamMarksPdf } = await import('@/lib/examMarksPdf');
+      await downloadExamMarksPdf(examTitle, attempts);
+    } catch { flash('PDF তৈরি করা যায়নি'); }
+    finally { setMarksDownloading(false); }
   };
 
   const resetSetForm = () => {
@@ -1174,6 +1198,12 @@ export default function AdminPrepPage() {
                         </div>
                         <button onClick={() => { editSet(s); window.scrollTo(0,0); }} className="text-xs text-blue-600 hover:underline">এডিট</button>
                         <button onClick={() => loadQuestions(s.id)} className="text-xs text-primary hover:underline ml-2">প্রশ্ন →</button>
+                        <button
+                          onClick={() => (marksSetId === s.id ? setMarksSetId(null) : loadAttempts(s.id))}
+                          className="text-xs text-amber-600 hover:underline ml-2"
+                        >
+                          📊 মার্কস {marksSetId === s.id ? '▲' : '→'}
+                        </button>
                         <button onClick={() => deleteSet(s.id)} className="text-xs text-red-500 hover:underline ml-2">মুছুন</button>
                       </div>
 
@@ -1238,6 +1268,61 @@ export default function AdminPrepPage() {
                                   + নতুন প্রশ্ন যোগ করুন (একটি একটি করে)
                                 </button>
                               )}
+                            </>
+                          )}
+                        </div>
+                      )}
+
+                      {marksSetId === s.id && (
+                        <div className="p-4 border-t border-warm-border space-y-3">
+                          {marksLoading ? (
+                            <p className="text-xs text-warm-muted">লোড হচ্ছে...</p>
+                          ) : attempts.length === 0 ? (
+                            <p className="text-xs text-warm-muted">এখনো কেউ এই পরীক্ষা দেয়নি</p>
+                          ) : (
+                            <>
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs text-warm-muted">{attempts.length} জন অংশগ্রহণকারী</p>
+                                <button
+                                  onClick={() => handleDownloadMarksheet(s.titleBn)}
+                                  disabled={marksDownloading}
+                                  className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-amber-300 text-amber-700 hover:bg-amber-50 disabled:opacity-50"
+                                >
+                                  {marksDownloading ? 'PDF তৈরি হচ্ছে...' : '⬇ মার্কশীট PDF ডাউনলোড করুন'}
+                                </button>
+                              </div>
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-xs">
+                                  <thead>
+                                    <tr className="text-left text-warm-muted border-b border-warm-border">
+                                      <th className="py-1.5 pr-2 font-medium">#</th>
+                                      <th className="py-1.5 pr-2 font-medium">নাম</th>
+                                      <th className="py-1.5 pr-2 font-medium">ইমেইল</th>
+                                      <th className="py-1.5 pr-2 font-medium">স্কোর</th>
+                                      <th className="py-1.5 pr-2 font-medium">%</th>
+                                      <th className="py-1.5 pr-2 font-medium">ধরন</th>
+                                      <th className="py-1.5 pr-2 font-medium">জমার সময়</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {attempts.map((a, i) => {
+                                      const pct = a.totalQuestions > 0 ? Math.round((a.score / a.totalQuestions) * 100) : 0;
+                                      const pctColor = pct >= 80 ? 'text-green-600' : pct >= 50 ? 'text-amber-600' : 'text-red-600';
+                                      return (
+                                        <tr key={a.id} className="border-b border-gray-100">
+                                          <td className="py-1.5 pr-2 text-warm-muted">{i + 1}</td>
+                                          <td className="py-1.5 pr-2 font-semibold text-gray-900">{a.userName}</td>
+                                          <td className="py-1.5 pr-2 text-warm-muted">{a.userEmail}</td>
+                                          <td className="py-1.5 pr-2 font-semibold">{a.score}/{a.totalQuestions}</td>
+                                          <td className={`py-1.5 pr-2 font-bold ${pctColor}`}>{pct}%</td>
+                                          <td className="py-1.5 pr-2 text-warm-muted">{a.attemptType === 'LIVE' ? 'লাইভ' : 'অনুশীলন'}</td>
+                                          <td className="py-1.5 pr-2 text-warm-muted">{new Date(a.submittedAt).toLocaleString('bn-BD')}</td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
                             </>
                           )}
                         </div>

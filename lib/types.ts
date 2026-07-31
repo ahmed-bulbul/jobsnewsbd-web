@@ -258,6 +258,18 @@ export interface ExamSet {
   userAttemptCount: number;
 }
 
+export interface AdminExamAttempt {
+  id: number;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  score: number;
+  totalQuestions: number;
+  attemptType: 'LIVE' | 'PRACTICE';
+  timeTakenSeconds: number | null;
+  submittedAt: string;
+}
+
 export interface ExamQuestion {
   id: number;
   examSetId: number;

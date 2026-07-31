@@ -630,6 +630,9 @@ export const adminUpdateExamSet = (token: string, id: number, body: unknown) =>
 export const adminDeleteExamSet = (token: string, id: number) =>
   authDelete(`/api/admin/exam/sets/${id}`, token);
 
+export const adminGetExamAttempts = (token: string, examSetId: number) =>
+  authGet<import('./types').AdminExamAttempt[]>(`/api/admin/exam/sets/${examSetId}/attempts`, token);
+
 export const adminGetQuestions = (token: string, examSetId: number) =>
   authGet<import('./types').ExamQuestion[]>(`/api/admin/exam/sets/${examSetId}/questions`, token);
 
