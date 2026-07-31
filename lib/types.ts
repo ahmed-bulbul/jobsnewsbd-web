@@ -215,6 +215,7 @@ export interface PrepTopic {
   description: string | null;
   displayOrder: number;
   contentCount: number;
+  hasLiveExam?: boolean;
 }
 
 export interface PrepCategoryDetail extends PrepCategory {

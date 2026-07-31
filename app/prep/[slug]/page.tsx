@@ -18,13 +18,28 @@ import type { PrepCategoryDetail, PrepTopic, PaymentConfig, EnrollmentRequest, P
 
 function CurriculumCard({ topic, color, locked }: { topic: PrepTopic; color: string; locked: boolean }) {
   const { t } = useLanguage();
+  const isLive = !!topic.hasLiveExam;
   const inner = (
     <>
-      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${color}22` }}>
+      <div className="relative w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${color}22` }}>
         <span className="text-xs font-bold" style={{ color }}>{topic.displayOrder}</span>
+        {isLive && (
+          <span
+            className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white animate-pulse"
+            title={t('লাইভ পরীক্ষা চলছে', 'Live exam running')}
+          />
+        )}
       </div>
       <div className="flex-1 min-w-0">
-        <p className={`font-semibold text-sm leading-snug ${locked ? 'text-gray-500' : 'text-gray-900'}`}>{topic.nameBn}</p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className={`font-semibold text-sm leading-snug ${locked ? 'text-gray-500' : 'text-gray-900'}`}>{topic.nameBn}</p>
+          {isLive && (
+            <span className="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-50 text-red-600 text-[10px] font-bold">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+              {t('লাইভ পরীক্ষা', 'LIVE')}
+            </span>
+          )}
+        </div>
         {topic.contentCount > 0 && (
           <p className="text-xs text-warm-muted mt-0.5">{topic.contentCount} {t('টি কন্টেন্ট', 'contents')}</p>
         )}
