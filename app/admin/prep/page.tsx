@@ -1297,7 +1297,7 @@ export default function AdminPrepPage() {
                                     <tr className="text-left text-warm-muted border-b border-warm-border">
                                       <th className="py-1.5 pr-2 font-medium">#</th>
                                       <th className="py-1.5 pr-2 font-medium">নাম</th>
-                                      <th className="py-1.5 pr-2 font-medium">ইমেইল</th>
+                                      {/*<th className="py-1.5 pr-2 font-medium">ইমেইল</th>*/}
                                       <th className="py-1.5 pr-2 font-medium">স্কোর</th>
                                       <th className="py-1.5 pr-2 font-medium">%</th>
                                       <th className="py-1.5 pr-2 font-medium">ধরন</th>
@@ -1312,7 +1312,7 @@ export default function AdminPrepPage() {
                                         <tr key={a.id} className="border-b border-gray-100">
                                           <td className="py-1.5 pr-2 text-warm-muted">{i + 1}</td>
                                           <td className="py-1.5 pr-2 font-semibold text-gray-900">{a.userName}</td>
-                                          <td className="py-1.5 pr-2 text-warm-muted">{a.userEmail}</td>
+                                          {/*<td className="py-1.5 pr-2 text-warm-muted">{a.userEmail}</td>*/}
                                           <td className="py-1.5 pr-2 font-semibold">{a.score}/{a.totalQuestions}</td>
                                           <td className={`py-1.5 pr-2 font-bold ${pctColor}`}>{pct}%</td>
                                           <td className="py-1.5 pr-2 text-warm-muted">{a.attemptType === 'LIVE' ? 'লাইভ' : 'অনুশীলন'}</td>
