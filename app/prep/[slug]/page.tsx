@@ -243,9 +243,12 @@ function RejectedCard({ req, onRetry }: { req: EnrollmentRequest; onRetry: () =>
 function RoutinePanel({ data, color, locked }: { data: PrepCategoryDetail; color: string; locked: boolean }) {
   const { t } = useLanguage();
 
-  if (!data.routine || data.routine.length === 0) return null;
-
   const now = Date.now();
+  // Only show what's still ahead — once an entry's date/time has passed,
+  // it drops off the routine rather than lingering greyed-out.
+  const upcoming = (data.routine ?? []).filter((entry) => new Date(entry.scheduledAt).getTime() >= now);
+
+  if (upcoming.length === 0) return null;
 
   return (
     <div className="rounded-2xl border border-warm-border bg-white p-5">
@@ -256,37 +259,29 @@ function RoutinePanel({ data, color, locked }: { data: PrepCategoryDetail; color
         {t('পরীক্ষার রুটিন', 'Exam Routine')}
       </h2>
       <div className="space-y-2">
-        {data.routine.map((entry) => {
+        {upcoming.map((entry) => {
           const scheduled = new Date(entry.scheduledAt);
-          const isPast = scheduled.getTime() < now;
           const clickable = !locked && !!(entry.examSetId && entry.examSetPublished && entry.topicSlug);
 
           const dateBn = scheduled.toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' });
           const timeBn = scheduled.toLocaleTimeString('bn-BD', { hour: 'numeric', minute: '2-digit' });
 
           const inner = (
-            <div className={`flex items-center gap-3 rounded-xl border border-warm-border p-3.5 transition-all ${isPast ? 'opacity-60' : clickable ? 'hover:border-primary hover:shadow-sm' : ''}`}>
+            <div className={`flex items-center gap-3 rounded-xl border border-warm-border p-3.5 transition-all ${clickable ? 'hover:border-primary hover:shadow-sm' : ''}`}>
               <div className="w-11 h-11 rounded-lg flex flex-col items-center justify-center shrink-0 leading-none"
-                style={{ background: isPast ? '#F3F4F6' : `${color}22`, color: isPast ? '#9CA3AF' : color }}>
+                style={{ background: `${color}22`, color }}>
                 <span className="text-[10px] font-semibold">{scheduled.toLocaleDateString('bn-BD', { month: 'short' })}</span>
                 <span className="text-base font-black">{scheduled.getDate()}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className={`font-semibold text-sm leading-snug ${isPast ? 'text-gray-500' : 'text-gray-900'}`}>{entry.titleBn}</p>
-                  {isPast && (
-                    <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
-                      {t('সম্পন্ন', 'Done')}
-                    </span>
-                  )}
-                </div>
+                <p className="font-semibold text-sm leading-snug text-gray-900">{entry.titleBn}</p>
                 <p className="text-xs text-warm-muted mt-0.5">
                   {dateBn} • {timeBn}
                   {entry.topicNameBn && ` • ${entry.topicNameBn}`}
                 </p>
                 {entry.description && <p className="text-xs text-gray-500 mt-1 leading-relaxed">{entry.description}</p>}
               </div>
-              {clickable && !isPast && (
+              {clickable && (
                 <svg className="w-4 h-4 text-warm-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
