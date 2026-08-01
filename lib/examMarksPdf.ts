@@ -41,7 +41,6 @@ function buildMarksSheetHtml(examTitle: string, attempts: AdminExamAttempt[]): s
     return `<tr style="${zebra}">
       <td style="padding:8px 10px;border-bottom:1px solid #E5E7EB;font-size:12px;color:#6B7280;">${i + 1}</td>
       <td style="padding:8px 10px;border-bottom:1px solid #E5E7EB;font-size:12px;color:#111827;font-weight:600;">${escapeHtml(a.userName || '—')}</td>
-      // <td style="padding:8px 10px;border-bottom:1px solid #E5E7EB;font-size:11px;color:#6B7280;">${escapeHtml(a.userEmail || '—')}</td>
       <td style="padding:8px 10px;border-bottom:1px solid #E5E7EB;font-size:12px;color:#111827;font-weight:700;">${a.score}/${a.totalQuestions}</td>
       <td style="padding:8px 10px;border-bottom:1px solid #E5E7EB;font-size:12px;font-weight:700;color:${pctColor};">${pct}%</td>
       <td style="padding:8px 10px;border-bottom:1px solid #E5E7EB;font-size:11px;color:#6B7280;">${typeLabel}</td>
