@@ -62,6 +62,15 @@ const TILES: HubTile[] = [
     descBn: 'কোচিং সেন্টার ও ইনস্টিটিউট সম্পর্কে রিভিউ পড়ুন ও লিখুন',
     descEn: 'Read and write reviews of coaching centers and institutes',
   },
+  {
+    href: '/study-corner/question-bank',
+    icon: '❓',
+    color: '#B45309',
+    titleBn: 'প্রশ্ন ব্যাংক',
+    titleEn: 'Question Bank',
+    descBn: 'বিষয়ভিত্তিক MCQ, লিখিত ও ল্যাব প্রশ্নের সংগ্রহ, উত্তরসহ',
+    descEn: 'Category-wise MCQ, written and lab questions with answers',
+  },
 ];
 
 function Tile({ tile }: { tile: HubTile }) {

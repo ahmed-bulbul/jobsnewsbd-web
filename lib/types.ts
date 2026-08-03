@@ -622,3 +622,47 @@ export interface BookOrderBuyerInfo {
   status: BookOrderStatus;
   createdAt: string;
 }
+
+// ── Question Bank ──────────────────────────────────────────────────────────────
+
+export type QuestionBankType = 'MCQ' | 'WRITTEN' | 'LAB';
+
+export interface QuestionBankCategory {
+  id: number;
+  nameBn: string;
+  nameEn: string | null;
+  slug: string;
+  icon: string | null;
+  colorHex: string | null;
+  displayOrder: number;
+  active: boolean;
+  description: string | null;
+  questionCount: number;
+}
+
+export interface QuestionBankQuestion {
+  id: number;
+  categoryId: number;
+  questionType: QuestionBankType;
+  questionText: string;
+  optionA: string | null;
+  optionB: string | null;
+  optionC: string | null;
+  optionD: string | null;
+  correctOption: string | null;
+  answerText: string | null;
+  explanationText: string | null;
+  displayOrder: number;
+  published: boolean;
+}
+
+export interface QuestionBankCategoryDetail {
+  id: number;
+  nameBn: string;
+  nameEn: string | null;
+  slug: string;
+  icon: string | null;
+  colorHex: string | null;
+  description: string | null;
+  questions: QuestionBankQuestion[];
+}

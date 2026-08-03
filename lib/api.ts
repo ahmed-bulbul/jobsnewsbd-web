@@ -659,6 +659,40 @@ export const adminUpdateRoutineEntry = (token: string, id: number, body: unknown
 export const adminDeleteRoutineEntry = (token: string, id: number) =>
   authDelete(`/api/admin/prep/routine/${id}`, token);
 
+// ── Question Bank (public) ────────────────────────────────────────────────────
+
+export const getQuestionBankCategories = () =>
+  get<import('./types').QuestionBankCategory[]>('/api/question-bank/categories');
+
+export const getQuestionBankCategory = (slug: string) =>
+  get<import('./types').QuestionBankCategoryDetail>(`/api/question-bank/categories/${slug}`);
+
+// ── Question Bank (admin) ─────────────────────────────────────────────────────
+
+export const adminGetQuestionBankCategories = (token: string) =>
+  authGet<import('./types').QuestionBankCategory[]>('/api/admin/question-bank/categories', token);
+
+export const adminCreateQuestionBankCategory = (token: string, body: unknown) =>
+  authPost<import('./types').QuestionBankCategory>('/api/admin/question-bank/categories', body, token);
+
+export const adminUpdateQuestionBankCategory = (token: string, id: number, body: unknown) =>
+  authPut<import('./types').QuestionBankCategory>(`/api/admin/question-bank/categories/${id}`, body, token);
+
+export const adminDeleteQuestionBankCategory = (token: string, id: number) =>
+  authDelete(`/api/admin/question-bank/categories/${id}`, token);
+
+export const adminGetQuestionBankQuestions = (token: string, categoryId: number) =>
+  authGet<import('./types').QuestionBankQuestion[]>(`/api/admin/question-bank/categories/${categoryId}/questions`, token);
+
+export const adminCreateQuestionBankQuestion = (token: string, body: unknown) =>
+  authPost<import('./types').QuestionBankQuestion>('/api/admin/question-bank/questions', body, token);
+
+export const adminUpdateQuestionBankQuestion = (token: string, id: number, body: unknown) =>
+  authPut<import('./types').QuestionBankQuestion>(`/api/admin/question-bank/questions/${id}`, body, token);
+
+export const adminDeleteQuestionBankQuestion = (token: string, id: number) =>
+  authDelete(`/api/admin/question-bank/questions/${id}`, token);
+
 // ── Comments ──────────────────────────────────────────────────────────────────
 export const getComments = (slug: string) =>
   get<Comment[]>(`/api/posts/${slug}/comments`);
