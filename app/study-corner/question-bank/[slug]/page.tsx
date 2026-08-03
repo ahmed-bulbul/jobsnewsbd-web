@@ -161,6 +161,7 @@ export default function QuestionBankCategoryPage({ params }: { params: Promise<{
   const [groupKey, setGroupKey] = useState<string | null>(null); // null = card grid view
   const [tab, setTab] = useState<FilterTab>('ALL');
   const [year, setYear] = useState('ALL');
+  const [gridYear, setGridYear] = useState('ALL'); // year filter on the card-grid view
 
   useEffect(() => {
     getQuestionBankCategory(slug)
@@ -170,12 +171,34 @@ export default function QuestionBankCategoryPage({ params }: { params: Promise<{
   }, [slug]);
 
   // Reset everything whenever the category changes.
-  useEffect(() => { setGroupKey(null); setTab('ALL'); setYear('ALL'); }, [slug]);
+  useEffect(() => { setGroupKey(null); setTab('ALL'); setYear('ALL'); setGridYear('ALL'); }, [slug]);
 
   const groups = data ? buildPostGroups(data.questions) : [];
   const activeGroup = groups.find((g) => g.key === groupKey) ?? null;
 
-  const openGroup = (g: PostGroup) => { setGroupKey(g.key); setTab('ALL'); setYear('ALL'); window.scrollTo(0, 0); };
+  const gridYears = data
+    ? Array.from(new Set(data.questions.map((q) => q.examYear).filter((v): v is number => !!v))).sort((a, b) => b - a)
+    : [];
+
+  // On the card grid, a year filter narrows which post-cards show at all
+  // (and how many questions each card's badge reports) rather than opening
+  // any single post.
+  const visibleGroups = groups
+    .map((g) => {
+      if (gridYear === 'ALL' || !data) return g;
+      const matchCount = data.questions.filter(
+        (q) => `${q.examInstitute ?? ''}|${q.examPost ?? ''}` === g.key && String(q.examYear) === gridYear
+      ).length;
+      return { ...g, count: matchCount, years: g.years.filter((y) => String(y) === gridYear) };
+    })
+    .filter((g) => gridYear === 'ALL' || g.count > 0);
+
+  const openGroup = (g: PostGroup) => {
+    setGroupKey(g.key);
+    setTab('ALL');
+    setYear(gridYear !== 'ALL' && g.years.some((y) => String(y) === gridYear) ? gridYear : 'ALL');
+    window.scrollTo(0, 0);
+  };
   const backToGrid = () => setGroupKey(null);
 
   const groupQuestions = activeGroup && data
@@ -221,11 +244,30 @@ export default function QuestionBankCategoryPage({ params }: { params: Promise<{
               {data.description && <p className="text-sm text-gray-600 mt-2 leading-relaxed">{data.description}</p>}
             </div>
 
-            {groups.length === 0 ? (
-              <div className="text-center py-16 text-warm-muted text-sm">{t('এখনো কোনো প্রশ্ন যোগ করা হয়নি', 'No questions added yet')}</div>
+            {gridYears.length > 0 && (
+              <div className="mb-4">
+                <select
+                  value={gridYear}
+                  onChange={(e) => setGridYear(e.target.value)}
+                  className="border border-warm-border rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 focus:outline-none focus:border-primary bg-white"
+                >
+                  <option value="ALL">{t('সব সাল', 'All years')}</option>
+                  {gridYears.map((yr) => (
+                    <option key={yr} value={yr}>{yr}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {visibleGroups.length === 0 ? (
+              <div className="text-center py-16 text-warm-muted text-sm">
+                {gridYear === 'ALL'
+                  ? t('এখনো কোনো প্রশ্ন যোগ করা হয়নি', 'No questions added yet')
+                  : t('এই সালে কোনো প্রশ্ন নেই', 'No questions for this year')}
+              </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {groups.map((g) => <PostCard key={g.key} group={g} onClick={() => openGroup(g)} t={t} />)}
+                {visibleGroups.map((g) => <PostCard key={g.key} group={g} onClick={() => openGroup(g)} t={t} />)}
               </div>
             )}
           </>
