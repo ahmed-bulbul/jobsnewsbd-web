@@ -68,9 +68,9 @@ function BulkQuestionBankImport({
 শুধুমাত্র নিচের ফরম্যাটে একটি JSON অ্যারে দাও — অন্য কোনো লেখা, ভূমিকা, ব্যাখ্যা বা \`\`\` কোড ফেন্স ছাড়া:
 
 [
-  { "type": "MCQ", "questionText": "প্রশ্নের লেখা", "optionA": "...", "optionB": "...", "optionC": "...", "optionD": "...", "correctOption": "A", "explanationText": "সংক্ষিপ্ত ব্যাখ্যা (ঐচ্ছিক)", "examYear": 2023, "examInstitute": "BPSC" },
-  { "type": "WRITTEN", "questionText": "প্রশ্নের লেখা", "answerText": "মডেল উত্তর", "explanationText": "", "examYear": null, "examInstitute": null },
-  { "type": "LAB", "questionText": "সমস্যার বিবরণ", "answerText": "সমাধান বা কোড", "explanationText": "", "examYear": null, "examInstitute": null }
+  { "type": "MCQ", "questionText": "প্রশ্নের লেখা", "optionA": "...", "optionB": "...", "optionC": "...", "optionD": "...", "correctOption": "A", "explanationText": "সংক্ষিপ্ত ব্যাখ্যা (ঐচ্ছিক)", "examYear": 2023, "examInstitute": "BPSC", "examPost": "Assistant Programmer" },
+  { "type": "WRITTEN", "questionText": "প্রশ্নের লেখা", "answerText": "মডেল উত্তর", "explanationText": "", "examYear": null, "examInstitute": null, "examPost": null },
+  { "type": "LAB", "questionText": "সমস্যার বিবরণ", "answerText": "সমাধান বা কোড", "explanationText": "", "examYear": null, "examInstitute": null, "examPost": null }
 ]
 
 নিয়ম:
@@ -78,7 +78,7 @@ function BulkQuestionBankImport({
 - MCQ-এর জন্য: চারটি ভিন্ন বাস্তবসম্মত অপশন এবং correctOption ("A"/"B"/"C"/"D") আবশ্যক।
 - WRITTEN ও LAB-এর জন্য: answerText আবশ্যক (মডেল উত্তর বা সমাধান/কোড)। এই দুই ধরনে optionA/B/C/D বা correctOption দিও না।
 - explanationText সবসময় ঐচ্ছিক — না দিতে চাইলে খালি স্ট্রিং দাও।
-- যদি প্রশ্নপত্র থেকে বোঝা যায় এটি কোন সালের এবং কোন প্রতিষ্ঠানের পরীক্ষা (যেমন BPSC, Bangladesh Bank, Ministry of Finance ইত্যাদি), তাহলে examYear (সংখ্যা) এবং examInstitute (নাম) দাও, না জানা থাকলে null দাও।
+- যদি প্রশ্নপত্র থেকে বোঝা যায় এটি কোন সালের, কোন প্রতিষ্ঠানের এবং কোন পদের পরীক্ষা (যেমন প্রতিষ্ঠান: BPSC/Bangladesh Bank/Ministry of Finance, পদ: AD (ICT)/Assistant Programmer), তাহলে examYear (সংখ্যা), examInstitute (নাম) ও examPost (পদের নাম) দাও, না জানা থাকলে null দাও।
 - আউটপুট শুধু JSON অ্যারে — কোনো ভূমিকা, উপসংহার বা কোড ব্লক মার্কার নয়।`;
 
   const copyPrompt = async () => {
@@ -156,6 +156,7 @@ function BulkQuestionBankImport({
         explanationText: it.explanationText ? String(it.explanationText).trim() : null,
         examYear: it.examYear != null && it.examYear !== '' ? Number(it.examYear) : null,
         examInstitute: it.examInstitute ? String(it.examInstitute).trim() : null,
+        examPost: it.examPost ? String(it.examPost).trim() : null,
         displayOrder: existingCount + i,
         published: true,
       };
@@ -262,6 +263,7 @@ export default function AdminQuestionBankPage() {
   const [qExplanation, setQExplanation] = useState('');
   const [qExamYear, setQExamYear] = useState('');
   const [qExamInstitute, setQExamInstitute] = useState('');
+  const [qExamPost, setQExamPost] = useState('');
   const [qOrder, setQOrder] = useState('0');
   const [qPublished, setQPublished] = useState(true);
 
@@ -326,7 +328,7 @@ export default function AdminQuestionBankPage() {
 
   const resetQForm = () => {
     setEditingQ(null); setQType('MCQ'); setQText(''); setQOptA(''); setQOptB(''); setQOptC(''); setQOptD('');
-    setQCorrect('A'); setQAnswer(''); setQExplanation(''); setQExamYear(''); setQExamInstitute('');
+    setQCorrect('A'); setQAnswer(''); setQExplanation(''); setQExamYear(''); setQExamInstitute(''); setQExamPost('');
     setQOrder('0'); setQPublished(true);
   };
 
@@ -334,7 +336,7 @@ export default function AdminQuestionBankPage() {
     setEditingQ(q); setQType(q.questionType); setQText(q.questionText);
     setQOptA(q.optionA ?? ''); setQOptB(q.optionB ?? ''); setQOptC(q.optionC ?? ''); setQOptD(q.optionD ?? '');
     setQCorrect(q.correctOption ?? 'A'); setQAnswer(q.answerText ?? ''); setQExplanation(q.explanationText ?? '');
-    setQExamYear(q.examYear ? String(q.examYear) : ''); setQExamInstitute(q.examInstitute ?? '');
+    setQExamYear(q.examYear ? String(q.examYear) : ''); setQExamInstitute(q.examInstitute ?? ''); setQExamPost(q.examPost ?? '');
     setQOrder(String(q.displayOrder)); setQPublished(q.published);
   };
 
@@ -359,6 +361,7 @@ export default function AdminQuestionBankPage() {
       explanationText: qExplanation || null,
       examYear: qExamYear.trim() ? Number(qExamYear) : null,
       examInstitute: qExamInstitute.trim() || null,
+      examPost: qExamPost.trim() || null,
       displayOrder: Number(qOrder),
       published: qPublished,
     };
@@ -536,6 +539,7 @@ export default function AdminQuestionBankPage() {
                       <Field label="পরীক্ষার প্রতিষ্ঠান" value={qExamInstitute} onChange={setQExamInstitute} placeholder="BPSC, Bangladesh Bank, Ministry..." />
                     </div>
                   </div>
+                  <Field label="পরীক্ষার পদ (Post)" value={qExamPost} onChange={setQExamPost} placeholder="AD (ICT), Assistant Programmer..." />
 
                   <Field label="ক্রম" value={qOrder} onChange={setQOrder} type="number" />
 
@@ -575,9 +579,9 @@ export default function AdminQuestionBankPage() {
                               {q.published
                                 ? <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">প্রকাশিত</span>
                                 : <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">ড্রাফট</span>}
-                              {(q.examInstitute || q.examYear) && (
+                              {(q.examInstitute || q.examPost || q.examYear) && (
                                 <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
-                                  {[q.examInstitute, q.examYear].filter(Boolean).join(' ')}
+                                  {[[q.examInstitute, q.examPost].filter(Boolean).join(' - '), q.examYear].filter(Boolean).join(' ')}
                                 </span>
                               )}
                             </div>
