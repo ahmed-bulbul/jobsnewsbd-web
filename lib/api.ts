@@ -616,6 +616,12 @@ export const getExamQuestions = (examSetId: number) =>
 export const submitExamAttempt = (examSetId: number, answers: { questionId: number; selectedOption: string | null }[], token: string) =>
   authPost<import('./types').ExamResult>(`/api/exam/sets/${examSetId}/attempt`, { answers }, token);
 
+export const getMyAttempts = (token: string) =>
+  authGet<import('./types').ExamAttemptSummary[]>('/api/exam/my-attempts', token);
+
+export const getAttemptResult = (token: string, attemptId: number) =>
+  authGet<import('./types').ExamResult>(`/api/exam/attempts/${attemptId}`, token);
+
 // ── Admin Exam ────────────────────────────────────────────────────────────────
 
 export const adminGetExamSets = (token: string, topicId: number) =>

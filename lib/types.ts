@@ -337,6 +337,17 @@ export interface ExamResult {
   questions: QuestionResult[];
 }
 
+export interface ExamAttemptSummary {
+  attemptId: number;
+  examSetId: number;
+  examSetTitleBn: string;
+  topicNameBn: string;
+  score: number;
+  totalQuestions: number;
+  attemptType: 'LIVE' | 'PRACTICE';
+  submittedAt: string;
+}
+
 export interface NotificationPreference {
   topic: 'JOB_CIRCULAR' | 'EXAM_SET' | 'DEADLINE_REMINDER' | 'EXAM_ROUTINE';
   description: string;

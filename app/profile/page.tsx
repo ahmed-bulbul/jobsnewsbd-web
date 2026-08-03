@@ -431,6 +431,12 @@ export default function ProfilePage() {
               </div>
               <div className="flex gap-2 shrink-0">
                 <Link
+                  href="/profile/exam-history"
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-medium transition-colors"
+                >
+                  📊 {t('পরীক্ষার ফলাফল', 'Exam History')}
+                </Link>
+                <Link
                   href="/profile/notifications"
                   className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-medium transition-colors"
                 >
