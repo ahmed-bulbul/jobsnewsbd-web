@@ -94,6 +94,7 @@ export default function QuestionBankCategoryPage({ params }: { params: Promise<{
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [tab, setTab] = useState<FilterTab>('ALL');
+  const [institute, setInstitute] = useState('ALL');
 
   useEffect(() => {
     getQuestionBankCategory(slug)
@@ -102,7 +103,16 @@ export default function QuestionBankCategoryPage({ params }: { params: Promise<{
       .finally(() => setLoading(false));
   }, [slug]);
 
-  const filtered = data ? data.questions.filter((q) => tab === 'ALL' || q.questionType === tab) : [];
+  // Reset the institute filter whenever the category changes, so a stale
+  // institute name from a previous category doesn't silently hide everything.
+  useEffect(() => { setInstitute('ALL'); setTab('ALL'); }, [slug]);
+
+  const institutes = data
+    ? Array.from(new Set(data.questions.map((q) => q.examInstitute).filter((v): v is string => !!v))).sort()
+    : [];
+
+  const byType = data ? data.questions.filter((q) => tab === 'ALL' || q.questionType === tab) : [];
+  const filtered = byType.filter((q) => institute === 'ALL' || q.examInstitute === institute);
 
   const counts = data ? {
     ALL: data.questions.length,
@@ -138,20 +148,37 @@ export default function QuestionBankCategoryPage({ params }: { params: Promise<{
               {data.description && <p className="text-sm text-gray-600 mt-2 leading-relaxed">{data.description}</p>}
             </div>
 
-            <div className="flex gap-1 bg-white border border-warm-border rounded-xl p-1 mb-5 w-fit flex-wrap">
-              {(['ALL', 'MCQ', 'WRITTEN', 'LAB'] as FilterTab[]).map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setTab(f)}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${tab === f ? 'bg-primary text-white shadow-sm' : 'text-gray-600 hover:text-primary'}`}
+            <div className="flex items-center gap-3 flex-wrap mb-5">
+              <div className="flex gap-1 bg-white border border-warm-border rounded-xl p-1 w-fit flex-wrap">
+                {(['ALL', 'MCQ', 'WRITTEN', 'LAB'] as FilterTab[]).map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setTab(f)}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${tab === f ? 'bg-primary text-white shadow-sm' : 'text-gray-600 hover:text-primary'}`}
+                  >
+                    {f === 'ALL' ? t('সব', 'All') : t(TYPE_BADGE[f].bn, TYPE_BADGE[f].en)} ({counts[f]})
+                  </button>
+                ))}
+              </div>
+
+              {institutes.length > 0 && (
+                <select
+                  value={institute}
+                  onChange={(e) => setInstitute(e.target.value)}
+                  className="border border-warm-border rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 focus:outline-none focus:border-primary bg-white"
                 >
-                  {f === 'ALL' ? t('সব', 'All') : t(TYPE_BADGE[f].bn, TYPE_BADGE[f].en)} ({counts[f]})
-                </button>
-              ))}
+                  <option value="ALL">{t('সব প্রতিষ্ঠান', 'All institutes')}</option>
+                  {institutes.map((inst) => (
+                    <option key={inst} value={inst}>{inst}</option>
+                  ))}
+                </select>
+              )}
             </div>
 
             {filtered.length === 0 ? (
-              <div className="text-center py-16 text-warm-muted text-sm">{t('এই ধরনের কোনো প্রশ্ন নেই', 'No questions of this type yet')}</div>
+              <div className="text-center py-16 text-warm-muted text-sm">
+                {t('এই ফিল্টারে কোনো প্রশ্ন নেই', 'No questions match this filter')}
+              </div>
             ) : (
               <div className="space-y-3">
                 {filtered.map((q, i) => <QuestionCard key={q.id} q={q} index={i} />)}
