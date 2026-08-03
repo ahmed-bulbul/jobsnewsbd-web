@@ -4,6 +4,7 @@ import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import CopyGuard from '@/components/questionbank/CopyGuard';
 import { useLanguage } from '@/context/LanguageContext';
 import { getQuestionBankCategory } from '@/lib/api';
 import type { QuestionBankCategoryDetail, QuestionBankQuestion, QuestionBankType } from '@/lib/types';
@@ -193,9 +194,10 @@ export default function QuestionBankCategoryPage({ params }: { params: Promise<{
 
   return (
     <div className="min-h-screen bg-warm-bg flex flex-col">
+      <CopyGuard />
       <Header />
 
-      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
+      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8 select-none">
         <nav className="flex items-center gap-2 text-xs text-warm-muted mb-6 flex-wrap">
           <Link href="/study-corner" className="hover:text-primary transition-colors">{t('স্টাডি কর্নার', 'Study Corner')}</Link>
           <span>›</span>
