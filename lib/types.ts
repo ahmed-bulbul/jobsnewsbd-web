@@ -652,6 +652,8 @@ export interface QuestionBankQuestion {
   correctOption: string | null;
   answerText: string | null;
   explanationText: string | null;
+  examYear: number | null;
+  examInstitute: string | null;
   displayOrder: number;
   published: boolean;
 }

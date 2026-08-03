@@ -30,6 +30,11 @@ function QuestionCard({ q, index }: { q: QuestionBankQuestion; index: number }) 
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ color: badge.color, background: badge.bg }}>
               {t(badge.bn, badge.en)}
             </span>
+            {(q.examInstitute || q.examYear) && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
+                {[q.examInstitute, q.examYear].filter(Boolean).join(' ')}
+              </span>
+            )}
           </div>
           <p className="text-sm font-medium text-gray-900 leading-relaxed whitespace-pre-wrap">{q.questionText}</p>
         </div>
