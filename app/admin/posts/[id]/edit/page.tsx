@@ -13,6 +13,37 @@ import type { CategoryType, Category, PostType, Post } from '@/lib/types';
 
 interface Props { params: Promise<{ id: string }> }
 
+function CopyUrlRow({ url }: { url: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        readOnly
+        value={url}
+        onFocus={(e) => e.target.select()}
+        className="input flex-1 text-xs text-gray-600 bg-gray-50"
+      />
+      <button
+        type="button"
+        onClick={copy}
+        className={`shrink-0 px-3 py-2 rounded-lg text-xs font-medium border transition-all whitespace-nowrap ${
+          copied
+            ? 'bg-emerald-50 border-emerald-300 text-emerald-700'
+            : 'bg-cream border-warm-border text-gray-600 hover:border-primary hover:text-primary'
+        }`}
+      >
+        {copied ? '✓ কপি হয়েছে' : '📋 লিংক কপি করুন'}
+      </button>
+    </div>
+  );
+}
+
 export default function EditPostPage({ params }: Props) {
   const router = useRouter();
   const [id, setId]               = useState(0);
@@ -328,6 +359,7 @@ export default function EditPostPage({ params }: Props) {
                   দেখুন
                 </a>
               </div>
+              <CopyUrlRow url={existingPdfUrl} />
               <div className="flex gap-2">
                 <label className="flex-1">
                   <span className="label">নতুন PDF দিয়ে প্রতিস্থাপন করুন</span>
@@ -424,6 +456,7 @@ export default function EditPostPage({ params }: Props) {
                 </div>
                 <span className="text-green-700 text-sm font-medium flex-1">লোগো আপলোড করা আছে ✓</span>
               </div>
+              <CopyUrlRow url={existingLogoUrl} />
               <div className="flex gap-2">
                 <label className="flex-1">
                   <span className="label">নতুন লোগো দিয়ে প্রতিস্থাপন করুন</span>
