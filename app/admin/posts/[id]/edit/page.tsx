@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  adminUpdatePost, adminUploadCircularPdf, adminDeleteCircularPdf,
+  adminUpdatePost, adminUploadCircularPdf, adminDeleteCircularPdf, adminSetCircularPdfUrl,
   getCategoryTypes, getCategories, getPostTypes,
 } from '@/lib/api';
 import type { CategoryType, Category, PostType, Post } from '@/lib/types';
@@ -26,6 +26,8 @@ export default function EditPostPage({ params }: Props) {
   const [pdfFile, setPdfFile]             = useState<File | null>(null);
   const [pdfUploading, setPdfUploading]   = useState(false);
   const [pdfMsg, setPdfMsg]               = useState('');
+  const [pdfUrlInput, setPdfUrlInput]     = useState('');
+  const [pdfUrlSaving, setPdfUrlSaving]   = useState(false);
   const pdfInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
@@ -113,6 +115,22 @@ export default function EditPostPage({ params }: Props) {
       setPdfMsg('PDF আপলোড ব্যর্থ হয়েছে');
     } finally {
       setPdfUploading(false);
+    }
+  };
+
+  const handleSetPdfUrl = async () => {
+    if (!pdfUrlInput.trim()) return;
+    setPdfUrlSaving(true);
+    setPdfMsg('');
+    try {
+      const updated = await adminSetCircularPdfUrl(id, pdfUrlInput.trim(), token);
+      setExistingPdfUrl(updated.circularPdfUrl ?? null);
+      setPdfUrlInput('');
+      setPdfMsg('PDF লিংক সংরক্ষণ হয়েছে ✓');
+    } catch {
+      setPdfMsg('PDF লিংক সংরক্ষণ ব্যর্থ হয়েছে');
+    } finally {
+      setPdfUrlSaving(false);
     }
   };
 
@@ -306,6 +324,28 @@ export default function EditPostPage({ params }: Props) {
               </button>
             </div>
           )}
+
+          <div className="pt-3 border-t border-warm-border space-y-2">
+            <label className="label">অথবা PDF এর সরাসরি লিংক দিন</label>
+            <p className="text-xs text-warm-muted">একই PDF একাধিক পোস্টে ব্যবহার করতে চাইলে (যেমন বাল্ক তৈরি করা পোস্টগুলোর জন্য), আগে আপলোড করা একটি PDF এর লিংক এখানে পেস্ট করুন।</p>
+            <div className="flex gap-2">
+              <input
+                value={pdfUrlInput}
+                onChange={(e) => setPdfUrlInput(e.target.value)}
+                type="url"
+                placeholder="https://..."
+                className="input flex-1"
+              />
+              <button
+                type="button"
+                onClick={handleSetPdfUrl}
+                disabled={!pdfUrlInput.trim() || pdfUrlSaving}
+                className="btn-primary py-2 px-4 text-sm disabled:opacity-50 whitespace-nowrap"
+              >
+                {pdfUrlSaving ? 'সংরক্ষণ হচ্ছে...' : 'লিংক সংরক্ষণ করুন'}
+              </button>
+            </div>
+          </div>
 
           {pdfMsg && (
             <p className={`text-sm ${pdfMsg.includes('✓') || pdfMsg.includes('মুছে') ? 'text-green-700' : 'text-red-600'}`}>

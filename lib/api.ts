@@ -344,6 +344,9 @@ export async function adminUploadCircularPdf(postId: number, file: File, token: 
 export const adminDeleteCircularPdf = (postId: number, token: string) =>
   authDelete(`/api/admin/posts/${postId}/circular`, token);
 
+export const adminSetCircularPdfUrl = (postId: number, url: string, token: string) =>
+  authPut<Post>(`/api/admin/posts/${postId}/circular-url`, { url }, token);
+
 export const adminGetAnalytics = (token: string) =>
   authGet<{
     totalPublished: number;

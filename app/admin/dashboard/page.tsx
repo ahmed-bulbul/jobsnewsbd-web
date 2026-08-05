@@ -9,13 +9,19 @@ import {
 } from '@/lib/api';
 import { formatBanglaDate } from '@/lib/utils';
 import StatusBadge from '@/components/ui/StatusBadge';
+import Pagination from '@/components/ui/Pagination';
 import type { CategoryType, Category, PostType, PostSummary } from '@/lib/types';
+
+const POSTS_PAGE_SIZE = 20;
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [token, setToken]             = useState('');
   const [adminName, setAdminName]     = useState('');
   const [posts, setPosts]             = useState<PostSummary[]>([]);
+  const [postsPage, setPostsPage]     = useState(0);
+  const [postsTotalPages, setPostsTotalPages] = useState(0);
+  const [postsTotal, setPostsTotal]   = useState(0);
   const [categoryTypes, setCategoryTypes] = useState<CategoryType[]>([]);
   const [categories, setCategories]   = useState<Category[]>([]);
   const [postTypes, setPostTypes]     = useState<PostType[]>([]);
@@ -39,9 +45,12 @@ export default function AdminDashboard() {
 
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(''), 3000); };
 
-  const loadPosts = useCallback(async (t: string) => {
-    const res = await adminGetPosts(t);
+  const loadPosts = useCallback(async (t: string, p = 0) => {
+    const res = await adminGetPosts(t, p, POSTS_PAGE_SIZE);
     setPosts(res.content);
+    setPostsPage(res.page);
+    setPostsTotalPages(res.totalPages);
+    setPostsTotal(res.totalElements);
   }, []);
 
   useEffect(() => {
@@ -60,10 +69,14 @@ export default function AdminDashboard() {
       .finally(() => setLoading(false));
   }, [router, loadPosts]);
 
+  const handlePostsPageChange = (p: number) => {
+    loadPosts(token, p);
+  };
+
   const handleDeletePost = async (id: number) => {
     if (!confirm('এই বিজ্ঞপ্তি মুছে ফেলবেন?')) return;
     await adminDeletePost(id, token);
-    await loadPosts(token);
+    await loadPosts(token, postsPage);
     flash('বিজ্ঞপ্তি মুছে ফেলা হয়েছে।');
   };
 
@@ -103,7 +116,7 @@ export default function AdminDashboard() {
   }
 
   const tabs = [
-    { id: 'posts',      label: `বিজ্ঞপ্তি (${posts.length})` },
+    { id: 'posts',      label: `বিজ্ঞপ্তি (${postsTotal})` },
     { id: 'categories', label: 'বিভাগ' },
     { id: 'types',      label: 'ধরন সমূহ' },
   ] as const;
@@ -227,6 +240,8 @@ export default function AdminDashboard() {
                 </table>
               </div>
             </div>
+
+            <Pagination page={postsPage} totalPages={postsTotalPages} onPageChange={handlePostsPageChange} />
           </div>
         )}
 
