@@ -1,21 +1,27 @@
-import { getCategoryTypes, getCategories, getPosts } from '@/lib/api';
+import { getCategoryTypes, getCategories, getPosts, getQuestionBankCategories } from '@/lib/api';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import HeroSearch from '@/components/home/HeroSearch';
 import CategoryPills from '@/components/home/CategoryPills';
-import UrgencyTicker from '@/components/home/UrgencyTicker';
+import QuickAccessChips from '@/components/home/QuickAccessChips';
+import DeadlineSoonList from '@/components/home/DeadlineSoonList';
 import InfiniteJobList from '@/components/home/InfiniteJobList';
 import T from '@/components/ui/T';
-import type { Category, CategoryType } from '@/lib/types';
+import type { Category, CategoryType, PostSummary, QuestionBankCategory } from '@/lib/types';
 import Link from 'next/link';
 
 export const revalidate = 60;
 
+const DEADLINE_SOON_DAYS = 5;
+
 export default async function HomePage() {
-  const [categoryTypes, categories, latestPosts] = await Promise.all([
+  const [categoryTypes, categories, latestPosts, deadlineSoon, qbCategories] = await Promise.all([
     getCategoryTypes().catch((): CategoryType[] => []),
     getCategories().catch((): Category[] => []),
-    getPosts({ size: 9 }).catch(() => ({ content: [], totalElements: 0, totalPages: 0, page: 0, size: 9, last: true })),
+    getPosts({ size: 9 }).catch(() => ({ content: [] as PostSummary[], totalElements: 0, totalPages: 0, page: 0, size: 9, last: true })),
+    getPosts({ status: 'ONGOING', deadlineWithinDays: DEADLINE_SOON_DAYS, size: 6 })
+      .catch(() => ({ content: [] as PostSummary[], totalElements: 0, totalPages: 0, page: 0, size: 6, last: true })),
+    getQuestionBankCategories().catch((): QuestionBankCategory[] => []),
   ]);
 
   // category name → category type slug (for JobCard border color)
@@ -25,13 +31,24 @@ export default async function HomePage() {
     if (ct) nameToTypeSlug[c.nameBn] = ct.slug;
   });
 
+  // Soonest-expiring ongoing posts, for the Deadline Soon column
+  const deadlineSoonPosts = [...deadlineSoon.content].sort(
+    (a, b) => new Date(a.applicationEnd!).getTime() - new Date(b.applicationEnd!).getTime()
+  );
+
+  const totalQuestions = qbCategories.reduce((sum, c) => sum + (c.questionCount ?? 0), 0);
+
   return (
     <>
       <Header />
       <main>
-        <HeroSearch />
+        <HeroSearch categoryTypes={categoryTypes} />
 
-        <UrgencyTicker posts={latestPosts.content} />
+        <QuickAccessChips
+          latestCount={latestPosts.totalElements}
+          deadlineSoonCount={deadlineSoon.totalElements}
+          totalQuestions={totalQuestions}
+        />
 
         {/* Stats bar */}
         <div className="bg-primary-900 text-white">
@@ -52,24 +69,49 @@ export default async function HomePage() {
         {/* Categories */}
         <CategoryPills categoryTypes={categoryTypes} categories={categories} />
 
-        {/* Job listing with infinite scroll */}
+        {/* Job listing with infinite scroll + sidebar */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="section-title">
-              <span className="text-primary">▍</span>
-              <T bn="সর্বশেষ চাকরির বিজ্ঞপ্তি" en="Latest Job Circulars" />
-            </h2>
-            <Link href="/jobs" className="text-sm text-primary-600 hover:text-primary font-medium hover:underline">
-              <T bn="ফিল্টার করুন →" en="Filter jobs →" />
-            </Link>
-          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="section-title">
+                  <span className="text-primary">▍</span>
+                  <T bn="সর্বশেষ চাকরির বিজ্ঞপ্তি" en="Latest Job Circulars" />
+                </h2>
+                <Link href="/jobs" className="text-sm text-primary-600 hover:text-primary font-medium hover:underline">
+                  <T bn="সব দেখুন →" en="View All →" />
+                </Link>
+              </div>
 
-          <InfiniteJobList
-            initialPosts={latestPosts.content}
-            initialLast={latestPosts.last}
-            initialPage={latestPosts.page}
-            nameToTypeSlug={nameToTypeSlug}
-          />
+              <InfiniteJobList
+                initialPosts={latestPosts.content}
+                initialLast={latestPosts.last}
+                initialPage={latestPosts.page}
+                nameToTypeSlug={nameToTypeSlug}
+              />
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-5">
+              <DeadlineSoonList posts={deadlineSoonPosts} />
+
+              <div className="card p-5 bg-primary-50 border-primary-100">
+                <h3 className="font-bold text-gray-900 text-sm mb-1.5">
+                  <T bn="MCQ দিয়ে প্রস্তুতি নিন" en="Practice with MCQs" />
+                </h3>
+                <ul className="text-xs text-gray-700 mb-4 leading-relaxed space-y-1">
+                  {totalQuestions > 0 && (
+                    <li>• <T bn={`${totalQuestions}+ প্রশ্ন`} en={`${totalQuestions}+ Questions`} /></li>
+                  )}
+                  <li>• <T bn={`${qbCategories.length}+ বিষয়ভিত্তিক ক্যাটাগরি`} en={`${qbCategories.length}+ Subject Categories`} /></li>
+                  <li>• <T bn="বিস্তারিত ব্যাখ্যাসহ উত্তর" en="Detailed Explanations" /></li>
+                </ul>
+                <Link href="/study-corner/question-bank" className="btn-primary text-sm w-full justify-center">
+                  <T bn="অনুশীলন শুরু করুন →" en="Start Practicing →" />
+                </Link>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* About / intro — real content about the site for visitors and search engines */}

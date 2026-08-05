@@ -286,8 +286,8 @@ export const getCategories = (categoryTypeId?: number) =>
 export const getPostTypes = () =>
   get<PostType[]>('/api/post-types');
 
-export const getPosts = ({ categoryId, categoryTypeId, postTypeId, status, q, page = 0, size = 12 }: PostFilters = {}) =>
-  get<PagedResponse<PostSummary>>('/api/posts', { categoryId, categoryTypeId, postTypeId, status, q, page, size });
+export const getPosts = ({ categoryId, categoryTypeId, postTypeId, status, q, deadlineWithinDays, postedToday, page = 0, size = 12 }: PostFilters = {}) =>
+  get<PagedResponse<PostSummary>>('/api/posts', { categoryId, categoryTypeId, postTypeId, status, q, deadlineWithinDays, postedToday, page, size });
 
 export const getPostBySlug = (slug: string) =>
   get<Post>(`/api/posts/${slug}`);

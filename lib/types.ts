@@ -99,6 +99,8 @@ export interface PostFilters {
   postTypeId?: number;
   status?: PostStatus;
   q?: string;
+  deadlineWithinDays?: number;
+  postedToday?: boolean;
   page?: number;
   size?: number;
 }
