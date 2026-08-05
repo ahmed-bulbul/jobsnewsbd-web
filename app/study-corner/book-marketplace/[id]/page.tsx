@@ -103,9 +103,18 @@ export default function BookListingDetailPage({ params }: { params: Promise<{ id
 
             {listing.author && <p className="text-sm text-warm-muted">{listing.author}</p>}
 
-            <span className="inline-block w-fit text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">
-              {t(CONDITION_META[listing.condition].bn, CONDITION_META[listing.condition].en)}
-            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-block w-fit text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">
+                {t(CONDITION_META[listing.condition].bn, CONDITION_META[listing.condition].en)}
+              </span>
+              {!listing.sold && (
+                <span className={`inline-block w-fit text-xs font-semibold px-2.5 py-1 rounded-full ${listing.quantity > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+                  {listing.quantity > 0
+                    ? t(`স্টকে আছে: ${listing.quantity}`, `Available: ${listing.quantity}`)
+                    : t('স্টক নেই', 'Out of stock')}
+                </span>
+              )}
+            </div>
 
             {listing.description && (
               <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap pt-2 border-t border-warm-border">{listing.description}</p>
@@ -135,9 +144,11 @@ export default function BookListingDetailPage({ params }: { params: Promise<{ id
                     </Link>
                   </p>
                 </div>
-              ) : listing.sold ? (
+              ) : listing.sold || listing.quantity <= 0 ? (
                 <div className="bg-gray-50 rounded-xl px-4 py-3 text-sm text-warm-muted">
-                  {t('বইটি ইতিমধ্যে বিক্রি হয়ে গেছে।', 'This book has already been sold.')}
+                  {listing.sold
+                    ? t('বইটি ইতিমধ্যে বিক্রি হয়ে গেছে।', 'This book has already been sold.')
+                    : t('বইটির কোনো কপি এখন স্টকে নেই।', 'This book is currently out of stock.')}
                 </div>
               ) : (
                 <div className="space-y-3">

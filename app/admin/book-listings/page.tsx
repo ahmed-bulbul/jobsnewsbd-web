@@ -155,7 +155,7 @@ export default function AdminBookListingsPage() {
                         {item.sellerName} <span className="font-normal">({item.sellerEmail})</span>
                       </p>
                       <p className="text-xs text-warm-muted">
-                        ৳{item.price} • {CONDITION_LABEL[item.condition] ?? item.condition}
+                        ৳{item.price} • {CONDITION_LABEL[item.condition] ?? item.condition} • পরিমাণ: {item.quantity}
                         {item.sold && <> • বিক্রি হয়ে গেছে</>}
                       </p>
                       {item.contactNumber && (

@@ -878,6 +878,9 @@ export const setBookListingSold = (token: string, id: number, sold: boolean) =>
 export const setBookListingContactNumber = (token: string, id: number, contactNumber: string) =>
   authPatch<MyBookListing>(`/api/user/book-listings/${id}/contact`, { contactNumber }, token);
 
+export const setBookListingQuantity = (token: string, id: number, quantity: number) =>
+  authPatch<MyBookListing>(`/api/user/book-listings/${id}/quantity`, { quantity }, token);
+
 export const deleteMyBookListing = (token: string, id: number) =>
   authDelete(`/api/user/book-listings/${id}`, token);
 

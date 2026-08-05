@@ -18,6 +18,7 @@ export default function SubmitBookListingPage() {
   const [author, setAuthor] = useState('');
   const [condition, setCondition] = useState<BookCondition>('GOOD');
   const [price, setPrice] = useState('');
+  const [quantity, setQuantity] = useState('1');
   const [contactNumber, setContactNumber] = useState('');
   const [description, setDescription] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -39,6 +40,8 @@ export default function SubmitBookListingPage() {
     const priceNum = Number(price);
     if (!priceNum || priceNum <= 0) { setError(t('সঠিক দাম লিখুন', 'Please enter a valid price')); return; }
     if (!contactNumber.trim()) { setError(t('যোগাযোগের নম্বর দিন', 'Please enter a contact number')); return; }
+    const quantityNum = Number(quantity);
+    if (!quantityNum || quantityNum <= 0) { setError(t('সঠিক পরিমাণ লিখুন', 'Please enter a valid quantity')); return; }
     setSubmitting(true);
     setError('');
     try {
@@ -49,6 +52,7 @@ export default function SubmitBookListingPage() {
         price: priceNum,
         description: description.trim() || undefined,
         contactNumber: contactNumber.trim(),
+        quantity: quantityNum,
       });
       if (photoFile) {
         try { await uploadBookListingPhoto(user.token, created.id, photoFile); } catch { /* non-fatal */ }
@@ -153,6 +157,10 @@ export default function SubmitBookListingPage() {
                 <div>
                   <label className="label">{t('যোগাযোগের নম্বর', 'Contact Number')} *</label>
                   <input type="tel" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} required maxLength={20} className="input" placeholder={t('যেমনঃ ০১৭xxxxxxxx', 'e.g. 017xxxxxxxx')} />
+                </div>
+                <div>
+                  <label className="label">{t('কতগুলো কপি আছে', 'Quantity Available')} *</label>
+                  <input type="number" min={1} value={quantity} onChange={(e) => setQuantity(e.target.value)} required className="input" placeholder="১" />
                 </div>
               </div>
 

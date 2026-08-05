@@ -8,7 +8,7 @@ import Footer from '@/components/layout/Footer';
 import Pagination from '@/components/ui/Pagination';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
-import { getMyBookListings, setBookListingSold, deleteMyBookListing, getBookListingOrders, setBookListingContactNumber } from '@/lib/api';
+import { getMyBookListings, setBookListingSold, deleteMyBookListing, getBookListingOrders, setBookListingContactNumber, setBookListingQuantity } from '@/lib/api';
 import type { MyBookListing, BookListingStatus, BookCondition, BookOrderBuyerInfo } from '@/lib/types';
 
 const STATUS_META: Record<BookListingStatus, { bn: string; en: string; bg: string; color: string }> = {
@@ -38,6 +38,9 @@ export default function MyBookListingsPage() {
   const [editingContactId, setEditingContactId] = useState<number | null>(null);
   const [contactInput, setContactInput] = useState('');
   const [contactSaving, setContactSaving] = useState(false);
+  const [editingQuantityId, setEditingQuantityId] = useState<number | null>(null);
+  const [quantityInput, setQuantityInput] = useState('');
+  const [quantitySaving, setQuantitySaving] = useState(false);
 
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(''), 3000); };
 
@@ -87,6 +90,20 @@ export default function MyBookListingsPage() {
       load();
     } catch { flash('ব্যর্থ হয়েছে'); }
     finally { setContactSaving(false); }
+  };
+
+  const handleSaveQuantity = async (id: number) => {
+    if (!user?.token) return;
+    const n = Number(quantityInput);
+    if (!Number.isInteger(n) || n < 0) return;
+    setQuantitySaving(true);
+    try {
+      await setBookListingQuantity(user.token, id, n);
+      flash('পরিমাণ সংরক্ষণ হয়েছে');
+      setEditingQuantityId(null);
+      load();
+    } catch { flash('ব্যর্থ হয়েছে'); }
+    finally { setQuantitySaving(false); }
   };
 
   const handleDelete = async (id: number) => {
@@ -161,6 +178,40 @@ export default function MyBookListingsPage() {
                   </p>
                   {listing.status === 'REJECTED' && listing.adminNote && (
                     <p className="text-xs text-red-600 bg-red-50 rounded-lg px-2 py-1 mt-1">{t('কারণ', 'Reason')}: {listing.adminNote}</p>
+                  )}
+
+                  {editingQuantityId === listing.id ? (
+                    <div className="flex gap-2 mt-2">
+                      <input
+                        type="number"
+                        min={0}
+                        value={quantityInput}
+                        onChange={(e) => setQuantityInput(e.target.value)}
+                        className="input text-xs py-1.5 w-20"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => handleSaveQuantity(listing.id)}
+                        disabled={quantityInput === '' || quantitySaving}
+                        className="btn-primary text-xs px-3 py-1.5 disabled:opacity-50"
+                      >
+                        {quantitySaving ? t('সংরক্ষণ হচ্ছে...', 'Saving...') : t('সংরক্ষণ', 'Save')}
+                      </button>
+                      <button onClick={() => setEditingQuantityId(null)} className="text-xs text-warm-muted hover:underline px-1">
+                        {t('বাতিল', 'Cancel')}
+                      </button>
+                    </div>
+                  ) : (
+                    <p className={`text-xs mt-1 ${listing.quantity <= 0 ? 'text-red-600 font-semibold' : 'text-warm-muted'}`}>
+                      {t('পরিমাণ', 'Quantity')}: {listing.quantity}
+                      {listing.quantity <= 0 && <> ({t('স্টক নেই', 'Out of stock')})</>}{' '}
+                      <button
+                        onClick={() => { setEditingQuantityId(listing.id); setQuantityInput(String(listing.quantity)); }}
+                        className="text-primary hover:underline font-semibold"
+                      >
+                        {t('পরিবর্তন করুন', 'Edit')}
+                      </button>
+                    </p>
                   )}
 
                   {editingContactId === listing.id ? (

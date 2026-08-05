@@ -26,10 +26,10 @@ function ListingCard({ listing }: { listing: BookListing }) {
       href={`/study-corner/book-marketplace/${listing.id}`}
       className="group bg-white rounded-2xl border border-warm-border hover:border-primary hover:shadow-md transition-all overflow-hidden flex flex-col relative"
     >
-      {listing.sold && (
+      {(listing.sold || listing.quantity <= 0) && (
         <div className="absolute top-2 right-2 z-10">
           <span className="bg-gray-900/80 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-            {t('বিক্রি হয়ে গেছে', 'Sold')}
+            {listing.sold ? t('বিক্রি হয়ে গেছে', 'Sold') : t('স্টক নেই', 'Out of stock')}
           </span>
         </div>
       )}
