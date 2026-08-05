@@ -22,29 +22,37 @@ interface InfoStore {
   motherBn: string;
   motherEn: string;
   dob: string;
+  gender: string;
+  maritalStatus: string;
   nid: string;
   birthCert: string;
+  passportId: string;
   bloodGroup: string;
   religion: string;
   nationality: string;
   quota: string;
+  departmentalStatus: string;
   // Contact
   mobile: string;
   altMobile: string;
   email: string;
   teletalk: string;
   // Present address
+  presentCareOf: string;
   presentVillage: string;
   presentUnion: string;
   presentUpazila: string;
   presentDistrict: string;
+  presentPostOffice: string;
   presentPost: string;
   // Permanent address
   sameAsPresent: boolean;
+  permCareOf: string;
   permVillage: string;
   permUnion: string;
   permUpazila: string;
   permDistrict: string;
+  permPostOffice: string;
   permPost: string;
   // SSC
   sscBoard: string;
@@ -75,12 +83,13 @@ interface InfoStore {
 
 const EMPTY: InfoStore = {
   nameBn: '', nameEn: '', fatherBn: '', fatherEn: '', motherBn: '', motherEn: '',
-  dob: '', nid: '', birthCert: '', bloodGroup: '', religion: 'ইসলাম', nationality: 'বাংলাদেশী',
-  quota: 'প্রযোজ্য নয়',
+  dob: '', gender: '', maritalStatus: 'অবিবাহিত', nid: '', birthCert: '', passportId: '',
+  bloodGroup: '', religion: 'ইসলাম', nationality: 'বাংলাদেশী',
+  quota: 'প্রযোজ্য নয়', departmentalStatus: 'প্রযোজ্য নয়',
   mobile: '', altMobile: '', email: '', teletalk: '',
-  presentVillage: '', presentUnion: '', presentUpazila: '', presentDistrict: '', presentPost: '',
+  presentCareOf: '', presentVillage: '', presentUnion: '', presentUpazila: '', presentDistrict: '', presentPostOffice: '', presentPost: '',
   sameAsPresent: false,
-  permVillage: '', permUnion: '', permUpazila: '', permDistrict: '', permPost: '',
+  permCareOf: '', permVillage: '', permUnion: '', permUpazila: '', permDistrict: '', permPostOffice: '', permPost: '',
   sscBoard: '', sscYear: '', sscRoll: '', sscGpa: '', sscGroup: 'বিজ্ঞান',
   hscBoard: '', hscYear: '', hscRoll: '', hscGpa: '', hscGroup: 'বিজ্ঞান',
   gradUniversity: '', gradSubject: '', gradYear: '', gradCgpa: '', gradDegree: 'স্নাতক (সম্মান)',
@@ -380,11 +389,13 @@ export default function InfoStorePage() {
     setInfo((prev) => {
       const next = { ...prev, [key]: value };
       if (key === 'sameAsPresent' && value === true) {
-        next.permVillage   = prev.presentVillage;
-        next.permUnion     = prev.presentUnion;
-        next.permUpazila   = prev.presentUpazila;
-        next.permDistrict  = prev.presentDistrict;
-        next.permPost      = prev.presentPost;
+        next.permCareOf     = prev.presentCareOf;
+        next.permVillage    = prev.presentVillage;
+        next.permUnion      = prev.presentUnion;
+        next.permUpazila    = prev.presentUpazila;
+        next.permDistrict   = prev.presentDistrict;
+        next.permPostOffice = prev.presentPostOffice;
+        next.permPost       = prev.presentPost;
       }
       persist(next);
       return next;
@@ -468,15 +479,19 @@ export default function InfoStorePage() {
       `মাতার নাম (বাংলা): ${info.motherBn}`,
       `মাতার নাম (ইংরেজি): ${info.motherEn}`,
       `জন্মতারিখ: ${info.dob}`,
+      `লিঙ্গ: ${info.gender}`,
+      `বৈবাহিক অবস্থা: ${info.maritalStatus}`,
       `জাতীয় পরিচয়পত্র নম্বর: ${info.nid}`,
+      `পাসপোর্ট নম্বর: ${info.passportId}`,
       `রক্তের গ্রুপ: ${info.bloodGroup}`,
       `ধর্ম: ${info.religion}`,
       `জাতীয়তা: ${info.nationality}`,
       `কোটা: ${info.quota}`,
+      `বিভাগীয় প্রার্থী: ${info.departmentalStatus}`,
       `মোবাইল: ${info.mobile}`,
       `ইমেইল: ${info.email}`,
-      `বর্তমান ঠিকানা: ${[info.presentVillage, info.presentUnion, info.presentUpazila, info.presentDistrict].filter(Boolean).join(', ')}`,
-      `স্থায়ী ঠিকানা: ${[info.permVillage, info.permUnion, info.permUpazila, info.permDistrict].filter(Boolean).join(', ')}`,
+      `বর্তমান ঠিকানা: ${[info.presentCareOf, info.presentVillage, info.presentUnion, info.presentUpazila, info.presentDistrict, info.presentPostOffice, info.presentPost].filter(Boolean).join(', ')}`,
+      `স্থায়ী ঠিকানা: ${[info.permCareOf, info.permVillage, info.permUnion, info.permUpazila, info.permDistrict, info.permPostOffice, info.permPost].filter(Boolean).join(', ')}`,
       `SSC: ${info.sscBoard} বোর্ড, ${info.sscYear}, GPA ${info.sscGpa}`,
       `HSC: ${info.hscBoard} বোর্ড, ${info.hscYear}, GPA ${info.hscGpa}`,
       `স্নাতক: ${info.gradUniversity}, ${info.gradSubject}, ${info.gradYear}, CGPA ${info.gradCgpa}`,
@@ -574,8 +589,11 @@ export default function InfoStorePage() {
             <Field label={t('মাতার নাম (বাংলা)', "Mother's Name (Bengali)")} placeholder="মোছাঃ রহিমা বেগম" {...f('motherBn')} />
             <Field label={t('মাতার নাম (ইংরেজি)', "Mother's Name (English)")} placeholder="Mst. Rahima Begum" {...f('motherEn')} />
             <Field label={t('জন্মতারিখ', 'Date of Birth')} type="date" {...f('dob')} />
+            <Field label={t('লিঙ্গ', 'Gender')} options={['', 'পুরুষ', 'মহিলা', 'অন্যান্য']} {...f('gender')} />
+            <Field label={t('বৈবাহিক অবস্থা', 'Marital Status')} options={['অবিবাহিত', 'বিবাহিত', 'বিধবা/বিপত্নীক', 'তালাকপ্রাপ্ত']} {...f('maritalStatus')} />
             <Field label={t('জাতীয় পরিচয়পত্র নম্বর (NID)', 'NID Number')} placeholder="১৯৯XXXXXXXXX" {...f('nid')} />
             <Field label={t('জন্ম নিবন্ধন নম্বর', 'Birth Certificate No.')} placeholder="XXXXXXXXXXXXXXXXXX" {...f('birthCert')} />
+            <Field label={t('পাসপোর্ট নম্বর', 'Passport No.')} placeholder="AXXXXXXXX" {...f('passportId')} />
             <Field label={t('রক্তের গ্রুপ', 'Blood Group')} options={['', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']} {...f('bloodGroup')} />
             <Field label={t('ধর্ম', 'Religion')} options={['ইসলাম', 'হিন্দু', 'বৌদ্ধ', 'খ্রিস্টান', 'অন্যান্য']} {...f('religion')} />
             <Field label={t('জাতীয়তা', 'Nationality')} options={['বাংলাদেশী', 'Bangladeshi']} {...f('nationality')} />
@@ -583,6 +601,11 @@ export default function InfoStorePage() {
               label={t('কোটা', 'Quota')}
               options={['প্রযোজ্য নয়', 'মুক্তিযোদ্ধা কোটা', 'নারী কোটা', 'প্রতিবন্ধী কোটা', 'উপজাতি কোটা', 'জেলা কোটা']}
               {...f('quota')}
+            />
+            <Field
+              label={t('বিভাগীয় প্রার্থী', 'Departmental Status')}
+              options={['প্রযোজ্য নয়', 'বিভাগীয় প্রার্থী']}
+              {...f('departmentalStatus')}
             />
           </Section>
 
@@ -596,10 +619,12 @@ export default function InfoStorePage() {
 
           {/* Present Address */}
           <Section title={t('বর্তমান ঠিকানা', 'Present Address')} icon="🏠">
-            <Field label={t('গ্রাম / মহল্লা', 'Village / Locality')} placeholder="গ্রামের নাম" {...f('presentVillage')} />
+            <Field label={t('কেয়ার অফ (C/O)', 'Care Of')} placeholder="মোঃ আব্দুল করিম" {...f('presentCareOf')} />
+            <Field label={t('গ্রাম / রোড / বাসা', 'Village / Road / House')} placeholder="গ্রামের নাম" {...f('presentVillage')} />
             <Field label={t('ইউনিয়ন / ওয়ার্ড', 'Union / Ward')} placeholder="ইউনিয়নের নাম" {...f('presentUnion')} />
             <Field label={t('উপজেলা / থানা', 'Upazila / Thana')} placeholder="উপজেলার নাম" {...f('presentUpazila')} />
             <Field label={t('জেলা', 'District')} placeholder="জেলার নাম" {...f('presentDistrict')} />
+            <Field label={t('পোস্ট অফিস', 'Post Office')} placeholder="পোস্ট অফিসের নাম" {...f('presentPostOffice')} />
             <Field label={t('পোস্ট কোড', 'Post Code')} placeholder="XXXX" {...f('presentPost')} />
           </Section>
 
@@ -618,10 +643,12 @@ export default function InfoStorePage() {
             </div>
             {!info.sameAsPresent && (
               <>
-                <Field label={t('গ্রাম / মহল্লা', 'Village / Locality')} placeholder="গ্রামের নাম" {...f('permVillage')} />
+                <Field label={t('কেয়ার অফ (C/O)', 'Care Of')} placeholder="মোঃ আব্দুল করিম" {...f('permCareOf')} />
+                <Field label={t('গ্রাম / রোড / বাসা', 'Village / Road / House')} placeholder="গ্রামের নাম" {...f('permVillage')} />
                 <Field label={t('ইউনিয়ন / ওয়ার্ড', 'Union / Ward')} placeholder="ইউনিয়নের নাম" {...f('permUnion')} />
                 <Field label={t('উপজেলা / থানা', 'Upazila / Thana')} placeholder="উপজেলার নাম" {...f('permUpazila')} />
                 <Field label={t('জেলা', 'District')} placeholder="জেলার নাম" {...f('permDistrict')} />
+                <Field label={t('পোস্ট অফিস', 'Post Office')} placeholder="পোস্ট অফিসের নাম" {...f('permPostOffice')} />
                 <Field label={t('পোস্ট কোড', 'Post Code')} placeholder="XXXX" {...f('permPost')} />
               </>
             )}
