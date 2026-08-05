@@ -2,6 +2,7 @@ import type {
   AdminJobExperience,
   AdminInstituteReview,
   AdminBookListing,
+  AdminBookOrder,
   BookListing,
   BookListingDetail,
   BookListingSubmission,
@@ -874,6 +875,9 @@ export const getMyBookListings = (token: string, page = 0, size = 20) =>
 export const setBookListingSold = (token: string, id: number, sold: boolean) =>
   authPatch<MyBookListing>(`/api/user/book-listings/${id}/sold`, { sold }, token);
 
+export const setBookListingContactNumber = (token: string, id: number, contactNumber: string) =>
+  authPatch<MyBookListing>(`/api/user/book-listings/${id}/contact`, { contactNumber }, token);
+
 export const deleteMyBookListing = (token: string, id: number) =>
   authDelete(`/api/user/book-listings/${id}`, token);
 
@@ -908,6 +912,9 @@ export const cancelBookOrder = (token: string, id: number) =>
 
 export const adminGetBookListings = (token: string, status?: string, page = 0, size = 20) =>
   authGet<PagedResponse<AdminBookListing>>('/api/admin/book-listings', token, { status, page, size });
+
+export const adminGetBookOrders = (token: string, status?: string, page = 0, size = 20) =>
+  authGet<PagedResponse<AdminBookOrder>>('/api/admin/book-orders', token, { status, page, size });
 
 export const adminApproveBookListing = (token: string, id: number) =>
   authPost<AdminBookListing>(`/api/admin/book-listings/${id}/approve`, {}, token);

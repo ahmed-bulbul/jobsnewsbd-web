@@ -634,6 +634,25 @@ export interface BookOrderBuyerInfo {
   createdAt: string;
 }
 
+/** Admin's platform-wide view of a book order — full buyer + seller + listing visibility. */
+export interface AdminBookOrder {
+  id: number;
+  listingId: number;
+  listingTitle: string;
+  listingPrice: number;
+  listingSold: boolean;
+  sellerId: number;
+  sellerName: string;
+  sellerEmail: string;
+  sellerPhone: string | null;
+  buyerId: number;
+  buyerName: string;
+  buyerEmail: string;
+  buyerPhone: string | null;
+  status: BookOrderStatus;
+  createdAt: string;
+}
+
 // ── Question Bank ──────────────────────────────────────────────────────────────
 
 export type QuestionBankType = 'MCQ' | 'WRITTEN' | 'LAB';

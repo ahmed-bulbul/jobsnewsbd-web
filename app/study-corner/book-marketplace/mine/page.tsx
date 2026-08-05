@@ -8,7 +8,7 @@ import Footer from '@/components/layout/Footer';
 import Pagination from '@/components/ui/Pagination';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
-import { getMyBookListings, setBookListingSold, deleteMyBookListing, getBookListingOrders } from '@/lib/api';
+import { getMyBookListings, setBookListingSold, deleteMyBookListing, getBookListingOrders, setBookListingContactNumber } from '@/lib/api';
 import type { MyBookListing, BookListingStatus, BookCondition, BookOrderBuyerInfo } from '@/lib/types';
 
 const STATUS_META: Record<BookListingStatus, { bn: string; en: string; bg: string; color: string }> = {
@@ -35,6 +35,9 @@ export default function MyBookListingsPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [ordersMap, setOrdersMap] = useState<Record<number, BookOrderBuyerInfo[]>>({});
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [editingContactId, setEditingContactId] = useState<number | null>(null);
+  const [contactInput, setContactInput] = useState('');
+  const [contactSaving, setContactSaving] = useState(false);
 
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(''), 3000); };
 
@@ -72,6 +75,18 @@ export default function MyBookListingsPage() {
       flash(listing.sold ? 'বিক্রি হয়নি হিসেবে চিহ্নিত হয়েছে' : 'বিক্রি হয়েছে হিসেবে চিহ্নিত হয়েছে');
       load();
     } catch { flash('ব্যর্থ হয়েছে'); }
+  };
+
+  const handleSaveContact = async (id: number) => {
+    if (!user?.token || !contactInput.trim()) return;
+    setContactSaving(true);
+    try {
+      await setBookListingContactNumber(user.token, id, contactInput.trim());
+      flash('যোগাযোগের নম্বর সংরক্ষণ হয়েছে');
+      setEditingContactId(null);
+      load();
+    } catch { flash('ব্যর্থ হয়েছে'); }
+    finally { setContactSaving(false); }
   };
 
   const handleDelete = async (id: number) => {
@@ -147,6 +162,40 @@ export default function MyBookListingsPage() {
                   {listing.status === 'REJECTED' && listing.adminNote && (
                     <p className="text-xs text-red-600 bg-red-50 rounded-lg px-2 py-1 mt-1">{t('কারণ', 'Reason')}: {listing.adminNote}</p>
                   )}
+
+                  {editingContactId === listing.id ? (
+                    <div className="flex gap-2 mt-2">
+                      <input
+                        type="tel"
+                        value={contactInput}
+                        onChange={(e) => setContactInput(e.target.value)}
+                        placeholder={t('যেমনঃ ০১৭xxxxxxxx', 'e.g. 017xxxxxxxx')}
+                        className="input text-xs py-1.5 flex-1"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => handleSaveContact(listing.id)}
+                        disabled={!contactInput.trim() || contactSaving}
+                        className="btn-primary text-xs px-3 py-1.5 disabled:opacity-50"
+                      >
+                        {contactSaving ? t('সংরক্ষণ হচ্ছে...', 'Saving...') : t('সংরক্ষণ', 'Save')}
+                      </button>
+                      <button onClick={() => setEditingContactId(null)} className="text-xs text-warm-muted hover:underline px-1">
+                        {t('বাতিল', 'Cancel')}
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-warm-muted mt-1">
+                      {t('যোগাযোগের নম্বর', 'Contact')}: {listing.contactNumber || t('দেওয়া নেই', 'Not set')}{' '}
+                      <button
+                        onClick={() => { setEditingContactId(listing.id); setContactInput(listing.contactNumber ?? ''); }}
+                        className="text-primary hover:underline font-semibold"
+                      >
+                        {listing.contactNumber ? t('পরিবর্তন করুন', 'Edit') : t('যোগ করুন', 'Add')}
+                      </button>
+                    </p>
+                  )}
+
                   <div className="flex gap-3 mt-2 flex-wrap">
                     {listing.status === 'APPROVED' && (
                       <button onClick={() => handleToggleSold(listing)} className="text-xs text-primary hover:underline font-semibold">
