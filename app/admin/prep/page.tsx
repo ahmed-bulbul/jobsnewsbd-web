@@ -1447,6 +1447,10 @@ export default function AdminPrepPage() {
               </select>
             </div>
 
+            <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-xs text-blue-800">
+              ℹ️ কোনো <strong>পরীক্ষা</strong> তৈরি বা এডিট করলে তার শিরোনাম ও শুরুর সময় অনুযায়ী রুটিন এন্ট্রি এখন <strong>স্বয়ংক্রিয়ভাবে</strong> তৈরি/আপডেট হয়ে যায় — আলাদাভাবে এখানে সেই তথ্য আবার লেখার দরকার নেই। নিচের ফর্মটি শুধু তখনই ব্যবহার করুন যখন এখনো তৈরি করা হয়নি এমন একটি ভবিষ্যৎ পরীক্ষার জন্য প্লেসহোল্ডার (যেমন শুধু তারিখ ঘোষণা) যোগ করতে চান।
+            </div>
+
             {routineCatId && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Routine entry form */}

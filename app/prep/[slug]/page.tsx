@@ -242,6 +242,7 @@ function RejectedCard({ req, onRetry }: { req: EnrollmentRequest; onRetry: () =>
 
 function RoutinePanel({ data, color, locked }: { data: PrepCategoryDetail; color: string; locked: boolean }) {
   const { t } = useLanguage();
+  const [downloading, setDownloading] = useState(false);
 
   const now = Date.now();
   // Only show what's still ahead — once an entry's date/time has passed,
@@ -250,14 +251,33 @@ function RoutinePanel({ data, color, locked }: { data: PrepCategoryDetail; color
 
   if (upcoming.length === 0) return null;
 
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      const { downloadExamRoutinePdf } = await import('@/lib/routinePdf');
+      await downloadExamRoutinePdf(t(data.nameBn, data.nameEn ?? data.nameBn), data.routine ?? []);
+    } catch { /* silent — user can retry */ }
+    finally { setDownloading(false); }
+  };
+
   return (
     <div className="rounded-2xl border border-warm-border bg-white p-5">
-      <h2 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-        </svg>
-        {t('পরীক্ষার রুটিন', 'Exam Routine')}
-      </h2>
+      <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+        <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+          </svg>
+          {t('পরীক্ষার রুটিন', 'Exam Routine')}
+        </h2>
+        <button
+          type="button"
+          onClick={handleDownload}
+          disabled={downloading}
+          className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-warm-border text-gray-600 hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
+        >
+          {downloading ? t('তৈরি হচ্ছে...', 'Preparing...') : `⬇ ${t('PDF ডাউনলোড করুন', 'Download PDF')}`}
+        </button>
+      </div>
       <div className="space-y-2">
         {upcoming.map((entry) => {
           const scheduled = new Date(entry.scheduledAt);
