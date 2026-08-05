@@ -17,6 +17,10 @@ function escapeHtml(s: string): string {
   return div.innerHTML;
 }
 
+// Must match the fixed `width` set on the wrapper <div> in buildRoutineHtml
+// below — used to convert measured DOM pixel offsets into PDF millimeters.
+const CONTENT_PX_WIDTH = 860;
+
 function buildRoutineHtml(categoryTitle: string, routine: ExamRoutineEntry[]): string {
   const generatedAt = new Date().toLocaleString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   const sorted = [...routine].sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime());
@@ -91,21 +95,45 @@ export async function downloadExamRoutinePdf(categoryTitle: string, routine: Exa
 
   let pdf: InstanceType<typeof jsPDF>;
   try {
-    const canvas = await html2canvas(container, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
-
     const marginMm = 10;
     const pdfWidthMm = 210;
     const contentWidthMm = pdfWidthMm - marginMm * 2;
-    const usableHeightMm = 297 - marginMm * 2;
+    // Leave a bit of extra clearance above the footer line so a page's last
+    // row never sits flush against (or under) the "Job Radar BD" footer.
+    const usableHeightMm = 297 - marginMm * 2 - 6;
+
+    // Row-aware pagination: instead of blindly slicing the screenshot every
+    // fixed usableHeightMm chunk (which can cut a table row in half across
+    // two pages), find the actual <tr> boundaries in the rendered DOM and
+    // only break pages between rows.
+    const containerRect = container.getBoundingClientRect();
+    const rows = Array.from(container.querySelectorAll('tbody tr'));
+    const pxToMm = contentWidthMm / CONTENT_PX_WIDTH;
+    const usableHeightPx = usableHeightMm / pxToMm;
+
+    const pageBreaksPx: number[] = [0];
+    let pageStartPx = 0;
+    for (const row of rows) {
+      const r = row.getBoundingClientRect();
+      const rowTop = r.top - containerRect.top;
+      const rowBottom = rowTop + r.height;
+      if (rowBottom - pageStartPx > usableHeightPx && rowTop > pageStartPx) {
+        pageBreaksPx.push(rowTop);
+        pageStartPx = rowTop;
+      }
+    }
+
+    const canvas = await html2canvas(container, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
     const imgHeightMm = (canvas.height * contentWidthMm) / canvas.width;
-    const totalPages = Math.max(1, Math.ceil(imgHeightMm / usableHeightMm));
+    const imgData = canvas.toDataURL('image/png');
+    const totalPages = pageBreaksPx.length;
 
     pdf = new jsPDF('p', 'mm', 'a4');
-    const imgData = canvas.toDataURL('image/png');
 
     for (let page = 0; page < totalPages; page++) {
       if (page > 0) pdf.addPage();
-      const y = marginMm - page * usableHeightMm;
+      const breakMm = pageBreaksPx[page] * pxToMm;
+      const y = marginMm - breakMm;
       pdf.addImage(imgData, 'PNG', marginMm, y, contentWidthMm, imgHeightMm);
 
       pdf.setFontSize(8);
