@@ -673,7 +673,7 @@ export interface AdminBookOrder {
 
 // ── Admin Notifications ─────────────────────────────────────────────────────────
 
-export type AdminNotificationType = 'BOOK_LISTING' | 'JOB_EXPERIENCE' | 'INSTITUTE_REVIEW' | 'ENROLLMENT_REQUEST';
+export type AdminNotificationType = 'BOOK_LISTING' | 'JOB_EXPERIENCE' | 'INSTITUTE_REVIEW' | 'ENROLLMENT_REQUEST' | 'USER_FEEDBACK';
 
 export interface AdminNotificationItem {
   type: AdminNotificationType;
@@ -695,6 +695,21 @@ export interface AdminNotificationSummary {
   totalPending: number;
   categories: AdminNotificationCategory[];
   items: AdminNotificationItem[];
+}
+
+// ── Feedback ────────────────────────────────────────────────────────────────
+
+export type FeedbackStatus = 'NEW' | 'READ';
+
+export interface AdminFeedback {
+  id: number;
+  submitterName: string;
+  submitterEmail: string | null;
+  rating: number | null;
+  message: string;
+  pageUrl: string | null;
+  status: FeedbackStatus;
+  createdAt: string;
 }
 
 // ── Question Bank ──────────────────────────────────────────────────────────────

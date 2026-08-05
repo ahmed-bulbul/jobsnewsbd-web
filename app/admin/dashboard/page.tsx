@@ -144,6 +144,7 @@ export default function AdminDashboard() {
           <Link href="/admin/book-listings" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">📦 বই কেনাবেচা</Link>
           <Link href="/admin/book-orders" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">🧾 বই অর্ডার</Link>
           <Link href="/admin/question-bank" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">❓ প্রশ্ন ব্যাংক</Link>
+          <Link href="/admin/feedback" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">💌 মতামত</Link>
           <Link href="/" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">সাইটে যান →</Link>
           <AdminNotificationBell token={token} />
           <button

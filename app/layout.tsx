@@ -4,6 +4,7 @@ import { GoogleTagManager } from '@next/third-parties/google';
 import { LanguageProvider } from '@/context/LanguageContext';
 import { AuthProvider } from '@/context/AuthContext';
 import AuthModal from '@/components/ui/AuthModal';
+import FeedbackWidget from '@/components/ui/FeedbackWidget';
 import './globals.css';
 
 const GTM_ID = 'GTM-KGKDQL6V';
@@ -104,6 +105,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <LanguageProvider>
             {children}
             <AuthModal />
+            <FeedbackWidget />
           </LanguageProvider>
         </AuthProvider>
       </body>

@@ -8,6 +8,7 @@ import {
   adminApproveJobExperience, adminRejectJobExperience,
   adminApproveInstituteReview, adminRejectInstituteReview,
   adminApproveEnrollmentRequest, adminRejectEnrollmentRequest,
+  adminMarkFeedbackRead,
 } from '@/lib/api';
 import type { AdminNotificationItem, AdminNotificationSummary, AdminNotificationType } from '@/lib/types';
 
@@ -88,6 +89,20 @@ export default function AdminNotificationBell({ token }: { token: string }) {
     }
   };
 
+  const handleMarkRead = async (item: AdminNotificationItem) => {
+    const key = `${item.type}-${item.id}`;
+    setActingKey(key);
+    setErrorMsg('');
+    try {
+      await adminMarkFeedbackRead(token, item.id);
+      load();
+    } catch {
+      setErrorMsg('ব্যর্থ হয়েছে');
+    } finally {
+      setActingKey(null);
+    }
+  };
+
   const total = summary?.totalPending ?? 0;
 
   return (
@@ -150,20 +165,32 @@ export default function AdminNotificationBell({ token }: { token: string }) {
                       </div>
                       <p className="text-[11px] text-warm-muted">{item.subtitle}</p>
                       <div className="flex gap-2 pt-0.5">
-                        <button
-                          onClick={() => handleApprove(item)}
-                          disabled={acting}
-                          className="text-[11px] font-semibold bg-green-600 text-white rounded-lg px-2.5 py-1 hover:bg-green-700 disabled:opacity-50"
-                        >
-                          {acting ? '...' : 'অনুমোদন'}
-                        </button>
-                        <button
-                          onClick={() => handleReject(item)}
-                          disabled={acting}
-                          className="text-[11px] font-semibold border border-red-300 text-red-600 rounded-lg px-2.5 py-1 hover:bg-red-50 disabled:opacity-50"
-                        >
-                          বাতিল
-                        </button>
+                        {item.type === 'USER_FEEDBACK' ? (
+                          <button
+                            onClick={() => handleMarkRead(item)}
+                            disabled={acting}
+                            className="text-[11px] font-semibold bg-green-600 text-white rounded-lg px-2.5 py-1 hover:bg-green-700 disabled:opacity-50"
+                          >
+                            {acting ? '...' : 'দেখা হয়েছে'}
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleApprove(item)}
+                              disabled={acting}
+                              className="text-[11px] font-semibold bg-green-600 text-white rounded-lg px-2.5 py-1 hover:bg-green-700 disabled:opacity-50"
+                            >
+                              {acting ? '...' : 'অনুমোদন'}
+                            </button>
+                            <button
+                              onClick={() => handleReject(item)}
+                              disabled={acting}
+                              className="text-[11px] font-semibold border border-red-300 text-red-600 rounded-lg px-2.5 py-1 hover:bg-red-50 disabled:opacity-50"
+                            >
+                              বাতিল
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   );

@@ -3,6 +3,7 @@ import type {
   AdminInstituteReview,
   AdminBookListing,
   AdminBookOrder,
+  AdminFeedback,
   AdminNotificationSummary,
   BookListing,
   BookListingDetail,
@@ -949,3 +950,31 @@ export const adminDeleteBookListing = (token: string, id: number) =>
 
 export const adminGetNotificationSummary = (token: string, itemsPerCategory = 5) =>
   authGet<AdminNotificationSummary>('/api/admin/notifications/summary', token, { itemsPerCategory });
+
+// ── Feedback ──────────────────────────────────────────────────────────────────
+
+// Public + optionally-authenticated (mirrors getOptionalAuth's pattern, but
+// for POST): attaches an Authorization header only when the visitor happens
+// to be logged in, so the submission gets linked to their account without
+// requiring login to leave feedback at all.
+export async function submitFeedback(message: string, rating?: number, pageUrl?: string, token?: string): Promise<AdminFeedback> {
+  const res = await fetch(`${BASE}/api/feedback`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ message, rating: rating ?? null, pageUrl: pageUrl ?? null }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { message?: string }).message ?? `POST /api/feedback → ${res.status}`);
+  }
+  return res.json();
+}
+
+export const adminGetFeedback = (token: string, status?: string, page = 0, size = 20) =>
+  authGet<PagedResponse<AdminFeedback>>('/api/admin/feedback', token, { status, page, size });
+
+export const adminMarkFeedbackRead = (token: string, id: number) =>
+  authPatch<AdminFeedback>(`/api/admin/feedback/${id}/read`, {}, token);
