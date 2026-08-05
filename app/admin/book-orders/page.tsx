@@ -125,6 +125,7 @@ export default function AdminBookOrdersPage() {
                       <p className="text-xs text-gray-700">{o.buyerName}</p>
                       <p className="text-xs text-gray-500">{o.buyerEmail}</p>
                       {o.buyerPhone && <p className="text-xs text-gray-500">{o.buyerPhone}</p>}
+                      {o.deliveryAddress && <p className="text-xs text-gray-500">ঠিকানা: {o.deliveryAddress}</p>}
                     </div>
                     <div className="bg-amber-50 rounded-lg px-3 py-2">
                       <p className="text-[11px] font-bold text-amber-700 mb-1">বিক্রেতা</p>

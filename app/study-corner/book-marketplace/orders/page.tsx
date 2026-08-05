@@ -107,6 +107,13 @@ export default function MyBookOrdersPage() {
                     ৳{order.listingPrice}
                     {order.listingSold && <> • <span className="font-semibold">{t('বিক্রি হয়ে গেছে', 'Sold')}</span></>}
                   </p>
+                  {(order.contactPhone || order.deliveryAddress) && (
+                    <p className="text-xs text-warm-muted mt-1">
+                      {order.contactPhone && <>{t('ফোন', 'Phone')}: {order.contactPhone}</>}
+                      {order.contactPhone && order.deliveryAddress && <> • </>}
+                      {order.deliveryAddress && <>{t('ঠিকানা', 'Address')}: {order.deliveryAddress}</>}
+                    </p>
+                  )}
                   {order.status === 'PENDING' && (
                     <button onClick={() => handleCancel(order.id)} className="text-xs text-red-500 hover:underline font-semibold mt-2">
                       {t('অর্ডার বাতিল করুন', 'Cancel order')}

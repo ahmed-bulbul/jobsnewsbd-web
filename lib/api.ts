@@ -898,8 +898,8 @@ export async function uploadBookListingPhoto(token: string, id: number, file: Fi
   return res.json();
 }
 
-export const placeBookOrder = (token: string, listingId: number) =>
-  authPost<BookOrder>(`/api/user/book-listings/${listingId}/order`, {}, token);
+export const placeBookOrder = (token: string, listingId: number, contactPhone: string, deliveryAddress: string) =>
+  authPost<BookOrder>(`/api/user/book-listings/${listingId}/order`, { contactPhone, deliveryAddress }, token);
 
 export const getBookListingOrders = (token: string, listingId: number) =>
   authGet<BookOrderBuyerInfo[]>(`/api/user/book-listings/${listingId}/orders`, token);

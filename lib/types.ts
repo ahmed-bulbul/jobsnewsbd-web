@@ -621,7 +621,15 @@ export interface BookOrder {
   listingPrice: number;
   listingSold: boolean;
   status: BookOrderStatus;
+  contactPhone: string | null;
+  deliveryAddress: string | null;
   createdAt: string;
+}
+
+/** Request body for placing an order — phone + delivery address are required. */
+export interface PlaceOrderRequest {
+  contactPhone: string;
+  deliveryAddress: string;
 }
 
 /** A seller's view of an order received on their own listing — reveals buyer contact. */
@@ -630,6 +638,7 @@ export interface BookOrderBuyerInfo {
   buyerName: string;
   buyerEmail: string;
   buyerPhone: string | null;
+  deliveryAddress: string | null;
   status: BookOrderStatus;
   createdAt: string;
 }
@@ -649,6 +658,7 @@ export interface AdminBookOrder {
   buyerName: string;
   buyerEmail: string;
   buyerPhone: string | null;
+  deliveryAddress: string | null;
   status: BookOrderStatus;
   createdAt: string;
 }

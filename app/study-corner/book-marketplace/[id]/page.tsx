@@ -26,6 +26,8 @@ export default function BookListingDetailPage({ params }: { params: Promise<{ id
   const [error, setError] = useState(false);
   const [ordering, setOrdering] = useState(false);
   const [orderMsg, setOrderMsg] = useState('');
+  const [orderPhone, setOrderPhone] = useState('');
+  const [orderAddress, setOrderAddress] = useState('');
 
   const load = () => {
     getBookListing(Number(id), user?.token)
@@ -41,10 +43,14 @@ export default function BookListingDetailPage({ params }: { params: Promise<{ id
 
   const handleOrder = async () => {
     if (!user?.token) return;
+    if (!orderPhone.trim() || !orderAddress.trim()) {
+      setOrderMsg(t('ফোন নম্বর ও ঠিকানা দিন', 'Please provide your phone number and delivery address'));
+      return;
+    }
     setOrdering(true);
     setOrderMsg('');
     try {
-      await placeBookOrder(user.token, Number(id));
+      await placeBookOrder(user.token, Number(id), orderPhone.trim(), orderAddress.trim());
       setOrderMsg(t('অর্ডার করা হয়েছে! বিক্রেতা আপনার তথ্য পেয়ে যোগাযোগ করবেন।', 'Order placed! The seller has been notified with your contact info.'));
       load();
     } catch (e) {
@@ -134,11 +140,35 @@ export default function BookListingDetailPage({ params }: { params: Promise<{ id
                   {t('বইটি ইতিমধ্যে বিক্রি হয়ে গেছে।', 'This book has already been sold.')}
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <p className="text-sm text-warm-muted">
                     {t('বইটি কিনতে চাইলে অর্ডার করুন — বিক্রেতা আপনার তথ্য পেয়ে যোগাযোগ করবেন এবং তারপর আপনি বিক্রেতার তথ্য দেখতে পাবেন।', 'Place an order to buy this book — the seller will get your contact info, and you\'ll then see theirs.')}
                   </p>
-                  <button onClick={handleOrder} disabled={ordering} className="btn-primary text-sm px-4 py-2 disabled:opacity-60">
+                  <div>
+                    <label className="label">{t('আপনার ফোন নম্বর', 'Your Phone Number')} *</label>
+                    <input
+                      type="tel"
+                      value={orderPhone}
+                      onChange={(e) => setOrderPhone(e.target.value)}
+                      placeholder={t('যেমনঃ ০১৭xxxxxxxx', 'e.g. 017xxxxxxxx')}
+                      className="input"
+                    />
+                  </div>
+                  <div>
+                    <label className="label">{t('ডেলিভারি ঠিকানা', 'Delivery Address')} *</label>
+                    <textarea
+                      value={orderAddress}
+                      onChange={(e) => setOrderAddress(e.target.value)}
+                      rows={2}
+                      placeholder={t('বাসা/হল, এলাকা, জেলা', 'House/hall, area, district')}
+                      className="input resize-none"
+                    />
+                  </div>
+                  <button
+                    onClick={handleOrder}
+                    disabled={ordering || !orderPhone.trim() || !orderAddress.trim()}
+                    className="btn-primary text-sm px-4 py-2 disabled:opacity-60"
+                  >
                     {ordering ? t('অর্ডার হচ্ছে...', 'Placing order...') : t('অর্ডার করুন', 'Place Order')}
                   </button>
                   {orderMsg && <p className="text-xs text-primary">{orderMsg}</p>}

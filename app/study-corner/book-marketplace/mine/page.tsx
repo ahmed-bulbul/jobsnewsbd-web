@@ -232,6 +232,7 @@ export default function MyBookListingsPage() {
                             </div>
                             <p className="text-warm-muted">{o.buyerEmail}</p>
                             {o.buyerPhone && <p className="text-warm-muted">{o.buyerPhone}</p>}
+                            {o.deliveryAddress && <p className="text-warm-muted">{t('ঠিকানা', 'Address')}: {o.deliveryAddress}</p>}
                           </div>
                         ))
                       )}
