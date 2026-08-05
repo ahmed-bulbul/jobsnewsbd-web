@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   adminUpdatePost, adminUploadCircularPdf, adminDeleteCircularPdf, adminSetCircularPdfUrl,
+  adminUploadOrganizationLogo, adminDeleteOrganizationLogo, adminSetOrganizationLogoUrl,
   getCategoryTypes, getCategories, getPostTypes,
 } from '@/lib/api';
 import type { CategoryType, Category, PostType, Post } from '@/lib/types';
@@ -29,6 +31,14 @@ export default function EditPostPage({ params }: Props) {
   const [pdfUrlInput, setPdfUrlInput]     = useState('');
   const [pdfUrlSaving, setPdfUrlSaving]   = useState(false);
   const pdfInputRef = useRef<HTMLInputElement>(null);
+
+  const [existingLogoUrl, setExistingLogoUrl] = useState<string | null>(null);
+  const [logoFile, setLogoFile]             = useState<File | null>(null);
+  const [logoUploading, setLogoUploading]   = useState(false);
+  const [logoMsg, setLogoMsg]               = useState('');
+  const [logoUrlInput, setLogoUrlInput]     = useState('');
+  const [logoUrlSaving, setLogoUrlSaving]   = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     titleBn: '', titleEn: '', organizationName: '', categoryId: '',
@@ -71,6 +81,7 @@ export default function EditPostPage({ params }: Props) {
           publish: post.publishedAt != null,
         });
         setExistingPdfUrl(post.circularPdfUrl ?? null);
+        setExistingLogoUrl(post.organizationLogoUrl ?? null);
         setViewCount(post.viewCount ?? 0);
       }
       setLoading(false);
@@ -145,6 +156,53 @@ export default function EditPostPage({ params }: Props) {
       setPdfMsg('PDF মুছে ফেলা ব্যর্থ হয়েছে');
     } finally {
       setPdfUploading(false);
+    }
+  };
+
+  const handleLogoUpload = async () => {
+    if (!logoFile) return;
+    setLogoUploading(true);
+    setLogoMsg('');
+    try {
+      const updated = await adminUploadOrganizationLogo(id, logoFile, token);
+      setExistingLogoUrl(updated.organizationLogoUrl ?? null);
+      setLogoFile(null);
+      if (logoInputRef.current) logoInputRef.current.value = '';
+      setLogoMsg('লোগো সফলভাবে আপলোড হয়েছে ✓');
+    } catch {
+      setLogoMsg('লোগো আপলোড ব্যর্থ হয়েছে');
+    } finally {
+      setLogoUploading(false);
+    }
+  };
+
+  const handleSetLogoUrl = async () => {
+    if (!logoUrlInput.trim()) return;
+    setLogoUrlSaving(true);
+    setLogoMsg('');
+    try {
+      const updated = await adminSetOrganizationLogoUrl(id, logoUrlInput.trim(), token);
+      setExistingLogoUrl(updated.organizationLogoUrl ?? null);
+      setLogoUrlInput('');
+      setLogoMsg('লোগো লিংক সংরক্ষণ হয়েছে ✓');
+    } catch {
+      setLogoMsg('লোগো লিংক সংরক্ষণ ব্যর্থ হয়েছে');
+    } finally {
+      setLogoUrlSaving(false);
+    }
+  };
+
+  const handleLogoDelete = async () => {
+    if (!confirm('প্রতিষ্ঠানের লোগো মুছে ফেলবেন?')) return;
+    setLogoUploading(true);
+    try {
+      await adminDeleteOrganizationLogo(id, token);
+      setExistingLogoUrl(null);
+      setLogoMsg('লোগো মুছে ফেলা হয়েছে');
+    } catch {
+      setLogoMsg('লোগো মুছে ফেলা ব্যর্থ হয়েছে');
+    } finally {
+      setLogoUploading(false);
     }
   };
 
@@ -350,6 +408,102 @@ export default function EditPostPage({ params }: Props) {
           {pdfMsg && (
             <p className={`text-sm ${pdfMsg.includes('✓') || pdfMsg.includes('মুছে') ? 'text-green-700' : 'text-red-600'}`}>
               {pdfMsg}
+            </p>
+          )}
+        </div>
+
+        {/* Organization logo section */}
+        <div className="card p-6 space-y-4">
+          <h2 className="font-bold text-gray-900 text-base">🏢 প্রতিষ্ঠানের লোগো</h2>
+
+          {existingLogoUrl ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+                <div className="w-12 h-12 rounded-lg overflow-hidden bg-white border border-green-200 shrink-0 relative">
+                  <Image src={existingLogoUrl} alt="Logo" fill className="object-cover" unoptimized />
+                </div>
+                <span className="text-green-700 text-sm font-medium flex-1">লোগো আপলোড করা আছে ✓</span>
+              </div>
+              <div className="flex gap-2">
+                <label className="flex-1">
+                  <span className="label">নতুন লোগো দিয়ে প্রতিস্থাপন করুন</span>
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setLogoFile(e.target.files?.[0] ?? null)}
+                    className="input"
+                  />
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleLogoUpload}
+                  disabled={!logoFile || logoUploading}
+                  className="btn-primary py-2 px-4 text-sm disabled:opacity-50"
+                >
+                  {logoUploading ? 'আপলোড হচ্ছে...' : 'প্রতিস্থাপন করুন'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogoDelete}
+                  disabled={logoUploading}
+                  className="btn-outline py-2 px-4 text-sm text-red-600 border-red-300 hover:bg-red-50"
+                >
+                  লোগো মুছুন
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-warm-muted">কোনো লোগো আপলোড করা নেই। ফিচারড জব কার্ডে দেখানোর জন্য প্রতিষ্ঠানের লোগো আপলোড করুন।</p>
+              <div>
+                <label className="label">লোগো ফাইল বেছে নিন</label>
+                <input
+                  ref={logoInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setLogoFile(e.target.files?.[0] ?? null)}
+                  className="input"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleLogoUpload}
+                disabled={!logoFile || logoUploading}
+                className="btn-primary py-2 px-4 text-sm disabled:opacity-50"
+              >
+                {logoUploading ? 'আপলোড হচ্ছে...' : 'লোগো আপলোড করুন'}
+              </button>
+            </div>
+          )}
+
+          <div className="pt-3 border-t border-warm-border space-y-2">
+            <label className="label">অথবা লোগোর সরাসরি লিংক দিন</label>
+            <p className="text-xs text-warm-muted">একই প্রতিষ্ঠানের লোগো একাধিক পোস্টে ব্যবহার করতে চাইলে, আগে আপলোড করা একটি লোগোর লিংক এখানে পেস্ট করুন।</p>
+            <div className="flex gap-2">
+              <input
+                value={logoUrlInput}
+                onChange={(e) => setLogoUrlInput(e.target.value)}
+                type="url"
+                placeholder="https://..."
+                className="input flex-1"
+              />
+              <button
+                type="button"
+                onClick={handleSetLogoUrl}
+                disabled={!logoUrlInput.trim() || logoUrlSaving}
+                className="btn-primary py-2 px-4 text-sm disabled:opacity-50 whitespace-nowrap"
+              >
+                {logoUrlSaving ? 'সংরক্ষণ হচ্ছে...' : 'লিংক সংরক্ষণ করুন'}
+              </button>
+            </div>
+          </div>
+
+          {logoMsg && (
+            <p className={`text-sm ${logoMsg.includes('✓') || logoMsg.includes('মুছে') ? 'text-green-700' : 'text-red-600'}`}>
+              {logoMsg}
             </p>
           )}
         </div>

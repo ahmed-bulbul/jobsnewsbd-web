@@ -31,6 +31,7 @@ export interface PostSummary {
   titleEn: string;
   slug: string;
   organizationName: string | null;
+  organizationLogoUrl: string | null;
   district: string | null;
   status: PostStatus;
   applicationStart: string | null;
@@ -66,6 +67,7 @@ export interface Post {
   status: PostStatus;
   sourceUrl: string | null;
   circularPdfUrl: string | null;
+  organizationLogoUrl: string | null;
   publishedAt: string;
   createdAt: string;
   updatedAt: string;

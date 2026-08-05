@@ -349,6 +349,24 @@ export const adminDeleteCircularPdf = (postId: number, token: string) =>
 export const adminSetCircularPdfUrl = (postId: number, url: string, token: string) =>
   authPut<Post>(`/api/admin/posts/${postId}/circular-url`, { url }, token);
 
+export async function adminUploadOrganizationLogo(postId: number, file: File, token: string): Promise<Post> {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch(`${BASE}/api/admin/posts/${postId}/logo`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+  });
+  if (!res.ok) throw new Error(`Upload logo → ${res.status}`);
+  return res.json();
+}
+
+export const adminDeleteOrganizationLogo = (postId: number, token: string) =>
+  authDelete(`/api/admin/posts/${postId}/logo`, token);
+
+export const adminSetOrganizationLogoUrl = (postId: number, url: string, token: string) =>
+  authPut<Post>(`/api/admin/posts/${postId}/logo-url`, { url }, token);
+
 export const adminGetAnalytics = (token: string) =>
   authGet<{
     totalPublished: number;

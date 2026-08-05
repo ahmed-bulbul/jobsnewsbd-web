@@ -4,6 +4,7 @@ import Footer from '@/components/layout/Footer';
 import HeroSearch from '@/components/home/HeroSearch';
 import CategoryPills from '@/components/home/CategoryPills';
 import QuickAccessChips from '@/components/home/QuickAccessChips';
+import FeaturedJobsRow from '@/components/home/FeaturedJobsRow';
 import DeadlineSoonList from '@/components/home/DeadlineSoonList';
 import InfiniteJobList from '@/components/home/InfiniteJobList';
 import T from '@/components/ui/T';
@@ -49,6 +50,8 @@ export default async function HomePage() {
           deadlineSoonCount={deadlineSoon.totalElements}
           totalQuestions={totalQuestions}
         />
+
+        <FeaturedJobsRow posts={latestPosts.content.slice(0, 6)} nameToTypeSlug={nameToTypeSlug} />
 
         {/* Stats bar */}
         <div className="bg-primary-900 text-white">
