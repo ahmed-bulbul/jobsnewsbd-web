@@ -667,6 +667,32 @@ export interface AdminBookOrder {
   createdAt: string;
 }
 
+// ── Admin Notifications ─────────────────────────────────────────────────────────
+
+export type AdminNotificationType = 'BOOK_LISTING' | 'JOB_EXPERIENCE' | 'INSTITUTE_REVIEW' | 'ENROLLMENT_REQUEST';
+
+export interface AdminNotificationItem {
+  type: AdminNotificationType;
+  id: number;
+  title: string;
+  subtitle: string;
+  createdAt: string;
+}
+
+export interface AdminNotificationCategory {
+  type: AdminNotificationType;
+  labelBn: string;
+  labelEn: string;
+  count: number;
+  path: string;
+}
+
+export interface AdminNotificationSummary {
+  totalPending: number;
+  categories: AdminNotificationCategory[];
+  items: AdminNotificationItem[];
+}
+
 // ── Question Bank ──────────────────────────────────────────────────────────────
 
 export type QuestionBankType = 'MCQ' | 'WRITTEN' | 'LAB';

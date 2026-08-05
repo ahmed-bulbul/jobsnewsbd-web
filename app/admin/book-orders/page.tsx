@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Pagination from '@/components/ui/Pagination';
+import AdminNotificationBell from '@/components/admin/AdminNotificationBell';
 import { adminGetBookOrders } from '@/lib/api';
 import type { AdminBookOrder, BookOrderStatus } from '@/lib/types';
 
@@ -70,6 +71,7 @@ export default function AdminBookOrdersPage() {
           <span className="text-primary-300 text-sm">👤 {adminName}</span>
           <Link href="/admin/dashboard" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">← ড্যাশবোর্ড</Link>
           <Link href="/admin/book-listings" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">বই বিজ্ঞাপন মডারেশন →</Link>
+          <AdminNotificationBell token={token} />
           <button
             onClick={() => { localStorage.removeItem('admin_token'); router.push('/admin/login'); }}
             className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"

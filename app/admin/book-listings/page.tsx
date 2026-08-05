@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import Pagination from '@/components/ui/Pagination';
+import AdminNotificationBell from '@/components/admin/AdminNotificationBell';
 import {
   adminGetBookListings,
   adminApproveBookListing,
@@ -103,6 +104,7 @@ export default function AdminBookListingsPage() {
           <span className="text-primary-300 text-sm">👤 {adminName}</span>
           <Link href="/admin/dashboard" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">← ড্যাশবোর্ড</Link>
           <Link href="/" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">সাইটে যান →</Link>
+          <AdminNotificationBell token={token} />
           <button
             onClick={() => { localStorage.removeItem('admin_token'); router.push('/admin/login'); }}
             className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"

@@ -3,6 +3,7 @@ import type {
   AdminInstituteReview,
   AdminBookListing,
   AdminBookOrder,
+  AdminNotificationSummary,
   BookListing,
   BookListingDetail,
   BookListingSubmission,
@@ -927,3 +928,6 @@ export const adminRejectBookListing = (token: string, id: number, adminNote?: st
 
 export const adminDeleteBookListing = (token: string, id: number) =>
   authDelete(`/api/admin/book-listings/${id}`, token);
+
+export const adminGetNotificationSummary = (token: string, itemsPerCategory = 5) =>
+  authGet<AdminNotificationSummary>('/api/admin/notifications/summary', token, { itemsPerCategory });
