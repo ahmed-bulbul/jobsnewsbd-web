@@ -75,9 +75,9 @@ function BulkQuestionBankImport({
 শুধুমাত্র নিচের ফরম্যাটে একটি JSON অ্যারে দাও — অন্য কোনো লেখা, ভূমিকা, ব্যাখ্যা বা \`\`\` কোড ফেন্স ছাড়া:
 
 [
-  { "type": "MCQ", "questionText": "প্রশ্নের লেখা", "optionA": "...", "optionB": "...", "optionC": "...", "optionD": "...", "correctOption": "A", "explanationText": "সংক্ষিপ্ত ব্যাখ্যা (ঐচ্ছিক)", "examYear": 2023, "examInstitute": "BPSC", "examPost": "Assistant Programmer", "topic": "Array", "difficulty": "MEDIUM" },
-  { "type": "WRITTEN", "questionText": "প্রশ্নের লেখা", "answerText": "মডেল উত্তর", "explanationText": "", "examYear": null, "examInstitute": null, "examPost": null, "topic": "OOP", "difficulty": "HARD" },
-  { "type": "LAB", "questionText": "সমস্যার বিবরণ", "answerText": "সমাধান বা কোড", "explanationText": "", "examYear": null, "examInstitute": null, "examPost": null, "topic": "Sorting", "difficulty": "HARD" }
+  { "type": "MCQ", "questionText": "প্রশ্নের লেখা", "optionA": "...", "optionB": "...", "optionC": "...", "optionD": "...", "correctOption": "A", "explanationText": "সংক্ষিপ্ত ব্যাখ্যা (ঐচ্ছিক)", "examYear": 2023, "examInstitute": "BPSC", "examPost": "Assistant Programmer", "topic": "Array", "difficulty": "MEDIUM", "examTaker": "BCS প্রার্থী" },
+  { "type": "WRITTEN", "questionText": "প্রশ্নের লেখা", "answerText": "মডেল উত্তর", "explanationText": "", "examYear": null, "examInstitute": null, "examPost": null, "topic": "OOP", "difficulty": "HARD", "examTaker": "ব্যাংক জব প্রার্থী" },
+  { "type": "LAB", "questionText": "সমস্যার বিবরণ", "answerText": "সমাধান বা কোড", "explanationText": "", "examYear": null, "examInstitute": null, "examPost": null, "topic": "Sorting", "difficulty": "HARD", "examTaker": "শিক্ষক নিবন্ধন প্রার্থী" }
 ]
 
 নিয়ম:
@@ -87,6 +87,7 @@ function BulkQuestionBankImport({
 - explanationText সবসময় ঐচ্ছিক — না দিতে চাইলে খালি স্ট্রিং দাও।
 - যদি প্রশ্নপত্র থেকে বোঝা যায় এটি কোন সালের, কোন প্রতিষ্ঠানের এবং কোন পদের পরীক্ষা (যেমন প্রতিষ্ঠান: BPSC/Bangladesh Bank/Ministry of Finance, পদ: AD (ICT)/Assistant Programmer), তাহলে examYear (সংখ্যা), examInstitute (নাম) ও examPost (পদের নাম) দাও, না জানা থাকলে null দাও।
 - প্রতিটি প্রশ্নে "topic" (প্রশ্নটি ঠিক কোন সাব-টপিকের, যেমন: "Array", "OOP", "Bangladesh History", "Verb Tense" — বিষয়ের একটি নির্দিষ্ট উপ-অংশের নাম) এবং "difficulty" ("EASY"/"MEDIUM"/"HARD" এর একটি, প্রশ্নটি কতটা কঠিন তা অনুমান করে) অবশ্যই দাও — না বুঝলে সবচেয়ে সম্ভাব্য অনুমান করে দাও, null দিও না।
+- প্রতিটি প্রশ্নে "examTaker" ও দাও — এই প্রশ্নটি মূলত কোন ধরনের পরীক্ষার্থীর জন্য উপযোগী (যেমন: "BCS প্রার্থী", "ব্যাংক জব প্রার্থী", "শিক্ষক নিবন্ধন প্রার্থী", "প্রাথমিক শিক্ষক প্রার্থী", "পুলিশ/আনসার প্রার্থী") — প্রশ্নপত্র থেকে বোঝা না গেলে বিষয়ের প্রকৃতি দেখে সবচেয়ে সম্ভাব্য অনুমান করো, না বুঝলে null দাও।
 
 ⚠️ বৈধ JSON বাধ্যতামূলক (এটি সবচেয়ে গুরুত্বপূর্ণ নিয়ম):
 - যদি কোনো প্রশ্ন বা উত্তরে প্রোগ্রামিং কোড থাকে (যেমন C/C++/Java কোডে { } ব্যবহার), তাহলে সেই কোডকে questionText/answerText স্ট্রিং-এর ভিতরে বসানোর সময় অবশ্যই প্রপার JSON স্ট্রিং এস্কেপিং করতে হবে: প্রতিটি নতুন লাইনকে \\n দিয়ে, প্রতিটি ডাবল-কোট (") কে \\" দিয়ে, এবং প্রতিটি ব্যাকস্ল্যাশ (\\) কে \\\\ দিয়ে রিপ্লেস করো। { এবং } ব্র্যাকেট নিজে থেকে কোনো সমস্যা করে না যতক্ষণ না এগুলো একটি স্ট্রিং-এর ভিতরে থাকে এবং স্ট্রিং-টি ঠিকভাবে quote/escape করা থাকে।
@@ -194,6 +195,7 @@ function BulkQuestionBankImport({
         difficulty: typeof it.difficulty === 'string' && ['EASY', 'MEDIUM', 'HARD'].includes(it.difficulty.trim().toUpperCase())
           ? it.difficulty.trim().toUpperCase()
           : null,
+        examTaker: it.examTaker ? String(it.examTaker).trim() : null,
         displayOrder: existingCount + i,
         published: true,
       };
@@ -303,6 +305,7 @@ export default function AdminQuestionBankPage() {
   const [qExamPost, setQExamPost] = useState('');
   const [qTopic, setQTopic] = useState('');
   const [qDifficulty, setQDifficulty] = useState<QuestionDifficulty | ''>('');
+  const [qExamTaker, setQExamTaker] = useState('');
   const [qOrder, setQOrder] = useState('0');
   const [qPublished, setQPublished] = useState(true);
 
@@ -368,7 +371,7 @@ export default function AdminQuestionBankPage() {
   const resetQForm = () => {
     setEditingQ(null); setQType('MCQ'); setQText(''); setQOptA(''); setQOptB(''); setQOptC(''); setQOptD('');
     setQCorrect('A'); setQAnswer(''); setQExplanation(''); setQExamYear(''); setQExamInstitute(''); setQExamPost('');
-    setQTopic(''); setQDifficulty('');
+    setQTopic(''); setQDifficulty(''); setQExamTaker('');
     setQOrder('0'); setQPublished(true);
   };
 
@@ -377,7 +380,7 @@ export default function AdminQuestionBankPage() {
     setQOptA(q.optionA ?? ''); setQOptB(q.optionB ?? ''); setQOptC(q.optionC ?? ''); setQOptD(q.optionD ?? '');
     setQCorrect(q.correctOption ?? 'A'); setQAnswer(q.answerText ?? ''); setQExplanation(q.explanationText ?? '');
     setQExamYear(q.examYear ? String(q.examYear) : ''); setQExamInstitute(q.examInstitute ?? ''); setQExamPost(q.examPost ?? '');
-    setQTopic(q.topic ?? ''); setQDifficulty(q.difficulty ?? '');
+    setQTopic(q.topic ?? ''); setQDifficulty(q.difficulty ?? ''); setQExamTaker(q.examTaker ?? '');
     setQOrder(String(q.displayOrder)); setQPublished(q.published);
   };
 
@@ -405,6 +408,7 @@ export default function AdminQuestionBankPage() {
       examPost: qExamPost.trim() || null,
       topic: qTopic.trim() || null,
       difficulty: qDifficulty || null,
+      examTaker: qExamTaker.trim() || null,
       displayOrder: Number(qOrder),
       published: qPublished,
     };
@@ -586,6 +590,8 @@ export default function AdminQuestionBankPage() {
 
                   <Field label="টপিক (Topic)" value={qTopic} onChange={setQTopic} placeholder="যেমন: Array, OOP, বাংলাদেশের ইতিহাস..." />
 
+                  <Field label="কাদের জন্য (Exam Taker)" value={qExamTaker} onChange={setQExamTaker} placeholder="যেমন: BCS প্রার্থী, ব্যাংক জব প্রার্থী, শিক্ষক নিবন্ধন প্রার্থী..." />
+
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1">কঠিনতার স্তর (Level)</label>
                     <div className="flex gap-1.5">
@@ -643,6 +649,9 @@ export default function AdminQuestionBankPage() {
                               )}
                               {q.topic && (
                                 <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">🏷 {q.topic}</span>
+                              )}
+                              {q.examTaker && (
+                                <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full">🎯 {q.examTaker}</span>
                               )}
                               {q.difficulty && (
                                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"

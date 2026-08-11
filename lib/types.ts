@@ -766,6 +766,7 @@ export interface QuestionBankQuestion {
   examPost: string | null;
   topic: string | null;
   difficulty: QuestionDifficulty | null;
+  examTaker: string | null;
   displayOrder: number;
   published: boolean;
 }
