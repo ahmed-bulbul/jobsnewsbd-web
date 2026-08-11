@@ -110,6 +110,13 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
     }
   };
 
+  // Scroll back to the top when the result appears — otherwise the user is
+  // left wherever they were scrolled to when they hit submit (often the very
+  // bottom of a long question list) and never actually sees their result.
+  useEffect(() => {
+    if (result) window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [result]);
+
   const answered = Object.values(answers).filter(Boolean).length;
 
   const autoSubmit = () => { if (!result) handleSubmit(); };
