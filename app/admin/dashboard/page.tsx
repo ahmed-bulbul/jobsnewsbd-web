@@ -136,6 +136,7 @@ export default function AdminDashboard() {
         <div className="flex items-center gap-3 sm:gap-4 flex-wrap w-full sm:w-auto">
           <span className="text-primary-300 text-sm">👤 {adminName}</span>
           <Link href="/admin/analytics" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">📊 অ্যানালিটিক্স</Link>
+          <Link href="/admin/users" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">👥 ব্যবহারকারী</Link>
           <Link href="/admin/exam-centers" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">🏫 পরীক্ষা কেন্দ্র</Link>
           <Link href="/admin/prep" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">📚 প্রস্তুতি</Link>
           <Link href="/admin/job-experiences" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">💬 চাকরির অভিজ্ঞতা</Link>

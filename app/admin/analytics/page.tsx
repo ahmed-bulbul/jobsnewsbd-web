@@ -34,6 +34,7 @@ export default function AdminAnalyticsPage() {
       <header className="bg-primary-900 text-white px-6 py-4 flex items-center gap-4">
         <Link href="/admin/dashboard" className="text-primary-300 hover:text-white text-sm">← ড্যাশবোর্ড</Link>
         <h1 className="font-bold">অ্যানালিটিক্স</h1>
+        <Link href="/admin/users" className="ml-auto text-primary-300 hover:text-white text-xs">👥 ব্যবহারকারী তালিকা →</Link>
       </header>
 
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">

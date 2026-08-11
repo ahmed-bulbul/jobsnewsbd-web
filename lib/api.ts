@@ -4,6 +4,8 @@ import type {
   AdminBookListing,
   AdminBookOrder,
   AdminFeedback,
+  AdminUser,
+  AdminUserStats,
   AdminNotificationSummary,
   BookListing,
   BookListingDetail,
@@ -978,3 +980,14 @@ export const adminGetFeedback = (token: string, status?: string, page = 0, size 
 
 export const adminMarkFeedbackRead = (token: string, id: number) =>
   authPatch<AdminFeedback>(`/api/admin/feedback/${id}/read`, {}, token);
+
+// ── Users ─────────────────────────────────────────────────────────────────────
+
+export const adminGetUsers = (token: string, q?: string, role?: string, page = 0, size = 20) =>
+  authGet<PagedResponse<AdminUser>>('/api/admin/users', token, { q, role, page, size });
+
+export const adminGetUserStats = (token: string) =>
+  authGet<AdminUserStats>('/api/admin/users/stats', token);
+
+export const adminToggleUserActive = (token: string, id: number) =>
+  authPatch<AdminUser>(`/api/admin/users/${id}/toggle-active`, {}, token);

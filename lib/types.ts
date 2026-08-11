@@ -701,6 +701,25 @@ export interface AdminNotificationSummary {
 
 export type FeedbackStatus = 'NEW' | 'READ';
 
+export interface AdminUser {
+  id: number;
+  name: string | null;
+  email: string;
+  phone: string | null;
+  role: 'ADMIN' | 'USER';
+  active: boolean;
+  emailVerified: boolean;
+  profilePhotoUrl: string | null;
+  createdAt: string;
+}
+
+export interface AdminUserStats {
+  total: number;
+  today: number;
+  thisWeek: number;
+  thisMonth: number;
+}
+
 export interface AdminFeedback {
   id: number;
   submitterName: string;
@@ -715,6 +734,7 @@ export interface AdminFeedback {
 // ── Question Bank ──────────────────────────────────────────────────────────────
 
 export type QuestionBankType = 'MCQ' | 'WRITTEN' | 'LAB';
+export type QuestionDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
 
 export interface QuestionBankCategory {
   id: number;
@@ -744,6 +764,8 @@ export interface QuestionBankQuestion {
   examYear: number | null;
   examInstitute: string | null;
   examPost: string | null;
+  topic: string | null;
+  difficulty: QuestionDifficulty | null;
   displayOrder: number;
   published: boolean;
 }

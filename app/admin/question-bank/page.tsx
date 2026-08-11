@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { jsonrepair } from 'jsonrepair';
 import {
   adminGetQuestionBankCategories,
   adminCreateQuestionBankCategory,
@@ -13,7 +14,7 @@ import {
   adminUpdateQuestionBankQuestion,
   adminDeleteQuestionBankQuestion,
 } from '@/lib/api';
-import type { QuestionBankCategory, QuestionBankQuestion, QuestionBankType } from '@/lib/types';
+import type { QuestionBankCategory, QuestionBankQuestion, QuestionBankType, QuestionDifficulty } from '@/lib/types';
 
 type Tab = 'categories' | 'questions';
 
@@ -36,6 +37,12 @@ function Field({ label, value, onChange, placeholder, type = 'text' }: {
 }
 
 const TYPE_LABEL: Record<QuestionBankType, string> = { MCQ: 'MCQ', WRITTEN: 'লিখিত', LAB: 'ল্যাব' };
+const DIFFICULTY_LABEL: Record<QuestionDifficulty, string> = { EASY: 'সহজ', MEDIUM: 'মাঝারি', HARD: 'কঠিন' };
+const DIFFICULTY_COLOR: Record<QuestionDifficulty, { bg: string; color: string }> = {
+  EASY:   { bg: '#ECFDF5', color: '#059669' },
+  MEDIUM: { bg: '#FFFBEB', color: '#B45309' },
+  HARD:   { bg: '#FEF2F2', color: '#DC2626' },
+};
 
 // ── AI bulk import (mixed MCQ / WRITTEN / LAB) ─────────────────────────────────
 
@@ -68,9 +75,9 @@ function BulkQuestionBankImport({
 শুধুমাত্র নিচের ফরম্যাটে একটি JSON অ্যারে দাও — অন্য কোনো লেখা, ভূমিকা, ব্যাখ্যা বা \`\`\` কোড ফেন্স ছাড়া:
 
 [
-  { "type": "MCQ", "questionText": "প্রশ্নের লেখা", "optionA": "...", "optionB": "...", "optionC": "...", "optionD": "...", "correctOption": "A", "explanationText": "সংক্ষিপ্ত ব্যাখ্যা (ঐচ্ছিক)", "examYear": 2023, "examInstitute": "BPSC", "examPost": "Assistant Programmer" },
-  { "type": "WRITTEN", "questionText": "প্রশ্নের লেখা", "answerText": "মডেল উত্তর", "explanationText": "", "examYear": null, "examInstitute": null, "examPost": null },
-  { "type": "LAB", "questionText": "সমস্যার বিবরণ", "answerText": "সমাধান বা কোড", "explanationText": "", "examYear": null, "examInstitute": null, "examPost": null }
+  { "type": "MCQ", "questionText": "প্রশ্নের লেখা", "optionA": "...", "optionB": "...", "optionC": "...", "optionD": "...", "correctOption": "A", "explanationText": "সংক্ষিপ্ত ব্যাখ্যা (ঐচ্ছিক)", "examYear": 2023, "examInstitute": "BPSC", "examPost": "Assistant Programmer", "topic": "Array", "difficulty": "MEDIUM" },
+  { "type": "WRITTEN", "questionText": "প্রশ্নের লেখা", "answerText": "মডেল উত্তর", "explanationText": "", "examYear": null, "examInstitute": null, "examPost": null, "topic": "OOP", "difficulty": "HARD" },
+  { "type": "LAB", "questionText": "সমস্যার বিবরণ", "answerText": "সমাধান বা কোড", "explanationText": "", "examYear": null, "examInstitute": null, "examPost": null, "topic": "Sorting", "difficulty": "HARD" }
 ]
 
 নিয়ম:
@@ -79,6 +86,11 @@ function BulkQuestionBankImport({
 - WRITTEN ও LAB-এর জন্য: answerText আবশ্যক (মডেল উত্তর বা সমাধান/কোড)। এই দুই ধরনে optionA/B/C/D বা correctOption দিও না।
 - explanationText সবসময় ঐচ্ছিক — না দিতে চাইলে খালি স্ট্রিং দাও।
 - যদি প্রশ্নপত্র থেকে বোঝা যায় এটি কোন সালের, কোন প্রতিষ্ঠানের এবং কোন পদের পরীক্ষা (যেমন প্রতিষ্ঠান: BPSC/Bangladesh Bank/Ministry of Finance, পদ: AD (ICT)/Assistant Programmer), তাহলে examYear (সংখ্যা), examInstitute (নাম) ও examPost (পদের নাম) দাও, না জানা থাকলে null দাও।
+- প্রতিটি প্রশ্নে "topic" (প্রশ্নটি ঠিক কোন সাব-টপিকের, যেমন: "Array", "OOP", "Bangladesh History", "Verb Tense" — বিষয়ের একটি নির্দিষ্ট উপ-অংশের নাম) এবং "difficulty" ("EASY"/"MEDIUM"/"HARD" এর একটি, প্রশ্নটি কতটা কঠিন তা অনুমান করে) অবশ্যই দাও — না বুঝলে সবচেয়ে সম্ভাব্য অনুমান করে দাও, null দিও না।
+
+⚠️ বৈধ JSON বাধ্যতামূলক (এটি সবচেয়ে গুরুত্বপূর্ণ নিয়ম):
+- যদি কোনো প্রশ্ন বা উত্তরে প্রোগ্রামিং কোড থাকে (যেমন C/C++/Java কোডে { } ব্যবহার), তাহলে সেই কোডকে questionText/answerText স্ট্রিং-এর ভিতরে বসানোর সময় অবশ্যই প্রপার JSON স্ট্রিং এস্কেপিং করতে হবে: প্রতিটি নতুন লাইনকে \\n দিয়ে, প্রতিটি ডাবল-কোট (") কে \\" দিয়ে, এবং প্রতিটি ব্যাকস্ল্যাশ (\\) কে \\\\ দিয়ে রিপ্লেস করো। { এবং } ব্র্যাকেট নিজে থেকে কোনো সমস্যা করে না যতক্ষণ না এগুলো একটি স্ট্রিং-এর ভিতরে থাকে এবং স্ট্রিং-টি ঠিকভাবে quote/escape করা থাকে।
+- আউটপুট দেওয়ার আগে নিজে মানসিকভাবে যাচাই করো যে পুরো আউটপুটটি JSON.parse() দিয়ে সরাসরি পার্স করা যাবে — কোনো ট্রেইলিং কমা, আনক্লোজড কোট, বা raw নিউলাইন স্ট্রিং-এর ভিতরে থাকা যাবে না।
 - আউটপুট শুধু JSON অ্যারে — কোনো ভূমিকা, উপসংহার বা কোড ব্লক মার্কার নয়।`;
 
   const copyPrompt = async () => {
@@ -89,13 +101,31 @@ function BulkQuestionBankImport({
     } catch { /* clipboard unavailable — ignore */ }
   };
 
+  const [parseErrorDetail, setParseErrorDetail] = useState('');
+
+  // AI output is almost-JSON, not guaranteed-valid JSON — especially once
+  // code snippets with raw newlines/quotes/braces sneak into a string value.
+  // Try a straight parse first; if that fails, fall back to jsonrepair
+  // (handles unescaped control characters, trailing commas, stray quotes,
+  // etc. — exactly the class of mistakes LLMs make around embedded code).
+  // If both fail (rare — usually an unescaped quote inside embedded code
+  // that makes string boundaries genuinely ambiguous), surface the real
+  // JSON.parse error so the admin can jump to that spot and fix it by hand.
   const parseItems = (): Array<Record<string, unknown>> | null => {
+    setParseErrorDetail('');
     const cleaned = raw.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
     try {
       const data = JSON.parse(cleaned);
       return Array.isArray(data) ? data : null;
-    } catch {
-      return null;
+    } catch (e1) {
+      try {
+        const repaired = jsonrepair(cleaned);
+        const data = JSON.parse(repaired);
+        return Array.isArray(data) ? data : null;
+      } catch {
+        setParseErrorDetail(e1 instanceof Error ? e1.message : String(e1));
+        return null;
+      }
     }
   };
 
@@ -103,7 +133,10 @@ function BulkQuestionBankImport({
     setError('');
     const items = parseItems();
     if (!items || items.length === 0) {
-      setError('বৈধ JSON অ্যারে পাওয়া যায়নি — AI-এর আউটপুট আবার চেক করুন।');
+      setError(
+        `বৈধ JSON অ্যারে পাওয়া যায়নি — অটো-ফিক্সও ব্যর্থ হয়েছে। কোডের ভিতরের কোট/নিউলাইন ঠিকভাবে এসকেপ করা আছে কিনা দেখুন।` +
+        (parseErrorDetail ? ` (টেকনিক্যাল ত্রুটি: ${parseErrorDetail})` : '')
+      );
       return;
     }
 
@@ -157,6 +190,10 @@ function BulkQuestionBankImport({
         examYear: it.examYear != null && it.examYear !== '' ? Number(it.examYear) : null,
         examInstitute: it.examInstitute ? String(it.examInstitute).trim() : null,
         examPost: it.examPost ? String(it.examPost).trim() : null,
+        topic: it.topic ? String(it.topic).trim() : null,
+        difficulty: typeof it.difficulty === 'string' && ['EASY', 'MEDIUM', 'HARD'].includes(it.difficulty.trim().toUpperCase())
+          ? it.difficulty.trim().toUpperCase()
+          : null,
         displayOrder: existingCount + i,
         published: true,
       };
@@ -264,6 +301,8 @@ export default function AdminQuestionBankPage() {
   const [qExamYear, setQExamYear] = useState('');
   const [qExamInstitute, setQExamInstitute] = useState('');
   const [qExamPost, setQExamPost] = useState('');
+  const [qTopic, setQTopic] = useState('');
+  const [qDifficulty, setQDifficulty] = useState<QuestionDifficulty | ''>('');
   const [qOrder, setQOrder] = useState('0');
   const [qPublished, setQPublished] = useState(true);
 
@@ -329,6 +368,7 @@ export default function AdminQuestionBankPage() {
   const resetQForm = () => {
     setEditingQ(null); setQType('MCQ'); setQText(''); setQOptA(''); setQOptB(''); setQOptC(''); setQOptD('');
     setQCorrect('A'); setQAnswer(''); setQExplanation(''); setQExamYear(''); setQExamInstitute(''); setQExamPost('');
+    setQTopic(''); setQDifficulty('');
     setQOrder('0'); setQPublished(true);
   };
 
@@ -337,6 +377,7 @@ export default function AdminQuestionBankPage() {
     setQOptA(q.optionA ?? ''); setQOptB(q.optionB ?? ''); setQOptC(q.optionC ?? ''); setQOptD(q.optionD ?? '');
     setQCorrect(q.correctOption ?? 'A'); setQAnswer(q.answerText ?? ''); setQExplanation(q.explanationText ?? '');
     setQExamYear(q.examYear ? String(q.examYear) : ''); setQExamInstitute(q.examInstitute ?? ''); setQExamPost(q.examPost ?? '');
+    setQTopic(q.topic ?? ''); setQDifficulty(q.difficulty ?? '');
     setQOrder(String(q.displayOrder)); setQPublished(q.published);
   };
 
@@ -362,6 +403,8 @@ export default function AdminQuestionBankPage() {
       examYear: qExamYear.trim() ? Number(qExamYear) : null,
       examInstitute: qExamInstitute.trim() || null,
       examPost: qExamPost.trim() || null,
+      topic: qTopic.trim() || null,
+      difficulty: qDifficulty || null,
       displayOrder: Number(qOrder),
       published: qPublished,
     };
@@ -541,6 +584,20 @@ export default function AdminQuestionBankPage() {
                   </div>
                   <Field label="পরীক্ষার পদ (Post)" value={qExamPost} onChange={setQExamPost} placeholder="AD (ICT), Assistant Programmer..." />
 
+                  <Field label="টপিক (Topic)" value={qTopic} onChange={setQTopic} placeholder="যেমন: Array, OOP, বাংলাদেশের ইতিহাস..." />
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">কঠিনতার স্তর (Level)</label>
+                    <div className="flex gap-1.5">
+                      {(['EASY', 'MEDIUM', 'HARD'] as QuestionDifficulty[]).map((d) => (
+                        <button key={d} type="button" onClick={() => setQDifficulty(d === qDifficulty ? '' : d)}
+                          className={`flex-1 px-2 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${qDifficulty === d ? 'bg-primary text-white border-primary' : 'border-warm-border text-gray-600 hover:border-primary'}`}>
+                          {DIFFICULTY_LABEL[d]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   <Field label="ক্রম" value={qOrder} onChange={setQOrder} type="number" />
 
                   <label className="flex items-center gap-2 text-sm cursor-pointer">
@@ -582,6 +639,15 @@ export default function AdminQuestionBankPage() {
                               {(q.examInstitute || q.examPost || q.examYear) && (
                                 <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
                                   {[[q.examInstitute, q.examPost].filter(Boolean).join(' - '), q.examYear].filter(Boolean).join(' ')}
+                                </span>
+                              )}
+                              {q.topic && (
+                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">🏷 {q.topic}</span>
+                              )}
+                              {q.difficulty && (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                  style={{ background: DIFFICULTY_COLOR[q.difficulty].bg, color: DIFFICULTY_COLOR[q.difficulty].color }}>
+                                  {DIFFICULTY_LABEL[q.difficulty]}
                                 </span>
                               )}
                             </div>
