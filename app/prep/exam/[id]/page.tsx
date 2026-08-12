@@ -2,7 +2,7 @@
 
 import { Suspense, use, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { ResultView } from '@/components/exam/ResultView';
@@ -53,25 +53,31 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
   const { t } = useLanguage();
   const { user, openModal } = useAuth();
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const examTitle = searchParams.get('title') ?? '';
   const duration = Number(searchParams.get('duration') ?? 30);
   const backSlug = searchParams.get('slug') ?? '';
+  const storageKey = `exam-attempt-${examSetId}`;
 
   const [questions, setQuestions] = useState<ExamQuestionPublic[]>([]);
   const [loading, setLoading] = useState(true);
   const [started, setStarted] = useState(false);
+  const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [initialRemaining, setInitialRemaining] = useState<number | null>(null);
+  const [resumeChecked, setResumeChecked] = useState(false);
   const [answers, setAnswers] = useState<Record<number, string | null>>({});
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<ExamResult | null>(null);
-  const [error, setError] = useState('');
+  const [loadError, setLoadError] = useState('');
+  const [submitError, setSubmitError] = useState('');
   const [examSet, setExamSet] = useState<ExamSet | null>(null);
   const [examSetChecked, setExamSetChecked] = useState(false);
 
   useEffect(() => {
     getExamQuestions(examSetId)
       .then((qs) => setQuestions(qs))
-      .catch(() => setError(t('প্রশ্ন লোড করা যায়নি', 'Failed to load questions')))
+      .catch(() => setLoadError(t('প্রশ্ন লোড করা যায়নি', 'Failed to load questions')))
       .finally(() => setLoading(false));
   }, [examSetId, t]);
 
@@ -88,27 +94,109 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
   }, [backSlug, examSetId]);
 
   const alreadyAttemptedLive = !!examSet && examStatus(examSet) === 'live' && examSet.userAttemptCount > 0;
+  const examInProgress = started && !result;
 
-  const handleSubmit = async () => {
-    if (!user?.token) { setError(t('পরীক্ষা দিতে লগইন করুন', 'Please login to submit')); return; }
+  const handleSubmit = async (answersOverride?: Record<number, string | null>) => {
+    if (!user?.token) { setSubmitError(t('পরীক্ষা দিতে লগইন করুন', 'Please login to submit')); return; }
     setSubmitting(true);
 
+    const effectiveAnswers = answersOverride ?? answers;
     const payload = questions.map((q) => ({
       questionId: q.id,
-      selectedOption: answers[q.id] ?? null,
+      selectedOption: effectiveAnswers[q.id] ?? null,
     }));
 
     try {
       const res = await submitExamAttempt(examSetId, payload, user.token);
       setResult(res);
     } catch (err) {
-      setError(err instanceof Error && err.message
+      setSubmitError(err instanceof Error && err.message
         ? err.message
         : t('জমা দিতে ব্যর্থ। আবার চেষ্টা করুন।', 'Submission failed. Please try again.'));
     } finally {
       setSubmitting(false);
     }
   };
+
+  // Resume-in-progress support: once an exam is started we persist
+  // {startedAt, answers} to localStorage so closing the tab, losing
+  // connectivity, or navigating away never lets someone dodge submission —
+  // reopening this same exam resumes the running clock from where it really
+  // is, and if time already ran out while they were away it force-submits
+  // immediately with whatever was answered.
+  useEffect(() => {
+    if (loading || resumeChecked) return;
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        const saved = JSON.parse(raw) as { startedAt: number; answers: Record<number, string | null> };
+        if (saved && typeof saved.startedAt === 'number') {
+          const elapsedMs = Date.now() - saved.startedAt;
+          const totalMs = duration * 60 * 1000;
+          setAnswers(saved.answers ?? {});
+          setStartedAt(saved.startedAt);
+          setStarted(true);
+          if (elapsedMs >= totalMs) {
+            setResumeChecked(true);
+            void handleSubmit(saved.answers ?? {});
+            return;
+          }
+          setInitialRemaining(Math.max(0, Math.floor((totalMs - elapsedMs) / 1000)));
+        }
+      }
+    } catch {
+      // Corrupt/unavailable localStorage — fall back to a normal fresh start.
+    }
+    setResumeChecked(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
+
+  // Keep localStorage in sync with the live attempt so a resume (tab
+  // reopened, browser restarted, connection dropped) picks up exactly where
+  // the answers were left off.
+  useEffect(() => {
+    if (!started || startedAt === null || result) return;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify({ startedAt, answers }));
+    } catch {
+      // ignore — worst case a resume starts from scratch instead of crashing
+    }
+  }, [answers, started, startedAt, result, storageKey]);
+
+  // Attempt resolved (submitted) — nothing left to resume, clear saved state.
+  useEffect(() => {
+    if (result) {
+      try { localStorage.removeItem(storageKey); } catch {}
+    }
+  }, [result, storageKey]);
+
+  const startExam = () => {
+    const now = Date.now();
+    setStartedAt(now);
+    setInitialRemaining(null);
+    setStarted(true);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify({ startedAt: now, answers: {} }));
+    } catch {}
+  };
+
+  const confirmLeave = () => {
+    const ok = window.confirm(t(
+      'পরীক্ষা চলাকালীন ছেড়ে গেলেও সময় চলতে থাকবে এবং সময় শেষ হলে স্বয়ংক্রিয়ভাবে জমা হয়ে যাবে। আপনি কি নিশ্চিত যে এখন ছেড়ে যেতে চান?',
+      'Leaving now does not stop the clock — it will auto-submit once time runs out. Are you sure you want to leave?'
+    ));
+    if (ok) router.push(backSlug ? `/prep/topics/${backSlug}/exam` : '/prep');
+  };
+
+  // Warn on tab close/refresh while an attempt is running — the browser's own
+  // (non-customizable) confirmation dialog, paired with the resume logic
+  // above so leaving never actually lets the exam go unsubmitted.
+  useEffect(() => {
+    if (!examInProgress) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [examInProgress]);
 
   // Scroll back to the top when the result appears — otherwise the user is
   // left wherever they were scrolled to when they hit submit (often the very
@@ -120,7 +208,7 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
   const answered = Object.values(answers).filter(Boolean).length;
 
   const autoSubmit = () => { if (!result) handleSubmit(); };
-  const timer = useTimer(duration * 60, started, autoSubmit);
+  const timer = useTimer(initialRemaining ?? duration * 60, started, autoSubmit);
 
   const optionText = (q: ExamQuestionPublic, opt: string) =>
     ({ A: q.optionA, B: q.optionB, C: q.optionC, D: q.optionD }[opt] ?? '');
@@ -130,14 +218,22 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
       <Header />
 
       <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
-        {/* Back */}
-        <Link href={backSlug ? `/prep/topics/${backSlug}/exam` : '/prep'}
-          className="inline-flex items-center gap-1.5 text-sm text-warm-muted hover:text-primary mb-6 transition-colors">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-          {t('পরীক্ষার তালিকা', 'Exam list')}
-        </Link>
+        {/* Back — during an active attempt, confirm first so leaving isn't accidental */}
+        {examInProgress ? (
+          <button onClick={confirmLeave}
+            className="inline-flex items-center gap-1.5 text-sm text-warm-muted hover:text-primary mb-6 transition-colors">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+            {t('পরীক্ষার তালিকা', 'Exam list')}
+          </button>
+        ) : (
+          <Link href={backSlug ? `/prep/topics/${backSlug}/exam` : '/prep'}
+            className="inline-flex items-center gap-1.5 text-sm text-warm-muted hover:text-primary mb-6 transition-colors">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+            {t('পরীক্ষার তালিকা', 'Exam list')}
+          </Link>
+        )}
 
-        {loading || !examSetChecked ? (
+        {loading || !examSetChecked || !resumeChecked ? (
           <div className="space-y-4 animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-2/3" />
             {[1,2,3].map((i) => <div key={i} className="h-40 bg-white rounded-2xl border border-warm-border" />)}
@@ -165,9 +261,9 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
               <button onClick={() => openModal('register')} className="text-primary hover:underline">{t('নিবন্ধন করুন', 'Register')}</button>
             </p>
           </div>
-        ) : error && !result ? (
+        ) : loadError && !result ? (
           <div className="text-center py-20">
-            <p className="text-red-500 font-medium mb-4">{error}</p>
+            <p className="text-red-500 font-medium mb-4">{loadError}</p>
           </div>
         ) : result ? (
           <ResultView result={result} backHref={backSlug ? `/prep/topics/${backSlug}/exam` : '/prep'} examTitle={examTitle} />
@@ -206,7 +302,7 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
               <li className="flex gap-2"><span className="text-amber-500">•</span>{t('সময় শেষ হলে স্বয়ংক্রিয়ভাবে জমা হবে।', 'Auto-submits when time expires.')}</li>
               <li className="flex gap-2"><span className="text-amber-500">•</span>{t('লগইন ছাড়া জমা দেওয়া যাবে না।', 'Login required to submit.')}</li>
             </ul>
-            <button onClick={() => setStarted(true)}
+            <button onClick={startExam}
               className="px-8 py-3 rounded-xl text-white font-bold text-sm transition-opacity hover:opacity-90"
               style={{ background: 'linear-gradient(135deg, #D97706, #B45309)' }}>
               {t('পরীক্ষা শুরু করুন', 'Start Exam')}
@@ -278,8 +374,8 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
             </div>
 
             {/* Submit */}
-            {error && <p className="text-red-500 text-sm text-center mb-3">{error}</p>}
-            <button onClick={handleSubmit} disabled={submitting}
+            {submitError && <p className="text-red-500 text-sm text-center mb-3">{submitError}</p>}
+            <button onClick={() => handleSubmit()} disabled={submitting}
               className="w-full py-3.5 rounded-xl text-white font-bold text-sm transition-opacity hover:opacity-90 disabled:opacity-60"
               style={{ background: 'linear-gradient(135deg, #D97706, #B45309)' }}>
               {submitting ? t('জমা দেওয়া হচ্ছে...', 'Submitting...') : `${t('উত্তর জমা দিন', 'Submit')} (${answered}/${questions.length})`}
