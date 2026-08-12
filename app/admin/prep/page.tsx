@@ -306,7 +306,7 @@ function BulkQuestionImport({
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
 
-  const promptTemplate = (topic: string) => `তুমি একজন পরীক্ষা প্রস্তুতি প্রশ্ন তৈরিকারী। বিষয়: ${topic ? `"${topic}"` : '[বিষয়ের নাম এখানে লিখুন]'} — এই বিষয়ে ১০টি মাল্টিপল চয়েস (MCQ) প্রশ্ন তৈরি করো, বাংলাদেশি চাকরির পরীক্ষার (BCS/ব্যাংক/সরকারি চাকরি) মানের।
+  const promptTemplate = (topic: string) => `তুমি একজন পরীক্ষা প্রস্তুতি প্রশ্ন তৈরিকারী। বিষয়: ${topic ? `"${topic}"` : '[বিষয়ের নাম এখানে লিখুন]'} — এই বিষয়ে ৩০টি মাল্টিপল চয়েস (MCQ) প্রশ্ন তৈরি করো, বাংলাদেশি চাকরির পরীক্ষার (BCS/ব্যাংক/সরকারি চাকরি) সবচেয়ে কঠিন লেভেলের প্রশ্নের মানে — সহজ বা মৌলিক প্রশ্ন নয়, এমন প্রশ্ন যা একজন ভালো প্রস্তুতি নেওয়া পরীক্ষার্থীকেও ভাবিয়ে তুলবে।
 
 শুধুমাত্র নিচের ফরম্যাটে একটি JSON অ্যারে দাও — অন্য কোনো লেখা, ভূমিকা, ব্যাখ্যা বা \`\`\` কোড ফেন্স ছাড়া:
 
@@ -323,10 +323,13 @@ function BulkQuestionImport({
 ]
 
 নিয়ম:
+- মোট প্রশ্ন সংখ্যা অবশ্যই ৩০টি।
+- কঠিনতা: প্রতিটি প্রশ্ন কঠিন ও চিন্তা-উদ্রেককারী হতে হবে — সরাসরি মুখস্থ তথ্যের বদলে বিশ্লেষণ, তুলনা, ব্যতিক্রম বা কম-পরিচিত খুঁটিনাটির উপর ভিত্তি করে প্রশ্ন করো।
 - correctOption অবশ্যই "A", "B", "C" অথবা "D" এর একটি হতে হবে (সঠিক উত্তরের অক্ষর, একেবারে ক্যাপিটাল)।
-- প্রতিটি প্রশ্নে চারটি ভিন্ন, বাস্তবসম্মত অপশন থাকতে হবে, নকল বা অস্পষ্ট নয়।
+- সঠিক উত্তরের অবস্থান (A/B/C/D) সম্পূর্ণ এলোমেলোভাবে (randomly shuffled) বণ্টন করো — ৩০টি প্রশ্নের মধ্যে প্রতিটি অক্ষর (A, B, C, D) মোটামুটি সমানসংখ্যক বার (প্রায় ৭-৮টি করে) সঠিক উত্তর হবে, কিন্তু ধারাবাহিকভাবে একই অক্ষর বা কোনো অনুমানযোগ্য প্যাটার্নে (যেমন A,B,C,D,A,B,C,D...) বসাবে না — সম্পূর্ণ র‍্যান্ডম ক্রমে বসাও, যাতে উত্তরের প্যাটার্ন দেখে কেউ অনুমান করতে না পারে।
+- প্রতিটি প্রশ্নের চারটি অপশনই একে অপরের কাছাকাছি ও বাস্তবসম্মত হতে হবে — ভুল অপশনগুলো (distractors) এমনভাবে লেখো যাতে পরীক্ষার্থী প্রতিটি অপশন নিয়েই দ্বিধায় পড়ে ও ভাবতে বাধ্য হয়; কোনো অপশন যেন দেখেই সহজে বাদ দেওয়া না যায় (অতিরিক্ত অবাস্তব, অপ্রাসঙ্গিক, বা স্পষ্টতই ভুল অপশন দেওয়া যাবে না)।
 - explanationText না দিতে চাইলে খালি স্ট্রিং দাও।
-- আউটপুট শুধু JSON অ্যারে — কোনো ভূমিকা, উপসংহার বা কোড ব্লক মার্কার নয়।`;
+- আউটপুট শুধু JSON অ্যারে — কোনো ভূমিকা, উপসংহার বা কোড ব্লক মার্কার নয়। আউটপুট দেওয়ার আগে যাচাই করো এটি সরাসরি JSON.parse() দিয়ে পার্স করা যাবে (কোনো ট্রেইলিং কমা বা আনক্লোজড কোট থাকবে না)।`;
 
   const copyPrompt = async () => {
     try {
@@ -447,6 +450,54 @@ function BulkQuestionImport({
         className="w-full bg-primary text-white rounded-xl py-2 text-sm font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50">
         {busy ? 'যোগ হচ্ছে...' : 'সব প্রশ্ন এক ক্লিকে যোগ করুন'}
       </button>
+    </div>
+  );
+}
+
+// ── AI study-resource prompt (study guide + YouTube suggestions) ────────────
+// Doesn't create anything itself — just gives the admin a ready-made prompt.
+// The AI's plain-text reply is meant to be split by hand into the existing
+// content types: the study-guide paragraph goes into a "POST" content's body,
+// and each suggested video into its own "VIDEO" content (title + a YouTube
+// link the admin finds/confirms — the AI shouldn't be trusted to invent a
+// real video URL, only a suggested title/search term).
+function StudyResourcePrompt({ defaultTopic }: { defaultTopic: string }) {
+  const [topic, setTopic] = useState(defaultTopic);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => { setTopic(defaultTopic); }, [defaultTopic]);
+
+  const template = (t: string) => `তুমি একজন পরীক্ষা প্রস্তুতি স্টাডি-গাইড লেখক। বিষয়: ${t ? `"${t}"` : '[বিষয়ের নাম এখানে লিখুন]'}
+
+নিচের দুইটি অংশ প্লেইন বাংলা টেক্সটে দাও (JSON নয়, কোনো কোড ফেন্স নয়):
+
+১) "স্টাডি গাইড" — এই বিষয়টি কীভাবে দ্রুত ও কার্যকরভাবে পড়া/আয়ত্ত করা যায় তার উপর ৫-৮ বাক্যের একটি সংক্ষিপ্ত, বাস্তবসম্মত গাইড (গুরুত্বপূর্ণ সাব-টপিক, কমন ভুল, মনে রাখার কৌশল)।
+
+২) "ভিডিও সাজেশন" — এই বিষয়ে পড়াশোনার জন্য উপযোগী ৩-৫টি সুপরিচিত বাংলা/ইংরেজি ইউটিউব চ্যানেল বা ভিডিওর নাম/সার্চ-টার্ম বুলেট আকারে দাও (যেমন: "10 Minute School - [বিষয়]", "[বিষয়] বেসিক টিউটোরিয়াল")। সরাসরি ইউটিউব লিংক বানিয়ে দিও না — শুধু নাম/সার্চ-টার্ম দাও, কারণ আমি নিজে ইউটিউবে খুঁজে সঠিক লিংক বসাব।`;
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(template(topic));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* clipboard unavailable — ignore */ }
+  };
+
+  return (
+    <div className="mt-4 pt-4 border-t border-warm-border space-y-2">
+      <h4 className="font-bold text-gray-800 text-sm">✨ AI দিয়ে স্টাডি রিসোর্স আইডিয়া নিন</h4>
+      <p className="text-xs text-warm-muted leading-relaxed">
+        একটি প্রম্পট কপি করে যেকোনো AI চ্যাটে পেস্ট করুন → স্টাডি গাইড ও ভিডিও সাজেশন পাবেন → গাইডটি একটি নতুন &quot;আর্টিকেল&quot; কন্টেন্টের বডিতে বসান, আর প্রতিটি ভিডিও সাজেশনের জন্য ইউটিউবে খুঁজে আসল লিংক দিয়ে একটি &quot;ভিডিও&quot; কন্টেন্ট তৈরি করুন।
+      </p>
+      <div className="flex gap-2">
+        <input type="text" value={topic} onChange={(e) => setTopic(e.target.value)}
+          placeholder="বিষয়ের নাম"
+          className="flex-1 border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" />
+        <button type="button" onClick={copy}
+          className="shrink-0 px-3 py-2 text-xs font-semibold border border-primary-300 text-primary rounded-lg hover:bg-primary-50">
+          {copied ? '✓ কপি হয়েছে' : '📋 প্রম্পট কপি করুন'}
+        </button>
+      </div>
     </div>
   );
 }
@@ -1202,6 +1253,10 @@ export default function AdminPrepPage() {
                   <p><strong>প্রকাশিত:</strong> চেক না করলে কন্টেন্ট ড্রাফট থাকবে — ব্যবহারকারীরা দেখতে পাবেন না।</p>
                 </div>
               </div>
+
+              <StudyResourcePrompt
+                defaultTopic={allTopics.find((t) => String(t.id) === contentTopicId)?.nameBn ?? ''}
+              />
 
               {allTopics.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-warm-border">

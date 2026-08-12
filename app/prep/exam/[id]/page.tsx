@@ -202,6 +202,7 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
             <ul className="text-sm text-gray-600 text-left space-y-2 mb-8 max-w-sm mx-auto">
               <li className="flex gap-2"><span className="text-amber-500">•</span>{t('প্রতিটি প্রশ্নে চারটি অপশন আছে।', 'Each question has 4 options.')}</li>
               <li className="flex gap-2"><span className="text-amber-500">•</span>{t('যেকোনো প্রশ্ন এড়িয়ে যেতে পারবেন।', 'You can skip any question.')}</li>
+              <li className="flex gap-2"><span className="text-amber-500">•</span>{t('একটি অপশন নির্বাচন করার পর সেটি আর পরিবর্তন করা যাবে না।', 'Once an option is selected, it cannot be changed.')}</li>
               <li className="flex gap-2"><span className="text-amber-500">•</span>{t('সময় শেষ হলে স্বয়ংক্রিয়ভাবে জমা হবে।', 'Auto-submits when time expires.')}</li>
               <li className="flex gap-2"><span className="text-amber-500">•</span>{t('লগইন ছাড়া জমা দেওয়া যাবে না।', 'Login required to submit.')}</li>
             </ul>
@@ -240,26 +241,38 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
                     <p className="text-sm font-semibold text-gray-900 leading-relaxed">{q.questionText}</p>
                   </div>
                   <div className="space-y-2">
-                    {(['A', 'B', 'C', 'D'] as const).map((opt) => {
-                      const selected = answers[q.id] === opt;
-                      return (
-                        <button key={opt} onClick={() => setAnswers((a) => ({ ...a, [q.id]: opt }))}
-                          className="w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all border"
-                          style={{
-                            background: selected ? '#FFF7ED' : '#F9FAFB',
-                            borderColor: selected ? '#D97706' : '#E5E7EB',
-                            color: selected ? '#B45309' : '#374151',
-                            fontWeight: selected ? 700 : 400,
-                          }}>
-                          <span className="w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold shrink-0"
-                            style={{ background: selected ? '#D97706' : '#E5E7EB', color: selected ? '#fff' : '#6B7280' }}>
-                            {opt}
-                          </span>
-                          {optionText(q, opt)}
-                        </button>
-                      );
-                    })}
+                    {(() => {
+                      // One-time selection: once an option is chosen for this
+                      // question, it's locked — the exam taker can't change
+                      // their mind, matching real proctored-exam behavior.
+                      const locked = !!answers[q.id];
+                      return (['A', 'B', 'C', 'D'] as const).map((opt) => {
+                        const selected = answers[q.id] === opt;
+                        return (
+                          <button key={opt}
+                            onClick={() => { if (!locked) setAnswers((a) => ({ ...a, [q.id]: opt })); }}
+                            disabled={locked}
+                            className="w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all border disabled:cursor-not-allowed"
+                            style={{
+                              background: selected ? '#FFF7ED' : '#F9FAFB',
+                              borderColor: selected ? '#D97706' : '#E5E7EB',
+                              color: selected ? '#B45309' : '#374151',
+                              fontWeight: selected ? 700 : 400,
+                              opacity: locked && !selected ? 0.5 : 1,
+                            }}>
+                            <span className="w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold shrink-0"
+                              style={{ background: selected ? '#D97706' : '#E5E7EB', color: selected ? '#fff' : '#6B7280' }}>
+                              {opt}
+                            </span>
+                            {optionText(q, opt)}
+                          </button>
+                        );
+                      });
+                    })()}
                   </div>
+                  {answers[q.id] && (
+                    <p className="text-[11px] text-warm-muted mt-2">🔒 {t('উত্তর একবার নির্বাচন করার পর পরিবর্তন করা যাবে না', 'Answer locked once selected')}</p>
+                  )}
                 </div>
               ))}
             </div>
