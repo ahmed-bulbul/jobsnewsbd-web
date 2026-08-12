@@ -15,6 +15,8 @@ import {
   adminCreatePrepContent,
   adminUpdatePrepContent,
   adminDeletePrepContent,
+  adminUploadPrepContentPdf,
+  adminDeletePrepContentPdf,
   adminGetExamSets,
   adminCreateExamSet,
   adminUpdateExamSet,
@@ -565,6 +567,9 @@ export default function AdminPrepPage() {
   const [contentBody, setContentBody] = useState('');
   const [contentOrder, setContentOrder] = useState('0');
   const [contentPublished, setContentPublished] = useState(false);
+  const [pdfUploading, setPdfUploading] = useState(false);
+  const [pdfCopied, setPdfCopied] = useState(false);
+  const pdfFileRef = useRef<HTMLInputElement>(null);
 
   // Exam state
   const [examTopicId, setExamTopicId] = useState('');
@@ -819,6 +824,37 @@ export default function AdminPrepPage() {
       await adminDeletePrepContent(token, id);
       flash('মুছে ফেলা হয়েছে');
     } catch { flash('মুছতে ব্যর্থ'); }
+  };
+
+  // PDF content: upload a file OR paste a URL — same dual-path pattern used
+  // for circular PDFs / organization logos elsewhere in the admin. Upload
+  // only works once the content row exists (needs an id to scope storage),
+  // so it's only offered while editing an already-saved PDF content item.
+  const handlePdfUpload = async (file: File) => {
+    if (!contentId) return;
+    setPdfUploading(true);
+    try {
+      const updated = await adminUploadPrepContentPdf(token, contentId, file);
+      setContentUrl(updated.contentUrl ?? '');
+      flash('PDF আপলোড হয়েছে');
+    } catch { flash('আপলোড ব্যর্থ'); } finally { setPdfUploading(false); }
+  };
+
+  const handlePdfRemove = async () => {
+    if (!contentId) { setContentUrl(''); return; }
+    try {
+      await adminDeletePrepContentPdf(token, contentId);
+      setContentUrl('');
+      flash('মুছে ফেলা হয়েছে');
+    } catch { flash('মুছতে ব্যর্থ'); }
+  };
+
+  const copyPdfUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(contentUrl);
+      setPdfCopied(true);
+      setTimeout(() => setPdfCopied(false), 2000);
+    } catch { /* clipboard unavailable — ignore */ }
   };
 
   // ── Exam actions ──────────────────────────────────────────────────────────
@@ -1198,8 +1234,47 @@ export default function AdminPrepPage() {
                 </select>
               </div>
 
-              {(contentType === 'VIDEO' || contentType === 'PDF') && (
-                <Field label={contentType === 'VIDEO' ? 'YouTube URL' : 'PDF URL'} value={contentUrl} onChange={setContentUrl} placeholder={contentType === 'VIDEO' ? 'https://youtube.com/watch?v=...' : 'https://...'} />
+              {contentType === 'VIDEO' && (
+                <Field label="YouTube URL" value={contentUrl} onChange={setContentUrl} placeholder="https://youtube.com/watch?v=..." />
+              )}
+
+              {contentType === 'PDF' && (
+                <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">PDF</label>
+
+                  {contentId > 0 ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <input ref={pdfFileRef} type="file" accept="application/pdf" className="hidden"
+                        onChange={(e) => { if (e.target.files?.[0]) handlePdfUpload(e.target.files[0]); }} />
+                      <button type="button" onClick={() => pdfFileRef.current?.click()} disabled={pdfUploading}
+                        className="text-xs border border-warm-border rounded-lg px-3 py-1.5 hover:border-primary text-gray-600 disabled:opacity-50">
+                        {pdfUploading ? 'আপলোড হচ্ছে...' : '📎 ফাইল আপলোড করুন'}
+                      </button>
+                      {contentUrl && (
+                        <button type="button" onClick={handlePdfRemove} className="text-xs text-red-500 hover:underline">
+                          মুছুন
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-warm-muted">
+                      ফাইল আপলোড করতে হলে প্রথমে নিচে &quot;তৈরি করুন&quot; দিয়ে সংরক্ষণ করুন, তারপর এডিট করে ফাইল আপলোড করতে পারবেন। এখন চাইলে সরাসরি URL-ও দিতে পারেন।
+                    </p>
+                  )}
+
+                  <Field label="অথবা সরাসরি URL দিন" value={contentUrl} onChange={setContentUrl} placeholder="https://..." />
+
+                  {contentUrl && (
+                    <div className="flex gap-2">
+                      <input readOnly value={contentUrl}
+                        className="flex-1 border border-warm-border rounded-lg px-2 py-1.5 text-xs bg-gray-50 text-gray-500" />
+                      <button type="button" onClick={copyPdfUrl}
+                        className="shrink-0 text-xs text-primary border border-primary-300 rounded-lg px-2.5 hover:bg-primary-50 whitespace-nowrap">
+                        {pdfCopied ? '✓ কপি হয়েছে' : '📋 কপি'}
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
 
               {(contentType === 'POST' || contentType === 'QUIZ') && (

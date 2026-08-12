@@ -631,6 +631,26 @@ export const adminUpdatePrepContent = (token: string, id: number, body: unknown)
 export const adminDeletePrepContent = (token: string, id: number) =>
   authDelete(`/api/admin/prep/content/${id}`, token);
 
+export async function adminUploadPrepContentPdf(token: string, contentId: number, file: File): Promise<PrepContent> {
+  const form = new FormData();
+  form.append('file', file);
+  const doFetch = (tok: string) => fetch(`${BASE}/api/admin/prep/content/${contentId}/pdf`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${tok}` },
+    body: form,
+  });
+  let res = await doFetch(token);
+  if (res.status === 401) res = await retryWithRefreshedToken(token, res, doFetch);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { message?: string }).message ?? `Upload PDF → ${res.status}`);
+  }
+  return res.json();
+}
+
+export const adminDeletePrepContentPdf = (token: string, contentId: number) =>
+  authDelete(`/api/admin/prep/content/${contentId}/pdf`, token);
+
 // ── Public Exam ───────────────────────────────────────────────────────────────
 
 export const getExamSets = (topicId: number) =>
