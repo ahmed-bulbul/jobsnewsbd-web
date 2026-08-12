@@ -622,6 +622,9 @@ export const adminUpdatePrepTopic = (token: string, id: number, body: unknown) =
 export const adminDeletePrepTopic = (token: string, id: number) =>
   authDelete(`/api/admin/prep/topics/${id}`, token);
 
+export const adminGetPrepContent = (token: string, topicId: number) =>
+  authGet<PrepContent[]>('/api/admin/prep/content', token, { topicId });
+
 export const adminCreatePrepContent = (token: string, body: unknown) =>
   authPost<PrepContent>('/api/admin/prep/content', body, token);
 

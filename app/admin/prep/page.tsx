@@ -12,6 +12,7 @@ import {
   adminCreatePrepTopic,
   adminUpdatePrepTopic,
   adminDeletePrepTopic,
+  adminGetPrepContent,
   adminCreatePrepContent,
   adminUpdatePrepContent,
   adminDeletePrepContent,
@@ -570,6 +571,8 @@ export default function AdminPrepPage() {
   const [pdfUploading, setPdfUploading] = useState(false);
   const [pdfCopied, setPdfCopied] = useState(false);
   const pdfFileRef = useRef<HTMLInputElement>(null);
+  const [topicContents, setTopicContents] = useState<PrepContent[]>([]);
+  const [contentsLoading, setContentsLoading] = useState(false);
 
   // Exam state
   const [examTopicId, setExamTopicId] = useState('');
@@ -794,8 +797,12 @@ export default function AdminPrepPage() {
 
   // ── Content actions ───────────────────────────────────────────────────────
 
+  // Deliberately does NOT clear contentTopicId — it's only ever called after
+  // a successful save, and keeping the topic selected lets the admin
+  // immediately see the just-saved item in the list below and add another
+  // one to the same topic without re-picking it every time.
   const resetContentForm = () => {
-    setContentId(0); setContentTopicId(''); setContentTitle('');
+    setContentId(0); setContentTitle('');
     setContentType('VIDEO'); setContentUrl(''); setContentBody('');
     setContentOrder('0'); setContentPublished(false);
   };
@@ -805,6 +812,16 @@ export default function AdminPrepPage() {
     setContentTitle(c.title); setContentType(c.contentType);
     setContentUrl(c.contentUrl ?? ''); setContentBody(c.body ?? '');
     setContentOrder(String(c.displayOrder)); setContentPublished(c.published ?? false);
+    window.scrollTo(0, 0);
+  };
+
+  const loadTopicContents = async (topicId: string) => {
+    if (!topicId) { setTopicContents([]); return; }
+    setContentsLoading(true);
+    try {
+      const list = await adminGetPrepContent(token, Number(topicId));
+      setTopicContents(list);
+    } catch { /* ignore */ } finally { setContentsLoading(false); }
   };
 
   const saveContent = async () => {
@@ -813,7 +830,9 @@ export default function AdminPrepPage() {
     try {
       if (contentId) await adminUpdatePrepContent(token, contentId, body);
       else await adminCreatePrepContent(token, body);
+      const savedTopicId = contentTopicId;
       resetContentForm();
+      await loadTopicContents(savedTopicId);
       flash(contentId ? 'আপডেট হয়েছে' : 'তৈরি হয়েছে');
     } catch { flash('ত্রুটি হয়েছে'); }
   };
@@ -822,6 +841,7 @@ export default function AdminPrepPage() {
     if (!confirm('মুছে ফেলবেন?')) return;
     try {
       await adminDeletePrepContent(token, id);
+      await loadTopicContents(contentTopicId);
       flash('মুছে ফেলা হয়েছে');
     } catch { flash('মুছতে ব্যর্থ'); }
   };
@@ -1215,7 +1235,7 @@ export default function AdminPrepPage() {
                 allTopics={allTopics}
                 categories={categories}
                 value={contentTopicId}
-                onChange={setContentTopicId}
+                onChange={(v) => { setContentTopicId(v); loadTopicContents(v); }}
               />
 
               <Field label="শিরোনাম *" value={contentTitle} onChange={setContentTitle} />
@@ -1306,6 +1326,40 @@ export default function AdminPrepPage() {
                 )}
               </div>
             </div>
+
+            {/* Existing content for the selected topic — এডিট/মুছুন live here */}
+            {contentTopicId && (
+              <div className="bg-white rounded-2xl border border-warm-border p-5 space-y-3 h-fit">
+                <h3 className="font-bold text-gray-800 text-sm">
+                  এই বিষয়ের কন্টেন্ট {topicContents.length > 0 && `(${topicContents.length})`}
+                </h3>
+                {contentsLoading ? (
+                  <p className="text-sm text-warm-muted">লোড হচ্ছে...</p>
+                ) : topicContents.length === 0 ? (
+                  <p className="text-sm text-warm-muted">এই বিষয়ে এখনো কোনো কন্টেন্ট নেই</p>
+                ) : (
+                  <div className="space-y-2">
+                    {topicContents.map((c) => (
+                      <div key={c.id} className="border border-warm-border rounded-xl p-3 flex items-center gap-3">
+                        <span className="text-lg shrink-0">
+                          {c.contentType === 'VIDEO' ? '📹' : c.contentType === 'POST' ? '📄' : c.contentType === 'PDF' ? '📑' : '❓'}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-gray-900 text-sm truncate">{c.title}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            {c.published
+                              ? <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">প্রকাশিত</span>
+                              : <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">ড্রাফট</span>}
+                          </div>
+                        </div>
+                        <button onClick={() => editContent(c)} className="text-xs text-blue-600 hover:underline shrink-0">এডিট</button>
+                        <button onClick={() => deleteContent(c.id)} className="text-xs text-red-500 hover:underline shrink-0">মুছুন</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Help panel */}
             <div className="bg-white rounded-2xl border border-warm-border p-5 space-y-4 h-fit">
