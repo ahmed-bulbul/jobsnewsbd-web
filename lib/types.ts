@@ -36,7 +36,7 @@ export interface PostSummary {
   status: PostStatus;
   applicationStart: string | null;
   applicationEnd: string | null;
-  publishedAt: string;
+  publishedAt: string | null;
   categoryNameBn: string;
   categoryNameEn: string | null;
   postTypeNameBn: string | null;

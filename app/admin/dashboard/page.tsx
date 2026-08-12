@@ -195,6 +195,7 @@ export default function AdminDashboard() {
                     <tr className="bg-cream border-b border-warm-border text-left">
                       <th className="px-4 py-3 font-semibold text-gray-700">শিরোনাম</th>
                       <th className="px-4 py-3 font-semibold text-gray-700">বিভাগ</th>
+                      <th className="px-4 py-3 font-semibold text-gray-700">প্রকাশ</th>
                       <th className="px-4 py-3 font-semibold text-gray-700">অবস্থা</th>
                       <th className="px-4 py-3 font-semibold text-gray-700">শেষ তারিখ</th>
                       <th className="px-4 py-3 font-semibold text-gray-700 text-right">ভিউ</th>
@@ -211,6 +212,19 @@ export default function AdminDashboard() {
                           )}
                         </td>
                         <td className="px-4 py-3 text-warm-muted">{post.categoryNameBn}</td>
+                        <td className="px-4 py-3">
+                          {post.publishedAt ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
+                              <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                              প্রকাশিত
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                              <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+                              খসড়া
+                            </span>
+                          )}
+                        </td>
                         <td className="px-4 py-3"><StatusBadge status={post.status} /></td>
                         <td className="px-4 py-3 text-warm-muted text-xs">
                           {post.applicationEnd ? formatBanglaDate(post.applicationEnd) : '—'}
@@ -238,7 +252,7 @@ export default function AdminDashboard() {
                     ))}
                     {posts.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="px-4 py-12 text-center text-warm-muted">কোনো বিজ্ঞপ্তি নেই</td>
+                        <td colSpan={7} className="px-4 py-12 text-center text-warm-muted">কোনো বিজ্ঞপ্তি নেই</td>
                       </tr>
                     )}
                   </tbody>

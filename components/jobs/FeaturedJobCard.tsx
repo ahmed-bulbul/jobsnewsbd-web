@@ -74,7 +74,7 @@ export default function FeaturedJobCard({ post, categoryTypeSlug }: Props) {
   const { lang, t } = useLanguage();
   const title = (lang === 'bn' && post.titleBn) ? post.titleBn : post.titleEn;
   const days = getDaysRemaining(post.applicationEnd);
-  const isNew = (Date.now() - new Date(post.publishedAt).getTime()) < 3 * 86_400_000;
+  const isNew = !!post.publishedAt && (Date.now() - new Date(post.publishedAt).getTime()) < 3 * 86_400_000;
   const isHot = !isNew && days > 0 && days <= 3 && post.status === 'ONGOING';
   const accent = categoryTypeAccent(categoryTypeSlug);
   const emoji = categoryTypeEmoji(categoryTypeSlug ?? '');
