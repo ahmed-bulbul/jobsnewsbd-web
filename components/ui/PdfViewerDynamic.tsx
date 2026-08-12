@@ -11,6 +11,6 @@ const PdfViewer = dynamic(() => import('./PdfViewer'), {
   ),
 });
 
-export default function PdfViewerDynamic({ url }: { url: string }) {
-  return <PdfViewer url={url} />;
+export default function PdfViewerDynamic({ url, allowDownload = true }: { url: string; allowDownload?: boolean }) {
+  return <PdfViewer url={url} allowDownload={allowDownload} />;
 }

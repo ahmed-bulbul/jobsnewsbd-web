@@ -10,9 +10,11 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 
 interface Props {
   url: string;
+  /** Set to false to hide the toolbar download link (read-only viewing only). Defaults to true. */
+  allowDownload?: boolean;
 }
 
-export default function PdfViewer({ url }: Props) {
+export default function PdfViewer({ url, allowDownload = true }: Props) {
   const { lang, t } = useLanguage();
   const [numPages, setNumPages]     = useState<number>(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -113,10 +115,12 @@ export default function PdfViewer({ url }: Props) {
             className="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 transition-colors text-sm" title={t('জুম ইন', 'Zoom in')}>
             +
           </button>
-          <a href={url} download
-            className="ml-2 px-3 py-1 rounded bg-accent hover:bg-accent-dark text-white text-xs font-medium transition-colors">
-            {t('⬇ ডাউনলোড', '⬇ Download')}
-          </a>
+          {allowDownload && (
+            <a href={url} download
+              className="ml-2 px-3 py-1 rounded bg-accent hover:bg-accent-dark text-white text-xs font-medium transition-colors">
+              {t('⬇ ডাউনলোড', '⬇ Download')}
+            </a>
+          )}
         </div>
       </div>
 

@@ -5,7 +5,9 @@ import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useLanguage } from '@/context/LanguageContext';
+import { useAuth } from '@/context/AuthContext';
 import { getPrepContent } from '@/lib/api';
+import PdfViewerDynamic from '@/components/ui/PdfViewerDynamic';
 import type { PrepContent } from '@/lib/types';
 
 function extractYouTubeId(url: string): string | null {
@@ -47,16 +49,19 @@ function MarkdownBody({ body }: { body: string }) {
 export default function PrepContentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { t } = useLanguage();
+  const { user, openModal } = useAuth();
   const [data, setData] = useState<PrepContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    getPrepContent(Number(id))
+    getPrepContent(Number(id), user?.token ?? undefined)
       .then(setData)
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, user]);
+
+  const pdfLoginRequired = data?.contentType === 'PDF' && !data.contentUrl && !user;
 
   const typeBadge: Record<string, { label: string; labelEn: string }> = {
     VIDEO: { label: 'ভিডিও', labelEn: 'Video' },
@@ -113,23 +118,33 @@ export default function PrepContentPage({ params }: { params: Promise<{ id: stri
                 <VideoPlayer url={data.contentUrl} />
               )}
 
+              {pdfLoginRequired && (
+                <div className="flex flex-col items-center justify-center py-14 px-6 text-center bg-amber-50 border border-amber-200 rounded-2xl">
+                  <div className="w-16 h-16 rounded-2xl bg-white border border-amber-200 flex items-center justify-center mb-4">
+                    <svg className="w-8 h-8 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-lg font-bold text-gray-900 mb-1.5">{t('লগইন প্রয়োজন', 'Login Required')}</h2>
+                  <p className="text-sm text-warm-muted mb-5 max-w-xs">
+                    {t('এই পিডিএফ পড়তে আগে লগইন করুন।', 'Please login to read this PDF.')}
+                  </p>
+                  <button
+                    onClick={() => openModal('login')}
+                    className="inline-block px-8 py-2.5 rounded-xl text-white font-bold text-sm bg-primary hover:bg-primary-dark transition-colors"
+                  >
+                    {t('লগইন করুন', 'Login')}
+                  </button>
+                </div>
+              )}
+
               {data.contentType === 'PDF' && data.contentUrl && (
-                <a
-                  href={data.contentUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary-dark transition-colors"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  {t('পিডিএফ ডাউনলোড', 'Download PDF')}
-                </a>
+                <PdfViewerDynamic url={data.contentUrl} />
               )}
 
               {data.body && <MarkdownBody body={data.body} />}
 
-              {!data.contentUrl && !data.body && (
+              {!data.contentUrl && !data.body && !pdfLoginRequired && (
                 <p className="text-warm-muted text-sm text-center py-8">
                   {t('কন্টেন্ট শীঘ্রই আসছে', 'Content coming soon')}
                 </p>
