@@ -662,8 +662,38 @@ export const getExamSets = (topicId: number) =>
 export const getExamQuestions = (examSetId: number) =>
   get<import('./types').ExamQuestionPublic[]>(`/api/exam/sets/${examSetId}/questions`);
 
-export const submitExamAttempt = (examSetId: number, answers: { questionId: number; selectedOption: string | null }[], token: string) =>
-  authPost<import('./types').ExamResult>(`/api/exam/sets/${examSetId}/attempt`, { answers }, token);
+export const startExamAttempt = (examSetId: number, token: string) =>
+  authPost<{ attemptId: number; startedAt: string; attemptType: string }>(
+    `/api/exam/sets/${examSetId}/start`, {}, token);
+
+// Best-effort periodic sync of in-progress answers so a server-side scheduler
+// can force-submit the attempt with real answers if the tab is closed and
+// never reopened past the exam's end time. Failures are swallowed on purpose
+// — this is a background safety net, never something that should interrupt
+// someone actively taking the exam.
+export async function syncExamAnswers(
+  attemptId: number,
+  answers: { questionId: number; selectedOption: string | null }[],
+  token: string,
+): Promise<void> {
+  try {
+    await fetch(`${BASE}/api/exam/attempts/${attemptId}/sync`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ answers }),
+    });
+  } catch {
+    // ignore — see comment above
+  }
+}
+
+export const submitExamAttempt = (
+  examSetId: number,
+  answers: { questionId: number; selectedOption: string | null }[],
+  token: string,
+  attemptId?: number | null,
+) =>
+  authPost<import('./types').ExamResult>(`/api/exam/sets/${examSetId}/attempt`, { attemptId: attemptId ?? null, answers }, token);
 
 export const getMyAttempts = (token: string) =>
   authGet<import('./types').ExamAttemptSummary[]>('/api/exam/my-attempts', token);

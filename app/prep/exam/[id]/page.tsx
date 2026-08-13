@@ -7,7 +7,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { ResultView } from '@/components/exam/ResultView';
 import { useLanguage } from '@/context/LanguageContext';
-import { getExamQuestions, getExamSets, getPrepTopic, submitExamAttempt } from '@/lib/api';
+import { getExamQuestions, getExamSets, getPrepTopic, startExamAttempt, syncExamAnswers, submitExamAttempt } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import type { ExamQuestionPublic, ExamResult, ExamSet } from '@/lib/types';
 
@@ -64,6 +64,7 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
   const [loading, setLoading] = useState(true);
   const [started, setStarted] = useState(false);
   const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [attemptId, setAttemptId] = useState<number | null>(null);
   const [initialRemaining, setInitialRemaining] = useState<number | null>(null);
   const [resumeChecked, setResumeChecked] = useState(false);
   const [answers, setAnswers] = useState<Record<number, string | null>>({});
@@ -96,18 +97,22 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
   const alreadyAttemptedLive = !!examSet && examStatus(examSet) === 'live' && examSet.userAttemptCount > 0;
   const examInProgress = started && !result;
 
-  const handleSubmit = async (answersOverride?: Record<number, string | null>) => {
+  const handleSubmit = async (
+    answersOverride?: Record<number, string | null>,
+    attemptIdOverride?: number | null,
+  ) => {
     if (!user?.token) { setSubmitError(t('পরীক্ষা দিতে লগইন করুন', 'Please login to submit')); return; }
     setSubmitting(true);
 
     const effectiveAnswers = answersOverride ?? answers;
+    const effectiveAttemptId = attemptIdOverride !== undefined ? attemptIdOverride : attemptId;
     const payload = questions.map((q) => ({
       questionId: q.id,
       selectedOption: effectiveAnswers[q.id] ?? null,
     }));
 
     try {
-      const res = await submitExamAttempt(examSetId, payload, user.token);
+      const res = await submitExamAttempt(examSetId, payload, user.token, effectiveAttemptId);
       setResult(res);
     } catch (err) {
       setSubmitError(err instanceof Error && err.message
@@ -129,16 +134,21 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
     try {
       const raw = localStorage.getItem(storageKey);
       if (raw) {
-        const saved = JSON.parse(raw) as { startedAt: number; answers: Record<number, string | null> };
+        const saved = JSON.parse(raw) as {
+          startedAt: number;
+          answers: Record<number, string | null>;
+          attemptId?: number | null;
+        };
         if (saved && typeof saved.startedAt === 'number') {
           const elapsedMs = Date.now() - saved.startedAt;
           const totalMs = duration * 60 * 1000;
           setAnswers(saved.answers ?? {});
           setStartedAt(saved.startedAt);
+          setAttemptId(saved.attemptId ?? null);
           setStarted(true);
           if (elapsedMs >= totalMs) {
             setResumeChecked(true);
-            void handleSubmit(saved.answers ?? {});
+            void handleSubmit(saved.answers ?? {}, saved.attemptId ?? null);
             return;
           }
           setInitialRemaining(Math.max(0, Math.floor((totalMs - elapsedMs) / 1000)));
@@ -157,11 +167,22 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
   useEffect(() => {
     if (!started || startedAt === null || result) return;
     try {
-      localStorage.setItem(storageKey, JSON.stringify({ startedAt, answers }));
+      localStorage.setItem(storageKey, JSON.stringify({ startedAt, answers, attemptId }));
     } catch {
       // ignore — worst case a resume starts from scratch instead of crashing
     }
-  }, [answers, started, startedAt, result, storageKey]);
+  }, [answers, started, startedAt, result, storageKey, attemptId]);
+
+  // Best-effort push of the latest answers to the server so
+  // ExamAttemptAutoSubmitScheduler has real answers to score from if this
+  // tab is closed and never reopened past the exam's end time. Failures are
+  // swallowed inside syncExamAnswers itself — this must never interrupt
+  // someone actively taking the exam.
+  useEffect(() => {
+    if (!started || !attemptId || result || questions.length === 0 || !user?.token) return;
+    const payload = questions.map((q) => ({ questionId: q.id, selectedOption: answers[q.id] ?? null }));
+    void syncExamAnswers(attemptId, payload, user.token);
+  }, [answers, started, attemptId, result, questions, user]);
 
   // Attempt resolved (submitted) — nothing left to resume, clear saved state.
   useEffect(() => {
@@ -170,13 +191,25 @@ function ExamTakingInner({ params }: { params: Promise<{ id: string }> }) {
     }
   }, [result, storageKey]);
 
-  const startExam = () => {
+  const startExam = async () => {
     const now = Date.now();
     setStartedAt(now);
     setInitialRemaining(null);
     setStarted(true);
+
+    let newAttemptId: number | null = null;
+    if (user?.token) {
+      try {
+        const res = await startExamAttempt(examSetId, user.token);
+        newAttemptId = res.attemptId;
+        setAttemptId(res.attemptId);
+      } catch {
+        // Falls back to a client-only attempt — final submit will create a
+        // fresh server-side row instead of finalizing a tracked one.
+      }
+    }
     try {
-      localStorage.setItem(storageKey, JSON.stringify({ startedAt: now, answers: {} }));
+      localStorage.setItem(storageKey, JSON.stringify({ startedAt: now, answers: {}, attemptId: newAttemptId }));
     } catch {}
   };
 
