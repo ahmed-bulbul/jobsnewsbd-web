@@ -659,6 +659,11 @@ export const adminDeletePrepContentPdf = (token: string, contentId: number) =>
 export const getExamSets = (topicId: number) =>
   get<import('./types').ExamSet[]>(`/api/exam/topics/${topicId}/sets`);
 
+// Site-wide list of exams live right now, across all categories/topics —
+// powers the homepage "today's live exam" section.
+export const getLiveExams = () =>
+  get<import('./types').LiveExam[]>('/api/exam/live');
+
 export const getExamQuestions = (examSetId: number) =>
   get<import('./types').ExamQuestionPublic[]>(`/api/exam/sets/${examSetId}/questions`);
 

@@ -1,14 +1,15 @@
-import { getCategoryTypes, getCategories, getPosts, getQuestionBankCategories } from '@/lib/api';
+import { getCategoryTypes, getCategories, getPosts, getQuestionBankCategories, getLiveExams } from '@/lib/api';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import HeroSearch from '@/components/home/HeroSearch';
 import CategoryPills from '@/components/home/CategoryPills';
 import QuickAccessChips from '@/components/home/QuickAccessChips';
 import FeaturedJobsRow from '@/components/home/FeaturedJobsRow';
+import LiveExamsToday from '@/components/home/LiveExamsToday';
 import DeadlineSoonList from '@/components/home/DeadlineSoonList';
 import InfiniteJobList from '@/components/home/InfiniteJobList';
 import T from '@/components/ui/T';
-import type { Category, CategoryType, PostSummary, QuestionBankCategory } from '@/lib/types';
+import type { Category, CategoryType, LiveExam, PostSummary, QuestionBankCategory } from '@/lib/types';
 import Link from 'next/link';
 
 export const revalidate = 60;
@@ -16,13 +17,14 @@ export const revalidate = 60;
 const DEADLINE_SOON_DAYS = 5;
 
 export default async function HomePage() {
-  const [categoryTypes, categories, latestPosts, deadlineSoon, qbCategories] = await Promise.all([
+  const [categoryTypes, categories, latestPosts, deadlineSoon, qbCategories, liveExams] = await Promise.all([
     getCategoryTypes().catch((): CategoryType[] => []),
     getCategories().catch((): Category[] => []),
     getPosts({ size: 9 }).catch(() => ({ content: [] as PostSummary[], totalElements: 0, totalPages: 0, page: 0, size: 9, last: true })),
     getPosts({ status: 'ONGOING', deadlineWithinDays: DEADLINE_SOON_DAYS, size: 6 })
       .catch(() => ({ content: [] as PostSummary[], totalElements: 0, totalPages: 0, page: 0, size: 6, last: true })),
     getQuestionBankCategories().catch((): QuestionBankCategory[] => []),
+    getLiveExams().catch((): LiveExam[] => []),
   ]);
 
   // category name → category type slug (for JobCard border color)
@@ -52,6 +54,8 @@ export default async function HomePage() {
         />
 
         <FeaturedJobsRow posts={latestPosts.content.slice(0, 6)} nameToTypeSlug={nameToTypeSlug} />
+
+        <LiveExamsToday exams={liveExams} />
 
         {/* Stats bar */}
         <div className="bg-primary-900 text-white">

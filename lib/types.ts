@@ -282,6 +282,26 @@ export interface ExamSet {
   userAttemptCount: number;
 }
 
+// Site-wide "live right now" exam card for the homepage — not scoped to a
+// single topic/category, carries topic/category slug+name for linking.
+export interface LiveExam {
+  id: number;
+  titleBn: string;
+  descriptionBn: string | null;
+  startsAt: string;
+  endsAt: string;
+  durationMinutes: number;
+  questionCount: number;
+  topicId: number;
+  topicSlug: string;
+  topicNameBn: string;
+  categoryId: number;
+  categorySlug: string;
+  categoryNameBn: string;
+  categoryColorHex: string | null;
+  categoryIcon: string | null;
+}
+
 export interface AdminExamAttempt {
   id: number;
   userId: number;

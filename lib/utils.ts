@@ -32,6 +32,13 @@ export function getDaysRemaining(endStr: string | null | undefined): number {
   return Math.ceil((end - now) / 86_400_000);
 }
 
+export function getMinutesRemaining(endStr: string | null | undefined): number {
+  if (!endStr) return 0;
+  const end = new Date(endStr).getTime();
+  const now = Date.now();
+  return Math.max(0, Math.ceil((end - now) / 60_000));
+}
+
 export function getDeadlineProgress(
   startStr: string | null | undefined,
   endStr: string | null | undefined,
