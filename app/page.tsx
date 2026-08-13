@@ -1,4 +1,4 @@
-import { getCategoryTypes, getCategories, getPosts, getQuestionBankCategories, getLiveExams } from '@/lib/api';
+import { getCategoryTypes, getCategories, getPosts, getQuestionBankCategories, getLiveExams, getJobExperiences } from '@/lib/api';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import HeroSearch from '@/components/home/HeroSearch';
@@ -6,10 +6,14 @@ import CategoryPills from '@/components/home/CategoryPills';
 import QuickAccessChips from '@/components/home/QuickAccessChips';
 import FeaturedJobsRow from '@/components/home/FeaturedJobsRow';
 import LiveExamsToday from '@/components/home/LiveExamsToday';
+import ClosingTodayTicker from '@/components/home/ClosingTodayTicker';
+import ExplorePlatform from '@/components/home/ExplorePlatform';
+import SuccessStories from '@/components/home/SuccessStories';
+import FaqSection from '@/components/home/FaqSection';
 import DeadlineSoonList from '@/components/home/DeadlineSoonList';
 import InfiniteJobList from '@/components/home/InfiniteJobList';
 import T from '@/components/ui/T';
-import type { Category, CategoryType, LiveExam, PostSummary, QuestionBankCategory } from '@/lib/types';
+import type { Category, CategoryType, JobExperience, LiveExam, PostSummary, QuestionBankCategory } from '@/lib/types';
 import Link from 'next/link';
 
 export const revalidate = 60;
@@ -17,14 +21,18 @@ export const revalidate = 60;
 const DEADLINE_SOON_DAYS = 5;
 
 export default async function HomePage() {
-  const [categoryTypes, categories, latestPosts, deadlineSoon, qbCategories, liveExams] = await Promise.all([
+  const [categoryTypes, categories, latestPosts, deadlineSoon, closingToday, qbCategories, liveExams, successStories] = await Promise.all([
     getCategoryTypes().catch((): CategoryType[] => []),
     getCategories().catch((): Category[] => []),
     getPosts({ size: 9 }).catch(() => ({ content: [] as PostSummary[], totalElements: 0, totalPages: 0, page: 0, size: 9, last: true })),
     getPosts({ status: 'ONGOING', deadlineWithinDays: DEADLINE_SOON_DAYS, size: 6 })
       .catch(() => ({ content: [] as PostSummary[], totalElements: 0, totalPages: 0, page: 0, size: 6, last: true })),
+    getPosts({ status: 'ONGOING', deadlineWithinDays: 1, size: 6 })
+      .catch(() => ({ content: [] as PostSummary[], totalElements: 0, totalPages: 0, page: 0, size: 6, last: true })),
     getQuestionBankCategories().catch((): QuestionBankCategory[] => []),
     getLiveExams().catch((): LiveExam[] => []),
+    getJobExperiences({ outcome: 'SELECTED', size: 3 })
+      .catch(() => ({ content: [] as JobExperience[], totalElements: 0, totalPages: 0, page: 0, size: 3, last: true })),
   ]);
 
   // category name → category type slug (for JobCard border color)
@@ -39,11 +47,16 @@ export default async function HomePage() {
     (a, b) => new Date(a.applicationEnd!).getTime() - new Date(b.applicationEnd!).getTime()
   );
 
+  const closingTodayPosts = [...closingToday.content].sort(
+    (a, b) => new Date(a.applicationEnd!).getTime() - new Date(b.applicationEnd!).getTime()
+  );
+
   const totalQuestions = qbCategories.reduce((sum, c) => sum + (c.questionCount ?? 0), 0);
 
   return (
     <>
       <Header />
+      <ClosingTodayTicker posts={closingTodayPosts} />
       <main>
         <HeroSearch categoryTypes={categoryTypes} />
 
@@ -56,6 +69,10 @@ export default async function HomePage() {
         <FeaturedJobsRow posts={latestPosts.content.slice(0, 6)} nameToTypeSlug={nameToTypeSlug} />
 
         <LiveExamsToday exams={liveExams} />
+
+        <ExplorePlatform />
+
+        <SuccessStories experiences={successStories.content} />
 
         {/* Stats bar */}
         <div className="bg-primary-900 text-white">
@@ -149,6 +166,8 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+
+        <FaqSection />
       </main>
       <Footer />
     </>

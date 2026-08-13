@@ -61,7 +61,7 @@ export default function Header() {
               <Image src="/logo-mark.svg" alt="Job Radar BD" width={36} height={36} className="w-full h-full" />
             </div>
             <div className="leading-tight min-w-0">
-              <span className="block font-bold text-primary text-sm sm:text-lg whitespace-nowrap">জব রাডার বাংলাদেশ</span>
+              <span className="block font-bold text-primary text-sm sm:text-lg whitespace-nowrap">জব রাডার</span>
               <span className="hidden sm:block text-[10px] text-warm-muted -mt-0.5 font-sans">Job Radar BD</span>
             </div>
           </Link>
