@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import T from '@/components/ui/T';
+import ExamCountdown from '@/components/home/ExamCountdown';
 import type { LiveExam, UpcomingExam } from '@/lib/types';
-import { getMinutesRemaining, toBanglaDigits } from '@/lib/utils';
+import { toBanglaDigits } from '@/lib/utils';
 
 interface Props {
   exams: LiveExam[];
@@ -31,7 +32,6 @@ export default function LiveExamsToday({ exams, upcoming }: Props) {
 
       <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 -mx-1 px-1">
         {exams.map((exam) => {
-          const minutesLeft = getMinutesRemaining(exam.endsAt);
           const href = `/prep/exam/${exam.id}?title=${encodeURIComponent(exam.titleBn)}&duration=${exam.durationMinutes}&slug=${exam.topicSlug}`;
 
           return (
@@ -61,7 +61,7 @@ export default function LiveExamsToday({ exams, upcoming }: Props) {
 
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-red-600 bg-red-50 rounded-full px-2 py-1 whitespace-nowrap">
-                  <T bn={`${toBanglaDigits(minutesLeft)} মিনিট বাকি`} en={`${minutesLeft}m left`} />
+                  <ExamCountdown endsAt={exam.endsAt} /> <T bn="বাকি" en="left" />
                 </span>
                 <span className="text-xs font-medium text-primary-600">
                   <T bn="পরীক্ষা দিন →" en="Take Exam →" />
