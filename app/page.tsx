@@ -1,4 +1,4 @@
-import { getCategoryTypes, getCategories, getPosts, getQuestionBankCategories, getLiveExams, getJobExperiences } from '@/lib/api';
+import { getCategoryTypes, getCategories, getPosts, getQuestionBankCategories, getLiveExams, getUpcomingExams, getJobExperiences } from '@/lib/api';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import HeroSearch from '@/components/home/HeroSearch';
@@ -13,7 +13,7 @@ import FaqSection from '@/components/home/FaqSection';
 import DeadlineSoonList from '@/components/home/DeadlineSoonList';
 import InfiniteJobList from '@/components/home/InfiniteJobList';
 import T from '@/components/ui/T';
-import type { Category, CategoryType, JobExperience, LiveExam, PostSummary, QuestionBankCategory } from '@/lib/types';
+import type { Category, CategoryType, JobExperience, LiveExam, PostSummary, QuestionBankCategory, UpcomingExam } from '@/lib/types';
 import Link from 'next/link';
 
 export const revalidate = 60;
@@ -21,7 +21,7 @@ export const revalidate = 60;
 const DEADLINE_SOON_DAYS = 5;
 
 export default async function HomePage() {
-  const [categoryTypes, categories, latestPosts, deadlineSoon, closingToday, qbCategories, liveExams, successStories] = await Promise.all([
+  const [categoryTypes, categories, latestPosts, deadlineSoon, closingToday, qbCategories, liveExams, upcomingExams, successStories] = await Promise.all([
     getCategoryTypes().catch((): CategoryType[] => []),
     getCategories().catch((): Category[] => []),
     getPosts({ size: 9 }).catch(() => ({ content: [] as PostSummary[], totalElements: 0, totalPages: 0, page: 0, size: 9, last: true })),
@@ -31,6 +31,7 @@ export default async function HomePage() {
       .catch(() => ({ content: [] as PostSummary[], totalElements: 0, totalPages: 0, page: 0, size: 6, last: true })),
     getQuestionBankCategories().catch((): QuestionBankCategory[] => []),
     getLiveExams().catch((): LiveExam[] => []),
+    getUpcomingExams().catch((): UpcomingExam[] => []),
     getJobExperiences({ outcome: 'SELECTED', size: 3 })
       .catch(() => ({ content: [] as JobExperience[], totalElements: 0, totalPages: 0, page: 0, size: 3, last: true })),
   ]);
@@ -68,7 +69,7 @@ export default async function HomePage() {
 
         <FeaturedJobsRow posts={latestPosts.content.slice(0, 6)} nameToTypeSlug={nameToTypeSlug} />
 
-        <LiveExamsToday exams={liveExams} />
+        <LiveExamsToday exams={liveExams} upcoming={upcomingExams} />
 
         <ExplorePlatform />
 

@@ -664,6 +664,11 @@ export const getExamSets = (topicId: number) =>
 export const getLiveExams = () =>
   get<import('./types').LiveExam[]>('/api/exam/live');
 
+// Site-wide "coming up next" exams from the routine — shown alongside live
+// exams so the homepage section isn't empty when nothing is live right now.
+export const getUpcomingExams = () =>
+  get<import('./types').UpcomingExam[]>('/api/exam/upcoming');
+
 export const getExamQuestions = (examSetId: number) =>
   get<import('./types').ExamQuestionPublic[]>(`/api/exam/sets/${examSetId}/questions`);
 

@@ -302,6 +302,25 @@ export interface LiveExam {
   categoryIcon: string | null;
 }
 
+// Site-wide "coming up next" exam card, sourced from the routine — not
+// startable yet, so it links to the category/topic page rather than the
+// exam-taking flow.
+export interface UpcomingExam {
+  id: number;
+  titleBn: string;
+  description: string | null;
+  scheduledAt: string;
+  examSetId: number | null;
+  topicId: number | null;
+  topicSlug: string | null;
+  topicNameBn: string | null;
+  categoryId: number;
+  categorySlug: string;
+  categoryNameBn: string;
+  categoryColorHex: string | null;
+  categoryIcon: string | null;
+}
+
 export interface AdminExamAttempt {
   id: number;
   userId: number;
