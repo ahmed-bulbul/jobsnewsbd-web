@@ -29,11 +29,11 @@ function formatDuration(seconds: number | null): string {
 function buildMarksSheetHtml(examTitle: string, attempts: AdminExamAttempt[]): string {
   const generatedAt = new Date().toLocaleString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   const avgPct = attempts.length
-    ? Math.round(attempts.reduce((sum, a) => sum + (a.totalQuestions ? (a.score / a.totalQuestions) * 100 : 0), 0) / attempts.length)
+    ? Math.round(attempts.reduce((sum, a) => sum + (a.totalQuestions ? (a.finalScore / a.totalQuestions) * 100 : 0), 0) / attempts.length)
     : 0;
 
   const rowsHtml = attempts.map((a, i) => {
-    const pct = a.totalQuestions > 0 ? Math.round((a.score / a.totalQuestions) * 100) : 0;
+    const pct = a.totalQuestions > 0 ? Math.round((a.finalScore / a.totalQuestions) * 100) : 0;
     const pctColor = pct >= 80 ? '#059669' : pct >= 50 ? '#D97706' : '#DC2626';
     const typeLabel = a.attemptType === 'LIVE' ? 'লাইভ' : 'অনুশীলন';
     const submitted = new Date(a.submittedAt).toLocaleString('bn-BD', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -42,6 +42,8 @@ function buildMarksSheetHtml(examTitle: string, attempts: AdminExamAttempt[]): s
       <td style="padding:8px 10px;border-bottom:1px solid #E5E7EB;font-size:12px;color:#6B7280;">${i + 1}</td>
       <td style="padding:8px 10px;border-bottom:1px solid #E5E7EB;font-size:12px;color:#111827;font-weight:600;">${escapeHtml(a.userName || '—')}</td>
       <td style="padding:8px 10px;border-bottom:1px solid #E5E7EB;font-size:12px;color:#111827;font-weight:700;">${a.score}/${a.totalQuestions}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #E5E7EB;font-size:12px;color:#DC2626;">${a.wrongCount}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #E5E7EB;font-size:12px;color:#111827;font-weight:700;">${a.finalScore}</td>
       <td style="padding:8px 10px;border-bottom:1px solid #E5E7EB;font-size:12px;font-weight:700;color:${pctColor};">${pct}%</td>
       <td style="padding:8px 10px;border-bottom:1px solid #E5E7EB;font-size:11px;color:#6B7280;">${typeLabel}</td>
       <td style="padding:8px 10px;border-bottom:1px solid #E5E7EB;font-size:11px;color:#6B7280;">${formatDuration(a.timeTakenSeconds)}</td>
@@ -71,13 +73,15 @@ function buildMarksSheetHtml(examTitle: string, attempts: AdminExamAttempt[]): s
             <th style="text-align:left;padding:8px 10px;font-size:11px;color:#92400E;border-bottom:2px solid #FDBA74;">নাম</th>
 <!--            <th style="text-align:left;padding:8px 10px;font-size:11px;color:#92400E;border-bottom:2px solid #FDBA74;">ইমেইল</th>-->
             <th style="text-align:left;padding:8px 10px;font-size:11px;color:#92400E;border-bottom:2px solid #FDBA74;">স্কোর</th>
+            <th style="text-align:left;padding:8px 10px;font-size:11px;color:#92400E;border-bottom:2px solid #FDBA74;">ভুল</th>
+            <th style="text-align:left;padding:8px 10px;font-size:11px;color:#92400E;border-bottom:2px solid #FDBA74;">নেট স্কোর</th>
             <th style="text-align:left;padding:8px 10px;font-size:11px;color:#92400E;border-bottom:2px solid #FDBA74;">%</th>
             <th style="text-align:left;padding:8px 10px;font-size:11px;color:#92400E;border-bottom:2px solid #FDBA74;">ধরন</th>
             <th style="text-align:left;padding:8px 10px;font-size:11px;color:#92400E;border-bottom:2px solid #FDBA74;">সময়</th>
             <th style="text-align:left;padding:8px 10px;font-size:11px;color:#92400E;border-bottom:2px solid #FDBA74;">জমার তারিখ</th>
           </tr>
         </thead>
-        <tbody>${rowsHtml || `<tr><td colspan="8" style="padding:20px;text-align:center;color:#9CA3AF;font-size:13px;">কোনো অ্যাটেম্পট নেই</td></tr>`}</tbody>
+        <tbody>${rowsHtml || `<tr><td colspan="10" style="padding:20px;text-align:center;color:#9CA3AF;font-size:13px;">কোনো অ্যাটেম্পট নেই</td></tr>`}</tbody>
       </table>
     </div>`;
 }

@@ -9,11 +9,14 @@ export function ResultView({ result, backHref, examTitle }: { result: ExamResult
   const { t } = useLanguage();
   const [expanded, setExpanded] = useState<number | null>(null);
   const [downloading, setDownloading] = useState(false);
-  const wrong = result.questions.filter((q) => q.selectedOption !== null && !q.correct).length;
   const skipped = result.questions.filter((q) => q.selectedOption === null).length;
-  const pct = result.totalQuestions > 0 ? Math.round((result.score / result.totalQuestions) * 100) : 0;
+  const wrong = result.wrongCount ?? result.questions.filter((q) => q.selectedOption !== null && !q.correct).length;
+  const negativeMarkingActive = (result.negativeMarksPerWrong ?? 0) > 0;
+  const displayScore = negativeMarkingActive ? result.finalScore : result.score;
+  const pct = result.totalQuestions > 0 ? Math.round((displayScore / result.totalQuestions) * 100) : 0;
   const scoreColor = pct >= 80 ? '#059669' : pct >= 50 ? '#D97706' : '#DC2626';
   const passed = pct >= 50;
+  const totalDeducted = negativeMarkingActive ? wrong * result.negativeMarksPerWrong : 0;
 
   const handleDownloadPdf = async () => {
     setDownloading(true);
@@ -31,8 +34,18 @@ export function ResultView({ result, backHref, examTitle }: { result: ExamResult
     <div className="space-y-6">
       {/* Score card */}
       <div className="bg-white rounded-2xl border border-warm-border p-6 text-center">
-        <p className="text-5xl font-black" style={{ color: scoreColor }}>{result.score}/{result.totalQuestions}</p>
+        <p className="text-5xl font-black" style={{ color: scoreColor }}>
+          {negativeMarkingActive ? result.finalScore.toFixed(2) : result.score}/{result.totalQuestions}
+        </p>
         <p className="text-lg font-bold mt-1" style={{ color: scoreColor }}>{pct}% {t('সঠিক', 'correct')}</p>
+        {negativeMarkingActive && (
+          <p className="text-xs text-warm-muted mt-1">
+            {t(
+              `প্রতি ভুল উত্তরে −${result.negativeMarksPerWrong} নম্বর কাটা হয়েছে • মোট কর্তন: −${totalDeducted.toFixed(2)}`,
+              `−${result.negativeMarksPerWrong} deducted per wrong answer • Total deducted: −${totalDeducted.toFixed(2)}`
+            )}
+          </p>
+        )}
         <span
           className={`inline-block mt-2 text-xs font-bold px-3 py-1 rounded-full ${
             passed ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'

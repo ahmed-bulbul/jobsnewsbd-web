@@ -280,6 +280,7 @@ export interface ExamSet {
   questionCount: number;
   totalAttempts: number;
   userAttemptCount: number;
+  negativeMarksPerWrong: number;
 }
 
 // Site-wide "live right now" exam card for the homepage — not scoped to a
@@ -331,6 +332,8 @@ export interface AdminExamAttempt {
   attemptType: 'LIVE' | 'PRACTICE';
   timeTakenSeconds: number | null;
   submittedAt: string;
+  wrongCount: number;
+  finalScore: number;
 }
 
 export interface ExamQuestion {
@@ -378,6 +381,9 @@ export interface ExamResult {
   totalQuestions: number;
   submittedAt: string;
   questions: QuestionResult[];
+  wrongCount: number;
+  finalScore: number;
+  negativeMarksPerWrong: number;
 }
 
 export interface ExamAttemptSummary {
@@ -389,6 +395,7 @@ export interface ExamAttemptSummary {
   totalQuestions: number;
   attemptType: 'LIVE' | 'PRACTICE';
   submittedAt: string;
+  finalScore: number;
 }
 
 export interface NotificationPreference {

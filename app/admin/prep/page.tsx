@@ -595,6 +595,8 @@ export default function AdminPrepPage() {
   const [setEndsAt, setSetEndsAt] = useState('');
   const [setDuration, setSetDuration] = useState('30');
   const [setPublished, setSetPublished] = useState(false);
+  const [setNegativeMarkingEnabled, setSetNegativeMarkingEnabled] = useState(false);
+  const [setNegativeMarks, setSetNegativeMarks] = useState('0');
 
   // Exam routine state
   const [routineCatId, setRoutineCatId] = useState('');
@@ -917,6 +919,7 @@ export default function AdminPrepPage() {
   const resetSetForm = () => {
     setEditingSet(null); setSetTitleBn(''); setSetDescBn('');
     setSetStartsAt(''); setSetEndsAt(''); setSetDuration('30'); setSetPublished(false);
+    setSetNegativeMarkingEnabled(false); setSetNegativeMarks('0');
   };
 
   // ── Exam routine ──────────────────────────────────────────────────────────
@@ -987,11 +990,13 @@ export default function AdminPrepPage() {
     setEditingSet(s); setSetTitleBn(s.titleBn); setSetDescBn(s.descriptionBn ?? '');
     setSetStartsAt(s.startsAt.slice(0, 16)); setSetEndsAt(s.endsAt.slice(0, 16));
     setSetDuration(String(s.durationMinutes)); setSetPublished(s.published);
+    setSetNegativeMarkingEnabled((s.negativeMarksPerWrong ?? 0) > 0);
+    setSetNegativeMarks(s.negativeMarksPerWrong ? String(s.negativeMarksPerWrong) : '0');
   };
 
   const saveSet = async () => {
     if (!examTopicId || !setTitleBn || !setStartsAt || !setEndsAt) { flash('সব ঘর পূরণ করুন'); return; }
-    const body = { topicId: Number(examTopicId), titleBn: setTitleBn, descriptionBn: setDescBn || null, startsAt: setStartsAt, endsAt: setEndsAt, durationMinutes: Number(setDuration), published: setPublished };
+    const body = { topicId: Number(examTopicId), titleBn: setTitleBn, descriptionBn: setDescBn || null, startsAt: setStartsAt, endsAt: setEndsAt, durationMinutes: Number(setDuration), published: setPublished, negativeMarksPerWrong: setNegativeMarkingEnabled ? (Number(setNegativeMarks) || 0) : 0 };
     try {
       if (editingSet) await adminUpdateExamSet(token, editingSet.id, body);
       else await adminCreateExamSet(token, body);
@@ -1448,6 +1453,19 @@ export default function AdminPrepPage() {
                       className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" />
                   </div>
                   <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" checked={setNegativeMarkingEnabled}
+                      onChange={(e) => { setSetNegativeMarkingEnabled(e.target.checked); if (!e.target.checked) setSetNegativeMarks('0'); }}
+                      className="rounded accent-primary w-4 h-4" />
+                    <span className="font-medium text-gray-700">নেগেটিভ মার্কিং চালু করুন</span>
+                  </label>
+                  {setNegativeMarkingEnabled && (
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">প্রতি ভুল উত্তরে কর্তন *</label>
+                      <input type="number" value={setNegativeMarks} onChange={(e) => setSetNegativeMarks(e.target.value)} min="0" step="0.25"
+                        className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" />
+                    </div>
+                  )}
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
                     <input type="checkbox" checked={setPublished} onChange={(e) => setSetPublished(e.target.checked)} className="rounded accent-primary w-4 h-4" />
                     <span className="font-medium text-gray-700">প্রকাশিত</span>
                   </label>
@@ -1579,6 +1597,8 @@ export default function AdminPrepPage() {
                                       <th className="py-1.5 pr-2 font-medium">নাম</th>
                                       {/*<th className="py-1.5 pr-2 font-medium">ইমেইল</th>*/}
                                       <th className="py-1.5 pr-2 font-medium">স্কোর</th>
+                                      <th className="py-1.5 pr-2 font-medium">ভুল</th>
+                                      <th className="py-1.5 pr-2 font-medium">নেট স্কোর</th>
                                       <th className="py-1.5 pr-2 font-medium">%</th>
                                       <th className="py-1.5 pr-2 font-medium">ধরন</th>
                                       <th className="py-1.5 pr-2 font-medium">জমার সময়</th>
@@ -1586,7 +1606,7 @@ export default function AdminPrepPage() {
                                   </thead>
                                   <tbody>
                                     {attempts.map((a, i) => {
-                                      const pct = a.totalQuestions > 0 ? Math.round((a.score / a.totalQuestions) * 100) : 0;
+                                      const pct = a.totalQuestions > 0 ? Math.round((a.finalScore / a.totalQuestions) * 100) : 0;
                                       const pctColor = pct >= 80 ? 'text-green-600' : pct >= 50 ? 'text-amber-600' : 'text-red-600';
                                       return (
                                         <tr key={a.id} className="border-b border-gray-100">
@@ -1594,6 +1614,8 @@ export default function AdminPrepPage() {
                                           <td className="py-1.5 pr-2 font-semibold text-gray-900">{a.userName}</td>
                                           {/*<td className="py-1.5 pr-2 text-warm-muted">{a.userEmail}</td>*/}
                                           <td className="py-1.5 pr-2 font-semibold">{a.score}/{a.totalQuestions}</td>
+                                          <td className="py-1.5 pr-2 text-red-500">{a.wrongCount}</td>
+                                          <td className="py-1.5 pr-2 font-semibold text-gray-900">{a.finalScore}</td>
                                           <td className={`py-1.5 pr-2 font-bold ${pctColor}`}>{pct}%</td>
                                           <td className="py-1.5 pr-2 text-warm-muted">{a.attemptType === 'LIVE' ? 'লাইভ' : 'অনুশীলন'}</td>
                                           <td className="py-1.5 pr-2 text-warm-muted">{new Date(a.submittedAt).toLocaleString('bn-BD')}</td>

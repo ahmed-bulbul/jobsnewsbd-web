@@ -30,8 +30,14 @@ function optionText(q: QuestionResult, opt: 'A' | 'B' | 'C' | 'D'): string {
 }
 
 function buildQuestionPaperHtml(result: ExamResult, examTitle: string): string {
-  const pct = result.totalQuestions > 0 ? Math.round((result.score / result.totalQuestions) * 100) : 0;
+  const negativeMarkingActive = (result.negativeMarksPerWrong ?? 0) > 0;
+  const displayScore = negativeMarkingActive ? result.finalScore : result.score;
+  const pct = result.totalQuestions > 0 ? Math.round((displayScore / result.totalQuestions) * 100) : 0;
   const date = new Date(result.submittedAt).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' });
+  const totalDeducted = negativeMarkingActive ? result.wrongCount * result.negativeMarksPerWrong : 0;
+  const negativeMarkingNote = negativeMarkingActive
+    ? `<div style="font-size:11px;color:#B45309;margin-top:4px;">প্রতি ভুল উত্তরে −${result.negativeMarksPerWrong} নম্বর কাটা হয়েছে • মোট কর্তন: −${totalDeducted.toFixed(2)}</div>`
+    : '';
 
   const questionsHtml = result.questions.map((q, i) => {
     const optionsHtml = (['A', 'B', 'C', 'D'] as const).map((opt) => {
@@ -72,8 +78,9 @@ function buildQuestionPaperHtml(result: ExamResult, examTitle: string): string {
         <div style="font-size:18px;font-weight:700;color:#111827;">${escapeHtml(examTitle)}</div>
         <div style="font-size:12px;color:#6B7280;margin-top:2px;">জমা দেওয়ার তারিখ: ${date} • মোট প্রশ্ন: ${result.totalQuestions}</div>
         <div style="margin-top:10px;display:inline-block;background:#FFF7ED;border:1px solid #FDBA74;border-radius:10px;padding:10px 16px;">
-          <span style="font-size:22px;font-weight:800;color:#B45309;">${result.score}/${result.totalQuestions}</span>
+          <span style="font-size:22px;font-weight:800;color:#B45309;">${negativeMarkingActive ? displayScore.toFixed(2) : displayScore}/${result.totalQuestions}</span>
           <span style="font-size:13px;color:#B45309;margin-left:6px;">(${pct}% সঠিক)</span>
+          ${negativeMarkingNote}
         </div>
       </div>
 
