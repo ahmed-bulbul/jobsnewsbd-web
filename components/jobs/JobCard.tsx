@@ -59,7 +59,7 @@ export default function JobCard({ post, categoryTypeSlug }: Props) {
         )}
 
         {/* Title */}
-        <h3 className="font-semibold text-gray-900 text-base leading-snug group-hover:text-primary-600 transition-colors line-clamp-2">
+        <h3 className="font-semibold text-ink text-base leading-snug group-hover:text-primary-600 transition-colors line-clamp-2">
           {title}
         </h3>
 

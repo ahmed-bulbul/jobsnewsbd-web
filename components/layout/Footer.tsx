@@ -8,14 +8,17 @@ export default function Footer() {
   const { t } = useLanguage();
   return (
     <footer className="bg-primary-900 text-primary-100 mt-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0">
-                <Image src="/logo-mark.svg" alt="Job Radar BD" width={36} height={36} className="w-full h-full" />
+                <Image src="/logo-mark.svg" alt="Job Radar" width={36} height={36} className="w-full h-full" />
               </div>
-              <span className="font-bold text-white text-lg">চাকরির খবর</span>
+              <div className="leading-tight">
+                <span className="block font-bold text-white text-base">জব রাডার</span>
+                <span className="block text-[10px] text-primary-300 -mt-0.5">Job Radar</span>
+              </div>
             </div>
             <p className="text-sm text-primary-300 leading-relaxed mb-4">
               {t(
@@ -54,10 +57,17 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold text-white mb-4">{t('চাকরির ধরন', 'Job Categories')}</h4>
             <ul className="space-y-2 text-sm text-primary-300">
-              <li>🏛️ {t('সরকারি চাকরি', 'Government Jobs')}</li>
-              <li>🏦 {t('ব্যাংক চাকরি', 'Bank Jobs')}</li>
-              <li>🌿 {t('এনজিও চাকরি', 'NGO Jobs')}</li>
-              <li>🏢 {t('বেসরকারি চাকরি', 'Private Jobs')}</li>
+              {[
+                { bn: 'সরকারি চাকরি', en: 'Government Jobs' },
+                { bn: 'ব্যাংক চাকরি', en: 'Bank Jobs' },
+                { bn: 'এনজিও চাকরি', en: 'NGO Jobs' },
+                { bn: 'বেসরকারি চাকরি', en: 'Private Jobs' },
+              ].map((c) => (
+                <li key={c.en} className="flex items-center gap-2">
+                  <span className="w-1 h-1 rounded-full bg-primary-400 shrink-0" />
+                  {t(c.bn, c.en)}
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -82,7 +92,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-primary-700 mt-10 pt-6 text-center text-xs text-primary-400">
-          © {new Date().getFullYear()} চাকরির খবর — Job Radar Bd.{' '}
+          © {new Date().getFullYear()} Job Radar.{' '}
           {t('সর্বস্বত্ব সংরক্ষিত।', 'All rights reserved.')}
         </div>
       </div>

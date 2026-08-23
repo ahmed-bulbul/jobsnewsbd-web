@@ -25,12 +25,12 @@ const inter = Inter({
 });
 
 const siteUrl = 'https://jobradarbd.com';
-const siteTitle = 'চাকরির খবর | Job Radar BD';
+const siteTitle = 'Job Radar';
 const siteDescription = 'বাংলাদেশের সরকারি ও বেসরকারি চাকরির বিজ্ঞপ্তি এক জায়গায়';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { default: siteTitle, template: '%s | চাকরির খবর' },
+  title: { default: siteTitle, template: '%s | Job Radar' },
   description: siteDescription,
   keywords: ['সরকারি চাকরি', 'বাংলাদেশ ব্যাংক চাকরি', 'job circular bangladesh', 'bd jobs'],
   alternates: { canonical: '/' },
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'bn_BD',
     url: siteUrl,
-    siteName: 'চাকরির খবর — Job Radar BD',
+    siteName: 'Job Radar',
     title: siteTitle,
     description: siteDescription,
     images: [{ url: '/og-default.png', width: 1200, height: 630, alt: siteTitle }],
@@ -60,7 +60,7 @@ const jsonLd = {
   '@graph': [
     {
       '@type': 'Organization',
-      name: 'চাকরির খবর — Job Radar BD',
+      name: 'Job Radar',
       url: siteUrl,
       sameAs: ['https://www.facebook.com/profile.php?id=61592111810490'],
       contactPoint: {
@@ -71,7 +71,7 @@ const jsonLd = {
     },
     {
       '@type': 'WebSite',
-      name: 'চাকরির খবর — Job Radar BD',
+      name: 'Job Radar',
       url: siteUrl,
       inLanguage: 'bn',
     },

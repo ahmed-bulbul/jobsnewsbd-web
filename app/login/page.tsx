@@ -54,8 +54,8 @@ function LoginForm() {
           <Link href="/" className="inline-flex items-center gap-2.5">
             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-lg shadow">চ</div>
             <div className="text-left leading-tight">
-              <span className="block font-bold text-primary text-xl">চাকরির খবর</span>
-              <span className="block text-xs text-warm-muted font-sans">Jobs News BD</span>
+              <span className="block font-bold text-primary text-xl">Job Radar</span>
+              <span className="block text-xs text-warm-muted font-sans">Job Radar</span>
             </div>
           </Link>
           <h1 className="mt-6 text-2xl font-bold text-gray-900">{t('আপনার অ্যাকাউন্টে প্রবেশ করুন', 'Sign in to your account')}</h1>

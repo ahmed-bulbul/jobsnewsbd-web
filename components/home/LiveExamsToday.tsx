@@ -30,6 +30,7 @@ export default function LiveExamsToday({ exams, upcoming }: Props) {
         </span>
       </div>
 
+      <div className="relative">
       <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 -mx-1 px-1">
         {exams.map((exam) => {
           const href = `/prep/exam/${exam.id}?title=${encodeURIComponent(exam.titleBn)}&duration=${exam.durationMinutes}&slug=${exam.topicSlug}`;
@@ -54,7 +55,7 @@ export default function LiveExamsToday({ exams, upcoming }: Props) {
                 </span>
               </div>
 
-              <p className="text-sm font-semibold text-gray-900 line-clamp-2 leading-snug mb-1">
+              <p className="text-sm font-semibold text-ink line-clamp-2 leading-snug mb-1">
                 {exam.titleBn}
               </p>
               <p className="text-xs text-warm-muted truncate mb-3">{exam.topicNameBn}</p>
@@ -98,7 +99,7 @@ export default function LiveExamsToday({ exams, upcoming }: Props) {
                 </span>
               </div>
 
-              <p className="text-sm font-semibold text-gray-900 line-clamp-2 leading-snug mb-1">
+              <p className="text-sm font-semibold text-ink line-clamp-2 leading-snug mb-1">
                 {exam.titleBn}
               </p>
               <p className="text-xs text-warm-muted truncate mb-3">{exam.topicNameBn ?? exam.categoryNameBn}</p>
@@ -114,6 +115,8 @@ export default function LiveExamsToday({ exams, upcoming }: Props) {
             </Link>
           );
         })}
+      </div>
+      <div className="pointer-events-none absolute top-0 right-0 bottom-2 w-10 sm:w-16 bg-gradient-to-l from-cream to-transparent" />
       </div>
     </section>
   );

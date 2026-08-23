@@ -64,7 +64,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: 'website',
       locale: 'bn_BD',
       images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
-      siteName: 'চাকরির খবর',
+      siteName: 'Job Radar',
     },
     twitter: {
       card: 'summary_large_image',

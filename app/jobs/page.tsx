@@ -72,7 +72,7 @@ function JobsPageInner() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page title */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl sm:text-3xl font-bold text-ink tracking-tight">
             {t('সব চাকরির বিজ্ঞপ্তি', 'All Job Circulars')}
           </h1>
           {filters.q && (
@@ -141,8 +141,10 @@ function JobsPageInner() {
               </>
             ) : (
               <div className="text-center py-24 text-warm-muted">
-                <div className="text-6xl mb-4">🔍</div>
-                <p className="text-lg font-medium">{t('কোনো চাকরি পাওয়া যায়নি', 'No jobs found')}</p>
+                <svg className="w-14 h-14 mx-auto mb-4 text-ink-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <p className="text-lg font-medium text-ink">{t('কোনো চাকরি পাওয়া যায়নি', 'No jobs found')}</p>
                 <p className="text-sm mt-2">{t('ভিন্ন ফিল্টার ব্যবহার করুন', 'Try different filters')}</p>
                 <button onClick={resetFilters} className="btn-outline mt-6">
                   {t('সব দেখান', 'Show all')}

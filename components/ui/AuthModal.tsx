@@ -355,8 +355,8 @@ export default function AuthModal() {
         <div className="flex items-center justify-center gap-2.5 pt-8 pb-2">
           <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-base shadow">চ</div>
           <div className="leading-tight">
-            <span className="block font-bold text-primary text-lg">চাকরির খবর</span>
-            <span className="block text-[10px] text-warm-muted font-sans">Job Radar BD</span>
+            <span className="block font-bold text-primary text-lg">Job Radar</span>
+            <span className="block text-[10px] text-warm-muted font-sans">Job Radar</span>
           </div>
         </div>
 

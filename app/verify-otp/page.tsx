@@ -103,8 +103,8 @@ function VerifyOtpForm() {
           <Link href="/" className="inline-flex items-center gap-2.5">
             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-lg shadow">চ</div>
             <div className="text-left leading-tight">
-              <span className="block font-bold text-primary text-xl">চাকরির খবর</span>
-              <span className="block text-xs text-warm-muted font-sans">Jobs News BD</span>
+              <span className="block font-bold text-primary text-xl">Job Radar</span>
+              <span className="block text-xs text-warm-muted font-sans">Job Radar</span>
             </div>
           </Link>
           <div className="mt-6 w-16 h-16 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4">

@@ -14,7 +14,7 @@ import type { ExamResult, QuestionResult } from './types';
  * out off-screen with real DOM/CSS, capture it with html2canvas, then slice
  * that image across real A4 pages with jsPDF.
  *
- * The "Job Radar BD • jobradarbd.com" footer is drawn as native PDF text
+ * The "Job Radar • jobradarbd.com" footer is drawn as native PDF text
  * (plain ASCII) rather than baked into the captured image, so it reliably
  * repeats on every page regardless of how many pages the questions span.
  */
@@ -69,7 +69,7 @@ function buildQuestionPaperHtml(result: ExamResult, examTitle: string): string {
       <div style="display:flex;align-items:center;gap:12px;border-bottom:3px solid #D97706;padding-bottom:16px;margin-bottom:20px;">
         <img src="/icon.png" width="48" height="48" style="border-radius:10px;display:block;" />
         <div>
-          <div style="font-size:20px;font-weight:800;color:#B45309;">Job Radar BD</div>
+          <div style="font-size:20px;font-weight:800;color:#B45309;">Job Radar</div>
           <div style="font-size:12px;color:#6B7280;">jobradarbd.com — বাংলাদেশের চাকরির প্রস্তুতি প্ল্যাটফর্ম</div>
         </div>
       </div>
@@ -132,7 +132,7 @@ export async function downloadExamResultPdf(result: ExamResult, examTitle: strin
 
       pdf.setFontSize(8);
       pdf.setTextColor(130);
-      pdf.text('Job Radar BD  •  jobradarbd.com', marginMm, 292);
+      pdf.text('Job Radar  •  jobradarbd.com', marginMm, 292);
       pdf.text(`Page ${page + 1}/${totalPages}`, pdfWidthMm - marginMm, 292, { align: 'right' });
     }
   } finally {

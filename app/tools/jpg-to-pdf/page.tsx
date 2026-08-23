@@ -7,7 +7,7 @@ import ToolFaq from '@/components/tools/ToolFaq';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'JPG থেকে PDF কনভার্টার | JPG to PDF Converter — চাকরির খবর',
+  title: 'JPG থেকে PDF কনভার্টার | JPG to PDF Converter — Job Radar',
   description: 'JPG বা JPEG ছবি সহজে PDF ফাইলে রূপান্তর করুন — একাধিক ছবি এক PDF-এ, সম্পূর্ণ বিনামূল্যে | Convert JPG or JPEG images to a PDF file — combine multiple photos into one PDF, completely free.',
   alternates: { canonical: '/tools/jpg-to-pdf' },
 };

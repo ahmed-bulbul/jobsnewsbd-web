@@ -5,7 +5,7 @@ import T from '@/components/ui/T';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'টুলস / Tools — চাকরির খবর',
+  title: 'টুলস / Tools — Job Radar',
   description: 'সরকারি চাকরির আবেদনে কাজে লাগে এমন বিনামূল্যের অনলাইন টুলস | Free online tools for Bangladesh govt job applications',
 };
 

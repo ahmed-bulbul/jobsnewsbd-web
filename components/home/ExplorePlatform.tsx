@@ -61,38 +61,35 @@ const TILES = [
 // Cross-sell grid — most first-time visitors only see the job board; this
 // makes the rest of the platform (prep, question bank, tools, community
 // content, marketplace) discoverable in one scan instead of staying buried
-// in a single sidebar card.
+// in a single sidebar card. Trimmed to icon + single label (no description
+// line) so the whole row reads at a glance, matching the leaner spacing
+// used across the rest of the redesigned homepage.
 export default function ExplorePlatform() {
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-5">
-        <h2 className="section-title">
-          <span className="text-primary">▍</span>
-          <T bn="শুধু চাকরি নয়, আরও অনেক কিছু" en="Beyond job circulars" />
-        </h2>
-        <p className="text-sm text-warm-muted mt-1">
-          <T bn="প্রস্তুতি থেকে শুরু করে অভিজ্ঞতা শেয়ার — সবকিছু এক জায়গায়" en="From exam prep to shared experience — all in one place" />
-        </p>
-      </div>
+      <h2 className="section-title mb-5">
+        <span className="text-primary">▍</span>
+        <T bn="একসেস টুলস ও রিসোর্স" en="Explore Tools & Resources" />
+      </h2>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {TILES.map((tile) => (
           <Link
             key={tile.href}
             href={tile.href}
-            className="card p-4 flex flex-col items-center text-center gap-2 hover:shadow-md transition-shadow"
+            className="card p-4 flex flex-col items-start text-left gap-2.5"
           >
-            <span className={`w-11 h-11 rounded-full flex items-center justify-center text-lg ${tile.accent}`}>
+            <span className={`w-11 h-11 rounded-xl flex items-center justify-center text-lg ${tile.accent}`}>
               {tile.emoji}
             </span>
-            <div>
-              <p className="text-sm font-semibold text-gray-900 leading-tight">
+            <span>
+              <p className="text-sm font-semibold text-ink leading-tight mb-0.5">
                 <T bn={tile.bn} en={tile.en} />
               </p>
-              <p className="text-[11px] text-warm-muted mt-0.5 leading-snug">
+              <p className="text-xs text-ink-soft leading-snug">
                 <T bn={tile.descBn} en={tile.descEn} />
               </p>
-            </div>
+            </span>
           </Link>
         ))}
       </div>

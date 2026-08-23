@@ -40,7 +40,7 @@ export default function AdminLoginPage() {
             <span className="text-white text-3xl font-bold">চ</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">অ্যাডমিন লগইন</h1>
-          <p className="text-warm-muted text-sm mt-1">চাকরির খবর — Admin Panel</p>
+          <p className="text-warm-muted text-sm mt-1">Job Radar — Admin Panel</p>
         </div>
 
         <form onSubmit={handleSubmit} className="card p-6 space-y-4">

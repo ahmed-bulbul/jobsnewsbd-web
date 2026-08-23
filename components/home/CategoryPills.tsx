@@ -10,11 +10,21 @@ interface Props {
   categories: Category[];
 }
 
-const TYPE_COLORS: Record<string, string> = {
-  government: 'border-primary-400 bg-primary-50 text-primary-700 hover:bg-primary-100',
-  bank:        'border-blue-400 bg-blue-50 text-blue-700 hover:bg-blue-100',
-  ngo:         'border-amber-400 bg-amber-50 text-amber-700 hover:bg-amber-100',
-  private:     'border-violet-400 bg-violet-50 text-violet-700 hover:bg-violet-100',
+// Pastel icon-badge colors (matches the QuickAccessChips treatment) instead
+// of a full 2px colored border per card — the border was the one place on
+// the homepage still doing the "heavy box" thing after the redesign pass.
+const TYPE_BADGE: Record<string, string> = {
+  government: 'bg-primary-50 text-primary-700',
+  bank:        'bg-blue-50 text-blue-700',
+  ngo:         'bg-amber-50 text-amber-700',
+  private:     'bg-violet-50 text-violet-700',
+};
+
+const TYPE_CHIP_TEXT: Record<string, string> = {
+  government: 'text-primary-700 hover:bg-primary-50',
+  bank:        'text-blue-700 hover:bg-blue-50',
+  ngo:         'text-amber-700 hover:bg-amber-50',
+  private:     'text-violet-700 hover:bg-violet-50',
 };
 
 export default function CategoryPills({ categoryTypes, categories }: Props) {
@@ -30,19 +40,17 @@ export default function CategoryPills({ categoryTypes, categories }: Props) {
       {/* Category type cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
         {categoryTypes.map((ct) => {
-          const colorClass = TYPE_COLORS[ct.slug] ?? 'border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100';
+          const badgeClass = TYPE_BADGE[ct.slug] ?? 'bg-gray-100 text-gray-700';
           const count = categories.filter((c) => c.categoryTypeId === ct.id).length;
           return (
-            <Link
-              key={ct.id}
-              href={`/jobs?categoryTypeId=${ct.id}`}
-              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border-2 transition-all duration-200 hover:shadow-sm active:scale-[0.98] ${colorClass}`}
-            >
-              <span className="text-xl shrink-0">{categoryTypeEmoji(ct.slug)}</span>
+            <Link key={ct.id} href={`/jobs?categoryTypeId=${ct.id}`} className="card flex items-center gap-3 px-4 py-3.5">
+              <span className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-lg ${badgeClass}`}>
+                {categoryTypeEmoji(ct.slug)}
+              </span>
               <div className="min-w-0">
-                <p className="font-semibold text-sm leading-tight">{t(ct.nameBn, ct.nameEn ?? ct.nameBn)}</p>
+                <p className="font-semibold text-sm text-ink leading-tight truncate">{t(ct.nameBn, ct.nameEn ?? ct.nameBn)}</p>
                 {count > 0 && (
-                  <p className="text-xs opacity-60 leading-tight">{count} {t('বিভাগ', 'categories')}</p>
+                  <p className="text-xs text-ink-soft leading-tight">{count} {t('বিভাগ', 'categories')}</p>
                 )}
               </div>
             </Link>
@@ -54,12 +62,12 @@ export default function CategoryPills({ categoryTypes, categories }: Props) {
       <div className="flex flex-wrap gap-2">
         {categories.map((cat) => {
           const parentType = categoryTypes.find((ct) => ct.id === cat.categoryTypeId);
-          const chipColors = TYPE_COLORS[parentType?.slug ?? ''] ?? 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50';
+          const chipTextClass = TYPE_CHIP_TEXT[parentType?.slug ?? ''] ?? 'text-gray-600 hover:bg-cream';
           return (
             <Link
               key={cat.id}
               href={`/jobs?categoryId=${cat.id}`}
-              className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${chipColors}`}
+              className={`px-3.5 py-1.5 rounded-full bg-white border border-warm-border/70 text-xs font-medium transition-colors ${chipTextClass}`}
             >
               {t(cat.nameBn, cat.nameEn ?? cat.nameBn)}
             </Link>

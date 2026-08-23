@@ -34,7 +34,7 @@ const faqItems = [
 ];
 
 export const metadata: Metadata = {
-  title: 'PDF থেকে JPG কনভার্টার | PDF to JPG Converter — চাকরির খবর',
+  title: 'PDF থেকে JPG কনভার্টার | PDF to JPG Converter — Job Radar',
   description: 'PDF-এর প্রতিটি পৃষ্ঠা JPG বা PNG ছবিতে রূপান্তর করুন — একাধিক পৃষ্ঠা হলে ZIP ফাইলে ডাউনলোড, সম্পূর্ণ বিনামূল্যে | Convert every page of a PDF into a JPG or PNG image — multi-page PDFs download as a ZIP, completely free.',
   alternates: { canonical: '/tools/pdf-to-jpg' },
 };

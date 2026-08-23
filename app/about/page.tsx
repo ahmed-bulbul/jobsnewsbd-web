@@ -23,8 +23,8 @@ export default function AboutPage() {
 
           <p className="text-sm text-gray-700 leading-relaxed mb-4">
             {t(
-              'চাকরির খবর (Job Radar BD) একটি বাংলাদেশভিত্তিক চাকরির বিজ্ঞপ্তি ও ক্যারিয়ার প্রস্তুতি প্ল্যাটফর্ম। আমাদের লক্ষ্য হলো সরকারি, বেসরকারি, ব্যাংক ও এনজিও চাকরির বিজ্ঞপ্তি এক জায়গায় সহজবোধ্য ও নির্ভরযোগ্যভাবে চাকরিপ্রার্থীদের কাছে পৌঁছে দেওয়া, এবং পরীক্ষা প্রস্তুতিতে সহায়তা করা।',
-              'Job Radar BD is a Bangladesh-based job circular and career preparation platform. Our goal is to bring government, private, bank, and NGO job circulars together in one place — presented clearly and reliably for job seekers — while also helping them prepare for exams.'
+              'Job Radar একটি বাংলাদেশভিত্তিক চাকরির বিজ্ঞপ্তি ও ক্যারিয়ার প্রস্তুতি প্ল্যাটফর্ম। আমাদের লক্ষ্য হলো সরকারি, বেসরকারি, ব্যাংক ও এনজিও চাকরির বিজ্ঞপ্তি এক জায়গায় সহজবোধ্য ও নির্ভরযোগ্যভাবে চাকরিপ্রার্থীদের কাছে পৌঁছে দেওয়া, এবং পরীক্ষা প্রস্তুতিতে সহায়তা করা।',
+              'Job Radar is a Bangladesh-based job circular and career preparation platform. Our goal is to bring government, private, bank, and NGO job circulars together in one place — presented clearly and reliably for job seekers — while also helping them prepare for exams.'
             )}
           </p>
 

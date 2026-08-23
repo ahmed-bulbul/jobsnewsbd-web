@@ -1,39 +1,40 @@
-import { getCategoryTypes, getCategories, getPosts, getQuestionBankCategories, getLiveExams, getUpcomingExams, getJobExperiences } from '@/lib/api';
+import { getCategoryTypes, getCategories, getPosts, getLiveExams, getUpcomingExams, getJobExperiences } from '@/lib/api';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import HeroSearch from '@/components/home/HeroSearch';
 import CategoryPills from '@/components/home/CategoryPills';
-import QuickAccessChips from '@/components/home/QuickAccessChips';
+import QuickAccessChips, { type QuickAccessItem } from '@/components/home/QuickAccessChips';
 import FeaturedJobsRow from '@/components/home/FeaturedJobsRow';
 import LiveExamsToday from '@/components/home/LiveExamsToday';
 import ClosingTodayTicker from '@/components/home/ClosingTodayTicker';
 import ExplorePlatform from '@/components/home/ExplorePlatform';
 import SuccessStories from '@/components/home/SuccessStories';
+import AppDownloadBanner from '@/components/home/AppDownloadBanner';
 import FaqSection from '@/components/home/FaqSection';
-import DeadlineSoonList from '@/components/home/DeadlineSoonList';
-import InfiniteJobList from '@/components/home/InfiniteJobList';
 import T from '@/components/ui/T';
-import type { Category, CategoryType, JobExperience, LiveExam, PostSummary, QuestionBankCategory, UpcomingExam } from '@/lib/types';
-import Link from 'next/link';
+import type { Category, CategoryType, JobExperience, LiveExam, PostSummary, UpcomingExam } from '@/lib/types';
 
 export const revalidate = 60;
 
-const DEADLINE_SOON_DAYS = 5;
+const emptyPage = <Item,>(size: number) => ({ content: [] as Item[], totalElements: 0, totalPages: 0, page: 0, size, last: true });
+
+function StatIcon({ path }: { path: string }) {
+  return (
+    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={path} />
+    </svg>
+  );
+}
 
 export default async function HomePage() {
-  const [categoryTypes, categories, latestPosts, deadlineSoon, closingToday, qbCategories, liveExams, upcomingExams, successStories] = await Promise.all([
+  const [categoryTypes, categories, latestPosts, closingToday, liveExams, upcomingExams, successStories] = await Promise.all([
     getCategoryTypes().catch((): CategoryType[] => []),
     getCategories().catch((): Category[] => []),
-    getPosts({ size: 9 }).catch(() => ({ content: [] as PostSummary[], totalElements: 0, totalPages: 0, page: 0, size: 9, last: true })),
-    getPosts({ status: 'ONGOING', deadlineWithinDays: DEADLINE_SOON_DAYS, size: 6 })
-      .catch(() => ({ content: [] as PostSummary[], totalElements: 0, totalPages: 0, page: 0, size: 6, last: true })),
-    getPosts({ status: 'ONGOING', deadlineWithinDays: 1, size: 6 })
-      .catch(() => ({ content: [] as PostSummary[], totalElements: 0, totalPages: 0, page: 0, size: 6, last: true })),
-    getQuestionBankCategories().catch((): QuestionBankCategory[] => []),
+    getPosts({ size: 6 }).catch(() => emptyPage<PostSummary>(6)),
+    getPosts({ status: 'ONGOING', deadlineWithinDays: 1, size: 6 }).catch(() => emptyPage<PostSummary>(6)),
     getLiveExams().catch((): LiveExam[] => []),
     getUpcomingExams().catch((): UpcomingExam[] => []),
-    getJobExperiences({ outcome: 'SELECTED', size: 3 })
-      .catch(() => ({ content: [] as JobExperience[], totalElements: 0, totalPages: 0, page: 0, size: 3, last: true })),
+    getJobExperiences({ outcome: 'SELECTED', size: 3 }).catch(() => emptyPage<JobExperience>(3)),
   ]);
 
   // category name → category type slug (for JobCard border color)
@@ -43,16 +44,27 @@ export default async function HomePage() {
     if (ct) nameToTypeSlug[c.nameBn] = ct.slug;
   });
 
-  // Soonest-expiring ongoing posts, for the Deadline Soon column
-  const deadlineSoonPosts = [...deadlineSoon.content].sort(
-    (a, b) => new Date(a.applicationEnd!).getTime() - new Date(b.applicationEnd!).getTime()
+  // Per-type job counts for the quick-access cards — one lightweight
+  // (size: 1) count-only request per known type, run alongside each other.
+  const typeId = (slug: string) => categoryTypes.find((ct) => ct.slug === slug)?.id;
+  const [govtCount, privateCount, bankCount] = await Promise.all(
+    (['government', 'private', 'bank'] as const).map((slug) => {
+      const id = typeId(slug);
+      return id ? getPosts({ categoryTypeId: id, size: 1 }).then((r) => r.totalElements).catch(() => 0) : Promise.resolve(0);
+    })
   );
+
+  const quickAccessItems: QuickAccessItem[] = [
+    { href: `/jobs${typeId('government') ? `?categoryTypeId=${typeId('government')}` : ''}`, icon: '🏛️', bn: 'সরকারি চাকরি', en: 'Government Jobs', count: govtCount, color: 'bg-amber-50 text-amber-700' },
+    { href: `/jobs${typeId('private') ? `?categoryTypeId=${typeId('private')}` : ''}`, icon: '🏢', bn: 'বেসরকারি চাকরি', en: 'Private Jobs', count: privateCount, color: 'bg-rose-50 text-rose-700' },
+    { href: `/jobs${typeId('bank') ? `?categoryTypeId=${typeId('bank')}` : ''}`, icon: '🏦', bn: 'ব্যাংক চাকরি', en: 'Bank Jobs', count: bankCount, color: 'bg-blue-50 text-blue-700' },
+    { href: '/prep', icon: '📝', bn: 'চাকরির প্রস্তুতি', en: 'Exam Prep', subtitleBn: 'প্রশ্ন ও সমাধান', subtitleEn: 'Questions & solutions', color: 'bg-emerald-50 text-emerald-700' },
+    { href: '/study-corner', icon: '📚', bn: 'স্টাডি কর্নার', en: 'Study Corner', subtitleBn: 'PDF ও নোটস', subtitleEn: 'PDFs & notes', color: 'bg-violet-50 text-violet-700' },
+  ];
 
   const closingTodayPosts = [...closingToday.content].sort(
     (a, b) => new Date(a.applicationEnd!).getTime() - new Date(b.applicationEnd!).getTime()
   );
-
-  const totalQuestions = qbCategories.reduce((sum, c) => sum + (c.questionCount ?? 0), 0);
 
   return (
     <>
@@ -61,11 +73,7 @@ export default async function HomePage() {
       <main>
         <HeroSearch categoryTypes={categoryTypes} />
 
-        <QuickAccessChips
-          latestCount={latestPosts.totalElements}
-          deadlineSoonCount={deadlineSoon.totalElements}
-          totalQuestions={totalQuestions}
-        />
+        <QuickAccessChips items={quickAccessItems} />
 
         <FeaturedJobsRow posts={latestPosts.content.slice(0, 6)} nameToTypeSlug={nameToTypeSlug} />
 
@@ -75,81 +83,22 @@ export default async function HomePage() {
 
         <SuccessStories experiences={successStories.content} />
 
-        {/* Stats bar */}
-        <div className="bg-primary-900 text-white">
-          <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 grid grid-cols-3 divide-x divide-primary-700">
-            {[
-              { bn: 'মোট বিজ্ঞপ্তি', en: 'Total Circulars', value: latestPosts.totalElements },
-              { bn: 'বিভাগ',         en: 'Categories',      value: categories.length },
-              { bn: 'ধরন',           en: 'Job Types',       value: categoryTypes.length },
-            ].map((s) => (
-              <div key={s.bn} className="text-center px-1 sm:px-4">
-                <div className="text-lg sm:text-2xl font-bold text-accent">{s.value}+</div>
-                <div className="text-[10px] sm:text-xs text-primary-300 mt-0.5 leading-tight"><T bn={s.bn} en={s.en} /></div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <AppDownloadBanner />
 
         {/* Categories */}
         <CategoryPills categoryTypes={categoryTypes} categories={categories} />
 
-        {/* Job listing with infinite scroll + sidebar */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="section-title">
-                  <span className="text-primary">▍</span>
-                  <T bn="সর্বশেষ চাকরির বিজ্ঞপ্তি" en="Latest Job Circulars" />
-                </h2>
-                <Link href="/jobs" className="text-sm text-primary-600 hover:text-primary font-medium hover:underline">
-                  <T bn="সব দেখুন →" en="View All →" />
-                </Link>
-              </div>
-
-              <InfiniteJobList
-                initialPosts={latestPosts.content}
-                initialLast={latestPosts.last}
-                initialPage={latestPosts.page}
-                nameToTypeSlug={nameToTypeSlug}
-              />
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-5">
-              <DeadlineSoonList posts={deadlineSoonPosts} />
-
-              <div className="card p-5 bg-primary-50 border-primary-100">
-                <h3 className="font-bold text-gray-900 text-sm mb-1.5">
-                  <T bn="MCQ দিয়ে প্রস্তুতি নিন" en="Practice with MCQs" />
-                </h3>
-                <ul className="text-xs text-gray-700 mb-4 leading-relaxed space-y-1">
-                  {totalQuestions > 0 && (
-                    <li>• <T bn={`${totalQuestions}+ প্রশ্ন`} en={`${totalQuestions}+ Questions`} /></li>
-                  )}
-                  <li>• <T bn={`${qbCategories.length}+ বিষয়ভিত্তিক ক্যাটাগরি`} en={`${qbCategories.length}+ Subject Categories`} /></li>
-                  <li>• <T bn="বিস্তারিত ব্যাখ্যাসহ উত্তর" en="Detailed Explanations" /></li>
-                </ul>
-                <Link href="/study-corner/question-bank" className="btn-primary text-sm w-full justify-center">
-                  <T bn="অনুশীলন শুরু করুন →" en="Start Practicing →" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* About / intro — real content about the site for visitors and search engines */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
           <div className="card p-6 sm:p-8">
             <h2 className="text-lg font-bold text-gray-900 mb-3">
-              <T bn="জব রাডার বাংলাদেশ কী এবং কেন ব্যবহার করবেন" en="What is Job Radar BD, and why use it" />
+              <T bn="Job Radar কী এবং কেন ব্যবহার করবেন" en="What is Job Radar, and why use it" />
             </h2>
             <div className="text-sm text-gray-700 leading-relaxed space-y-3">
               <p>
                 <T
-                  bn="জব রাডার বাংলাদেশ (আগে চাকরির খবর নামে পরিচিত) বাংলাদেশের সরকারি, বেসরকারি, ব্যাংক ও এনজিও প্রতিষ্ঠানের চাকরির বিজ্ঞপ্তি প্রতিদিন সংগ্রহ করে এক জায়গায় নিয়ে আসে। প্রতিটি বিজ্ঞপ্তির সাথে মূল সার্কুলার (PDF), গুরুত্বপূর্ণ তারিখ, আবেদনের যোগ্যতা ও শেষ সময়সীমার কাউন্টডাউন যুক্ত থাকে, যাতে কোনো সুযোগ হাতছাড়া না হয়।"
-                  en="Job Radar BD (formerly চাকরির খবর) collects government, private, bank and NGO job circulars from across Bangladesh every day and brings them into one place. Each listing includes the official circular (PDF), key dates, eligibility details, and a countdown to the application deadline so nothing slips by."
+                  bn="Job Radar বাংলাদেশের সরকারি, বেসরকারি, ব্যাংক ও এনজিও প্রতিষ্ঠানের চাকরির বিজ্ঞপ্তি প্রতিদিন সংগ্রহ করে এক জায়গায় নিয়ে আসে। প্রতিটি বিজ্ঞপ্তির সাথে মূল সার্কুলার (PDF), গুরুত্বপূর্ণ তারিখ, আবেদনের যোগ্যতা ও শেষ সময়সীমার কাউন্টডাউন যুক্ত থাকে, যাতে কোনো সুযোগ হাতছাড়া না হয়।"
+                  en="Job Radar collects government, private, bank and NGO job circulars from across Bangladesh every day and brings them into one place. Each listing includes the official circular (PDF), key dates, eligibility details, and a countdown to the application deadline so nothing slips by."
                 />
               </p>
               <p>
@@ -169,6 +118,30 @@ export default async function HomePage() {
         </section>
 
         <FaqSection />
+
+        {/* Stats bar — closing summary just above the footer */}
+        <div className="bg-primary-900 text-white">
+          <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-6 grid grid-cols-4 divide-x divide-primary-700">
+            {[
+              { bn: 'মোট বিজ্ঞপ্তি', en: 'Total Circulars', value: latestPosts.totalElements, icon: <StatIcon path="M12 2a5 5 0 015 5v2a5 5 0 01-10 0V7a5 5 0 015-5zM4 21a8 8 0 0116 0" /> },
+              { bn: 'বিভাগ',         en: 'Categories',      value: categories.length, icon: <StatIcon path="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /> },
+              { bn: 'ধরন',           en: 'Job Types',       value: categoryTypes.length, icon: <StatIcon path="M4 21V9l8-6 8 6v12M9 21v-6h6v6" /> },
+              { bn: 'আপডেট',         en: 'Updates',         value: '24/7', icon: <StatIcon path="M12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36A5.5 5.5 0 1112.36 3.1 9 9 0 0012 3z" /> },
+            ].map((s) => (
+              <div key={s.bn} className="flex items-center gap-2 sm:gap-3 justify-center px-1 sm:px-4">
+                <span className="hidden xs:flex sm:flex w-8 h-8 sm:w-10 sm:h-10 shrink-0 rounded-full bg-white/10 items-center justify-center text-accent">
+                  {s.icon}
+                </span>
+                <div className="text-center sm:text-left">
+                  <div className="text-lg sm:text-2xl font-bold text-accent">
+                    {typeof s.value === 'number' ? `${s.value}+` : s.value}
+                  </div>
+                  <div className="text-[10px] sm:text-xs text-primary-300 mt-0.5 leading-tight"><T bn={s.bn} en={s.en} /></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </main>
       <Footer />
     </>

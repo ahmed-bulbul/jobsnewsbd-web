@@ -7,7 +7,7 @@ import ToolFaq from '@/components/tools/ToolFaq';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'PNG থেকে PDF কনভার্টার | PNG to PDF Converter — চাকরির খবর',
+  title: 'PNG থেকে PDF কনভার্টার | PNG to PDF Converter — Job Radar',
   description: 'PNG ছবি সহজে PDF ফাইলে রূপান্তর করুন — একাধিক ছবি এক PDF-এ, স্বচ্ছ ব্যাকগ্রাউন্ড সাপোর্টেড, সম্পূর্ণ বিনামূল্যে | Convert PNG images to a PDF file — transparent backgrounds supported, completely free.',
   alternates: { canonical: '/tools/png-to-pdf' },
 };

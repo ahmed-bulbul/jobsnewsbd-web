@@ -49,7 +49,7 @@ export default function ContactPage() {
               <div>
                 <p className="text-sm font-semibold text-gray-900">{t('ফেসবুক পেজ', 'Facebook Page')}</p>
                 <a href="https://www.facebook.com/profile.php?id=61592111810490" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold hover:underline text-sm">
-                  {t('জব রাডার বিডি — ফেসবুকে দেখুন', 'Job Radar BD on Facebook')}
+                  {t('Job Radar — ফেসবুকে দেখুন', 'Job Radar on Facebook')}
                 </a>
               </div>
             </div>

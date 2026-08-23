@@ -2,9 +2,9 @@ import T from '@/components/ui/T';
 
 const FAQS = [
   {
-    qBn: 'জব রাডার বাংলাদেশ ব্যবহার করতে কি টাকা লাগে?',
-    qEn: 'Is Job Radar BD free to use?',
-    aBn: 'হ্যাঁ, চাকরির বিজ্ঞপ্তি দেখা, সার্কুলার PDF পড়া, এবং বেশিরভাগ টুলস ও কনটেন্ট সম্পূর্ণ বিনামূল্যে। অ্যাকাউন্ট তৈরি করলে অতিরিক্ত সুবিধা যেমন নোটিফিকেশন ও প্রিয় তালিকা পাওয়া যায়।',
+    qBn: 'Job Radar ব্যবহার করতে কি টাকা লাগে?',
+    qEn: 'Is Job Radar free to use?',
+    aBn: 'না, চাকরির বিজ্ঞপ্তি দেখা, সার্কুলার PDF পড়া, এবং বেশিরভাগ টুলস ও কনটেন্ট সম্পূর্ণ বিনামূল্যে। অ্যাকাউন্ট তৈরি করলে অতিরিক্ত সুবিধা যেমন নোটিফিকেশন ও প্রিয় তালিকা পাওয়া যায়।',
     aEn: 'Yes — browsing job circulars, reading circular PDFs, and most tools and content are completely free. Creating an account unlocks extras like notifications and saved-job lists.',
   },
   {
@@ -44,18 +44,23 @@ export default function FaqSection() {
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <div className="card p-6 sm:p-8">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">
+      <div className="card p-6 sm:p-10">
+        <h2 className="section-title mb-6">
           <T bn="সচরাচর জিজ্ঞাসিত প্রশ্ন" en="Frequently asked questions" />
         </h2>
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-warm-border/70">
           {FAQS.map((f, i) => (
-            <details key={i} className="group py-3 first:pt-0 last:pb-0">
-              <summary className="flex items-center justify-between gap-3 cursor-pointer text-sm font-medium text-gray-900 list-none">
+            <details key={i} className="group py-4 first:pt-0 last:pb-0">
+              <summary className="flex items-center justify-between gap-3 cursor-pointer text-sm sm:text-base font-medium text-ink list-none">
                 <span><T bn={f.qBn} en={f.qEn} /></span>
-                <span className="shrink-0 text-primary-600 transition-transform group-open:rotate-45">+</span>
+                <svg
+                  className="shrink-0 w-4 h-4 text-primary-600 transition-transform group-open:rotate-180"
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </summary>
-              <p className="text-sm text-gray-600 leading-relaxed mt-2 pr-6">
+              <p className="text-sm text-ink-soft leading-relaxed mt-3 pr-6">
                 <T bn={f.aBn} en={f.aEn} />
               </p>
             </details>

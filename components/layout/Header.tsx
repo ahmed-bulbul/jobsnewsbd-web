@@ -53,34 +53,41 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-warm-border shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-[60px]">
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group min-w-0 shrink">
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg overflow-hidden shadow-sm shrink-0">
-              <Image src="/logo-mark.svg" alt="Job Radar BD" width={36} height={36} className="w-full h-full" />
+              <Image src="/logo-mark.svg" alt="Job Radar" width={36} height={36} className="w-full h-full" />
             </div>
             <div className="leading-tight min-w-0">
               <span className="block font-bold text-primary text-sm sm:text-lg whitespace-nowrap">জব রাডার</span>
-              <span className="hidden sm:block text-[10px] text-warm-muted -mt-0.5 font-sans">Job Radar BD</span>
+              <span className="hidden sm:block text-[10px] text-gray-800 -mt-0.5 font-sans font-semibold">Job Radar</span>
             </div>
           </Link>
 
-          {/* Nav */}
+          {/* Nav — subtle underline indicator instead of a filled pill, so the
+              bar reads lighter with five items sitting side by side. */}
           <nav className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  (link.href === '/' ? pathname === '/' : pathname.startsWith(link.href))
-                    ? 'bg-primary-50 text-primary-700'
-                    : 'text-gray-600 hover:text-primary hover:bg-primary-50'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const active = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`relative px-3.5 py-2 text-sm font-medium transition-colors ${
+                    active ? 'text-primary-700' : 'text-gray-600 hover:text-primary-700'
+                  }`}
+                >
+                  {link.label}
+                  <span
+                    className={`absolute left-3.5 right-3.5 -bottom-[1px] h-[2px] rounded-full bg-primary-600 transition-opacity ${
+                      active ? 'opacity-100' : 'opacity-0'
+                    }`}
+                  />
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Right controls */}
@@ -136,7 +143,7 @@ export default function Header() {
                 {dropdownOpen && (
                   <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-warm-border py-1.5 z-50">
                     <div className="px-4 py-2 border-b border-warm-border">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
+                      <p className="text-sm font-semibold text-ink truncate">{user.name}</p>
                       <p className="text-xs text-warm-muted truncate">{user.email}</p>
                     </div>
                     <Link

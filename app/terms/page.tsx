@@ -32,8 +32,8 @@ export default function TermsPage() {
           <h2 className="text-lg font-bold text-gray-900 mt-8 mb-2">{t('১. সেবার বর্ণনা', '1. Description of Service')}</h2>
           <p className="text-sm text-gray-700 leading-relaxed mb-4">
             {t(
-              'চাকরির খবর (Job Radar BD) বাংলাদেশের সরকারি ও বেসরকারি চাকরির বিজ্ঞপ্তি একত্রিত করে প্রদর্শন করে এবং চাকরিপ্রার্থীদের জন্য প্রস্তুতি সামগ্রী (মডেল টেস্ট, পরীক্ষা) ও একটি কমিউনিটি এলাকা ("স্টাডি কর্নার") প্রদান করে, যেখানে ব্যবহারকারীরা চাকরির অভিজ্ঞতা শেয়ার করতে, ইনস্টিটিউট রিভিউ লিখতে এবং পুরাতন বই কেনাবেচা করতে পারেন। আমরা চাকরিদাতা নই এবং কোনো নিয়োগ প্রক্রিয়ায় সরাসরি জড়িত নই — আমরা কেবল তথ্য একত্রিত করে প্রদর্শন করি।',
-              'Job Radar BD aggregates government and private job circulars in Bangladesh and provides preparation material (model tests, exams) and a community area ("Study Corner") where users can share job experiences, write institute reviews, and buy/sell used preparation books. We are not an employer and are not directly involved in any hiring process — we aggregate and display publicly available information.'
+              'Job Radar বাংলাদেশের সরকারি ও বেসরকারি চাকরির বিজ্ঞপ্তি একত্রিত করে প্রদর্শন করে এবং চাকরিপ্রার্থীদের জন্য প্রস্তুতি সামগ্রী (মডেল টেস্ট, পরীক্ষা) ও একটি কমিউনিটি এলাকা ("স্টাডি কর্নার") প্রদান করে, যেখানে ব্যবহারকারীরা চাকরির অভিজ্ঞতা শেয়ার করতে, ইনস্টিটিউট রিভিউ লিখতে এবং পুরাতন বই কেনাবেচা করতে পারেন। আমরা চাকরিদাতা নই এবং কোনো নিয়োগ প্রক্রিয়ায় সরাসরি জড়িত নই — আমরা কেবল তথ্য একত্রিত করে প্রদর্শন করি।',
+              'Job Radar aggregates government and private job circulars in Bangladesh and provides preparation material (model tests, exams) and a community area ("Study Corner") where users can share job experiences, write institute reviews, and buy/sell used preparation books. We are not an employer and are not directly involved in any hiring process — we aggregate and display publicly available information.'
             )}
           </p>
 

@@ -46,7 +46,7 @@ function buildRoutineHtml(categoryTitle: string, routine: ExamRoutineEntry[]): s
       <div style="display:flex;align-items:center;gap:12px;border-bottom:3px solid #1D4ED8;padding-bottom:16px;margin-bottom:20px;">
         <img src="/icon.png" width="44" height="44" style="border-radius:10px;display:block;" />
         <div>
-          <div style="font-size:19px;font-weight:800;color:#1D4ED8;">Job Radar BD</div>
+          <div style="font-size:19px;font-weight:800;color:#1D4ED8;">Job Radar</div>
           <div style="font-size:12px;color:#6B7280;">jobradarbd.com — পরীক্ষার রুটিন / Exam Routine</div>
         </div>
       </div>
@@ -99,7 +99,7 @@ export async function downloadExamRoutinePdf(categoryTitle: string, routine: Exa
     const pdfWidthMm = 210;
     const contentWidthMm = pdfWidthMm - marginMm * 2;
     // Leave a bit of extra clearance above the footer line so a page's last
-    // row never sits flush against (or under) the "Job Radar BD" footer.
+    // row never sits flush against (or under) the "Job Radar" footer.
     const usableHeightMm = 297 - marginMm * 2 - 6;
 
     // Row-aware pagination: instead of blindly slicing the screenshot every
@@ -138,7 +138,7 @@ export async function downloadExamRoutinePdf(categoryTitle: string, routine: Exa
 
       pdf.setFontSize(8);
       pdf.setTextColor(130);
-      pdf.text('Job Radar BD  •  jobradarbd.com', marginMm, 292);
+      pdf.text('Job Radar  •  jobradarbd.com', marginMm, 292);
       pdf.text(`Page ${page + 1}/${totalPages}`, pdfWidthMm - marginMm, 292, { align: 'right' });
     }
   } finally {

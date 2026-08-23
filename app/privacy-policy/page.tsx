@@ -24,8 +24,8 @@ export default function PrivacyPolicyPage() {
 
           <p className="text-sm text-gray-700 leading-relaxed mb-6">
             {t(
-              'চাকরির খবর (Job Radar BD) একটি বাংলাদেশভিত্তিক চাকরির বিজ্ঞপ্তি ও ক্যারিয়ার প্রস্তুতি প্ল্যাটফর্ম, যা jobradarbd.com ওয়েবসাইট ও আমাদের মোবাইল অ্যাপের মাধ্যমে পরিচালিত হয়। আপনার গোপনীয়তা আমাদের কাছে গুরুত্বপূর্ণ। এই প্রাইভেসি পলিসিতে আমরা কী তথ্য সংগ্রহ করি, কীভাবে তা ব্যবহার করি এবং আপনার অধিকার কী তা ব্যাখ্যা করা হয়েছে।',
-              'চাকরির খবর (Job Radar BD) is a Bangladesh-based job circular and career preparation platform, operated through the website jobradarbd.com and our mobile app. Your privacy matters to us. This Privacy Policy explains what information we collect, how we use it, and what rights you have.'
+              'Job Radar একটি বাংলাদেশভিত্তিক চাকরির বিজ্ঞপ্তি ও ক্যারিয়ার প্রস্তুতি প্ল্যাটফর্ম, যা jobradarbd.com ওয়েবসাইট ও আমাদের মোবাইল অ্যাপের মাধ্যমে পরিচালিত হয়। আপনার গোপনীয়তা আমাদের কাছে গুরুত্বপূর্ণ। এই প্রাইভেসি পলিসিতে আমরা কী তথ্য সংগ্রহ করি, কীভাবে তা ব্যবহার করি এবং আপনার অধিকার কী তা ব্যাখ্যা করা হয়েছে।',
+              'Job Radar is a Bangladesh-based job circular and career preparation platform, operated through the website jobradarbd.com and our mobile app. Your privacy matters to us. This Privacy Policy explains what information we collect, how we use it, and what rights you have.'
             )}
           </p>
 

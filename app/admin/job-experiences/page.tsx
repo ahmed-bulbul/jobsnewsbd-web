@@ -96,7 +96,7 @@ export default function AdminJobExperiencesPage() {
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-primary font-bold shrink-0">চ</div>
           <div>
-            <span className="font-bold">চাকরির খবর</span>
+            <span className="font-bold">Job Radar</span>
             <span className="text-primary-300 text-xs ml-2">Admin Panel</span>
           </div>
         </div>

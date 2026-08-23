@@ -80,7 +80,7 @@ export default function FeaturedJobCard({ post, categoryTypeSlug }: Props) {
   const emoji = categoryTypeEmoji(categoryTypeSlug ?? '');
 
   return (
-    <div className="w-64 shrink-0 snap-start bg-white rounded-2xl border border-warm-border shadow-sm hover:shadow-md transition-shadow p-4 flex flex-col gap-3">
+    <div className="card w-64 shrink-0 snap-start p-4 flex flex-col gap-3">
       {/* Top row: badge + bookmark */}
       <div className="flex items-center justify-between">
         {isNew ? (
@@ -111,7 +111,7 @@ export default function FeaturedJobCard({ post, categoryTypeSlug }: Props) {
             {post.organizationName}
           </p>
         )}
-        <h3 className="text-sm font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-primary-600 transition-colors">
+        <h3 className="text-sm font-bold text-ink leading-snug line-clamp-2 group-hover:text-primary-600 transition-colors">
           {title}
         </h3>
 
@@ -126,8 +126,11 @@ export default function FeaturedJobCard({ post, categoryTypeSlug }: Props) {
             </span>
           )}
           {days !== Infinity && days > 0 && (
-            <span className="flex items-center gap-1 shrink-0">
-              ⏰ {t(`${toBanglaDigits(days)} দিন বাকি`, `${days}d left`)}
+            <span className={`flex items-center gap-1 shrink-0 ${days <= 3 ? 'text-accent-dark font-semibold' : ''}`}>
+              <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {t(`${toBanglaDigits(days)} দিন বাকি`, `${days}d left`)}
             </span>
           )}
         </div>

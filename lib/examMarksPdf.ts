@@ -8,7 +8,7 @@ import type { AdminExamAttempt } from './types';
  * that file for why: Bengali names need real browser text shaping, which
  * PDF text-embedding libraries don't handle correctly out of the box).
  *
- * The "Job Radar BD • jobradarbd.com" footer is drawn as native PDF text on
+ * The "Job Radar • jobradarbd.com" footer is drawn as native PDF text on
  * every page — reliable regardless of how many attempts span how many
  * pages.
  */
@@ -56,7 +56,7 @@ function buildMarksSheetHtml(examTitle: string, attempts: AdminExamAttempt[]): s
       <div style="display:flex;align-items:center;gap:12px;border-bottom:3px solid #D97706;padding-bottom:16px;margin-bottom:20px;">
         <img src="/icon.png" width="44" height="44" style="border-radius:10px;display:block;" />
         <div>
-          <div style="font-size:19px;font-weight:800;color:#B45309;">Job Radar BD</div>
+          <div style="font-size:19px;font-weight:800;color:#B45309;">Job Radar</div>
           <div style="font-size:12px;color:#6B7280;">jobradarbd.com — মার্কশীট / Exam Marks Sheet</div>
         </div>
       </div>
@@ -129,7 +129,7 @@ export async function downloadExamMarksPdf(examTitle: string, attempts: AdminExa
 
       pdf.setFontSize(8);
       pdf.setTextColor(130);
-      pdf.text('Job Radar BD  •  jobradarbd.com', marginMm, 292);
+      pdf.text('Job Radar  •  jobradarbd.com', marginMm, 292);
       pdf.text(`Page ${page + 1}/${totalPages}`, pdfWidthMm - marginMm, 292, { align: 'right' });
     }
   } finally {

@@ -23,14 +23,19 @@ export default function FeaturedJobsRow({ posts, nameToTypeSlug }: Props) {
         </Link>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 -mx-1 px-1">
-        {posts.map((post) => (
-          <FeaturedJobCard
-            key={post.id}
-            post={post}
-            categoryTypeSlug={nameToTypeSlug[post.categoryNameBn ?? '']}
-          />
-        ))}
+      {/* Relative wrapper so a right-edge fade can hint that the row keeps
+          going off-screen — otherwise nothing signals it's scrollable. */}
+      <div className="relative">
+        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 -mx-1 px-1">
+          {posts.map((post) => (
+            <FeaturedJobCard
+              key={post.id}
+              post={post}
+              categoryTypeSlug={nameToTypeSlug[post.categoryNameBn ?? '']}
+            />
+          ))}
+        </div>
+        <div className="pointer-events-none absolute top-0 right-0 bottom-2 w-10 sm:w-16 bg-gradient-to-l from-cream to-transparent" />
       </div>
     </section>
   );

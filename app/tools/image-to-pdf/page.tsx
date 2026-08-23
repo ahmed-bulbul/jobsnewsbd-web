@@ -34,7 +34,7 @@ const faqItems = [
 ];
 
 export const metadata: Metadata = {
-  title: 'ছবি থেকে PDF | Image to PDF Converter — চাকরির খবর',
+  title: 'ছবি থেকে PDF | Image to PDF Converter — Job Radar',
   description: 'একাধিক JPG, PNG বা WEBP ছবি একসাথে PDF ফাইলে রূপান্তর করুন — সম্পূর্ণ বিনামূল্যে, কোনো আপলোড ছাড়াই | Combine multiple JPG, PNG or WEBP images into one PDF file — free, right in your browser.',
   alternates: { canonical: '/tools/image-to-pdf' },
 };
