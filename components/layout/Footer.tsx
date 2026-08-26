@@ -80,6 +80,7 @@ export default function Footer() {
                 { href: '/privacy-policy', label: t('প্রাইভেসি পলিসি', 'Privacy Policy') },
                 { href: '/terms',          label: t('ব্যবহারের শর্তাবলী', 'Terms & Conditions') },
                 { href: '/disclaimer',     label: t('ডিসক্লেইমার', 'Disclaimer') },
+                { href: '/account-deletion', label: t('অ্যাকাউন্ট মুছে ফেলুন', 'Delete Account') },
               ].map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className="text-primary-300 hover:text-white transition-colors">
