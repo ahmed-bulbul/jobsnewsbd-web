@@ -19,6 +19,7 @@ import type {
   EnrollmentRequest,
   ExamCenterDetail,
   ExamCenterSummary,
+  GoogleSignInLog,
   InstituteReview,
   InstituteReviewSubmission,
   JobExperience,
@@ -1043,6 +1044,9 @@ export const adminGetFeedback = (token: string, status?: string, page = 0, size 
 
 export const adminMarkFeedbackRead = (token: string, id: number) =>
   authPatch<AdminFeedback>(`/api/admin/feedback/${id}/read`, {}, token);
+
+export const adminGetGoogleSignInLogs = (token: string, success?: boolean, page = 0, size = 50) =>
+  authGet<PagedResponse<GoogleSignInLog>>('/api/admin/google-signin-logs', token, { success, page, size });
 
 // ── Users ─────────────────────────────────────────────────────────────────────
 

@@ -777,6 +777,19 @@ export interface AdminFeedback {
   createdAt: string;
 }
 
+export interface GoogleSignInLog {
+  id: number;
+  email: string | null;
+  success: boolean;
+  stage: string;
+  errorMessage: string | null;
+  platform: string | null;
+  appVersion: string | null;
+  osVersion: string | null;
+  deviceModel: string | null;
+  createdAt: string;
+}
+
 // ── Question Bank ──────────────────────────────────────────────────────────────
 
 export type QuestionBankType = 'MCQ' | 'WRITTEN' | 'LAB';
