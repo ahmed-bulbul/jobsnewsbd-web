@@ -119,26 +119,33 @@ export default function HeroSearch({ categoryTypes = [] }: Props) {
           {/* Right: app-download panel — phone mockups, QR code, Google Play badge */}
           <div className="hidden lg:flex items-center justify-center lg:-mr-4">
             <div className="flex items-center gap-6">
-              <div className="max-w-[220px]">
-                <h2 className="font-bold text-xl leading-tight mb-2">
+              <div className="max-w-[240px]">
+                <h2 className="font-bold text-2xl leading-tight mb-2.5">
                   <span className="block text-ink">{t('Job Radar', 'Job Radar')}</span>
                   <span className="block text-primary">{t('অ্যাপ ডাউনলোড করুন', 'Download the app')}</span>
                 </h2>
-                <p className="text-xs text-warm-muted mb-4 leading-relaxed">
+                <p className="text-sm text-warm-muted mb-5 leading-relaxed">
                   {t(
                     'চাকরির খবর, প্রস্তুতি, নোটিশ এবং সবকিছু এক অ্যাপে — যেখানেই থাকুন, বেখেয়াল থাকুন।',
                     'Job news, exam prep, notices and everything else in one app.'
                   )}
                 </p>
-                <div className="flex flex-col items-start gap-2.5">
-                  <Image
-                    src="/qr-google-play.png"
-                    alt={t('Google Play QR কোড', 'Google Play QR code')}
-                    width={72}
-                    height={72}
-                    className="rounded-lg border border-warm-border"
-                  />
-                  <GooglePlayCta />
+                <div className="flex items-center gap-3.5">
+                  <div className="bg-white rounded-xl p-2 shadow-[0_2px_12px_rgba(16,24,32,0.08)] border border-warm-border/70 shrink-0">
+                    <Image
+                      src="/qr-google-play.png"
+                      alt={t('Google Play QR কোড', 'Google Play QR code')}
+                      width={64}
+                      height={64}
+                      className="rounded-md block"
+                    />
+                  </div>
+                  <div className="flex flex-col items-start gap-2">
+                    <span className="text-[11px] text-warm-muted leading-snug">
+                      {t('স্ক্যান করুন, অথবা —', 'Scan, or —')}
+                    </span>
+                    <GooglePlayCta compact />
+                  </div>
                 </div>
               </div>
 
