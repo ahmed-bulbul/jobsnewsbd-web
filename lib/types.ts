@@ -790,6 +790,15 @@ export interface GoogleSignInLog {
   createdAt: string;
 }
 
+export interface Notice {
+  id: number;
+  title: string;
+  body: string;
+  createdByEmail: string;
+  recipientCount: number;
+  createdAt: string;
+}
+
 // ── Question Bank ──────────────────────────────────────────────────────────────
 
 export type QuestionBankType = 'MCQ' | 'WRITTEN' | 'LAB';

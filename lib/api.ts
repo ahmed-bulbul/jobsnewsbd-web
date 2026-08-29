@@ -41,6 +41,7 @@ import type {
   RecommendedBook,
   RecommendedBookRequest,
   MyBookListing,
+  Notice,
   NotificationPreference,
   TipCategory,
   UserProfile,
@@ -1047,6 +1048,14 @@ export const adminMarkFeedbackRead = (token: string, id: number) =>
 
 export const adminGetGoogleSignInLogs = (token: string, success?: boolean, page = 0, size = 50) =>
   authGet<PagedResponse<GoogleSignInLog>>('/api/admin/google-signin-logs', token, { success, page, size });
+
+// ── Notices ───────────────────────────────────────────────────────────────────
+
+export const adminCreateNotice = (token: string, title: string, body: string) =>
+  authPost<Notice>('/api/admin/notices', { title, body }, token);
+
+export const adminGetNotices = (token: string, page = 0, size = 20) =>
+  authGet<PagedResponse<Notice>>('/api/admin/notices', token, { page, size });
 
 // ── Users ─────────────────────────────────────────────────────────────────────
 
