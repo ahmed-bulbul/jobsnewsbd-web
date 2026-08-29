@@ -1,26 +1,20 @@
 'use client';
 
-import { useState } from 'react';
-import { useLanguage } from '@/context/LanguageContext';
-
 // Single reusable "Google Play" touchpoint — used in the hero strip and the
-// homepage app-promo banner. The app is submitted but not live yet, so every
-// instance opens the same Coming Soon modal instead of a dead store link.
+// homepage app-promo banner. The app is now live on the Play Store, so every
+// instance links straight to the real store listing.
+export const GOOGLE_PLAY_URL = 'https://play.google.com/store/apps/details?id=com.jobradarbd.mobile';
+
 interface Props {
   compact?: boolean;
   className?: string;
 }
 
 export default function GooglePlayCta({ compact = false, className = '' }: Props) {
-  const [open, setOpen] = useState(false);
-
   return (
-    <>
-      <button type="button" onClick={() => setOpen(true)} className={className}>
-        <GooglePlayBadge compact={compact} />
-      </button>
-      <ComingSoonModal open={open} onClose={() => setOpen(false)} />
-    </>
+    <a href={GOOGLE_PLAY_URL} target="_blank" rel="noopener noreferrer" className={className}>
+      <GooglePlayBadge compact={compact} />
+    </a>
   );
 }
 
@@ -44,40 +38,5 @@ export function GooglePlayBadge({ compact = false }: { compact?: boolean }) {
         </span>
       </span>
     </span>
-  );
-}
-
-export function ComingSoonModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { t } = useLanguage();
-  if (!open) return null;
-
-  return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm animate-overlay-fade"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-    >
-      <div
-        className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-7 text-center animate-modal-pop"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary-50 flex items-center justify-center text-3xl">
-          🚀
-        </div>
-        <h3 className="text-lg font-bold text-ink mb-2">
-          {t('Job Radar — খুব শীঘ্রই আসছে', 'Job Radar — Coming Soon')}
-        </h3>
-        <p className="text-sm text-ink-soft leading-relaxed mb-6">
-          {t(
-            'আমাদের Job Radar অ্যান্ড্রয়েড অ্যাপটি খুব শীঘ্রই Google Play Store-এ উপলব্ধ হবে।',
-            'Our Job Radar Android app will be available on the Google Play Store very soon.'
-          )}
-        </p>
-        <button type="button" onClick={onClose} className="btn-primary justify-center w-full py-2.5">
-          {t('ঠিক আছে', 'Got it')}
-        </button>
-      </div>
-    </div>
   );
 }
