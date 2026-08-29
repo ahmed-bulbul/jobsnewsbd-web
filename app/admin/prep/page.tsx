@@ -637,6 +637,7 @@ export default function AdminPrepPage() {
   const [routineTitleBn, setRoutineTitleBn] = useState('');
   const [routineTitleEn, setRoutineTitleEn] = useState('');
   const [routineDescription, setRoutineDescription] = useState('');
+  const [routineLocation, setRoutineLocation] = useState('');
   const [routineScheduledAt, setRoutineScheduledAt] = useState('');
   const [routineOrder, setRoutineOrder] = useState('0');
   const [routinePublished, setRoutinePublished] = useState(true);
@@ -969,7 +970,7 @@ export default function AdminPrepPage() {
 
   const resetRoutineForm = () => {
     setEditingRoutine(null); setRoutineTopicId(''); setRoutineExamSetId(''); setRoutineExamSets([]);
-    setRoutineTitleBn(''); setRoutineTitleEn(''); setRoutineDescription('');
+    setRoutineTitleBn(''); setRoutineTitleEn(''); setRoutineDescription(''); setRoutineLocation('');
     setRoutineScheduledAt(''); setRoutineOrder('0'); setRoutinePublished(true);
   };
 
@@ -979,6 +980,7 @@ export default function AdminPrepPage() {
     setRoutineExamSetId(e.examSetId ? String(e.examSetId) : '');
     if (e.topicId) loadRoutineExamSets(String(e.topicId));
     setRoutineTitleBn(e.titleBn); setRoutineTitleEn(e.titleEn ?? ''); setRoutineDescription(e.description ?? '');
+    setRoutineLocation(e.location ?? '');
     setRoutineScheduledAt(e.scheduledAt.slice(0, 16));
     setRoutineOrder(String(e.displayOrder)); setRoutinePublished(e.published);
   };
@@ -992,6 +994,7 @@ export default function AdminPrepPage() {
       titleBn: routineTitleBn,
       titleEn: routineTitleEn || null,
       description: routineDescription || null,
+      location: routineLocation || null,
       scheduledAt: routineScheduledAt,
       displayOrder: Number(routineOrder),
       published: routinePublished,
@@ -1728,6 +1731,8 @@ export default function AdminPrepPage() {
                     <textarea value={routineDescription} onChange={(e) => setRoutineDescription(e.target.value)} rows={2}
                       className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none" />
                   </div>
+
+                  <Field label="স্থান/ভেন্যু (ঐচ্ছিক)" value={routineLocation} onChange={setRoutineLocation} placeholder="যেমন: ঢাকা কলেজ, রুম ৩০৪" />
 
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1">তারিখ ও সময় *</label>

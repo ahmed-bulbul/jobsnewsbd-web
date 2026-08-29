@@ -242,6 +242,7 @@ export interface ExamRoutineEntry {
   titleBn: string;
   titleEn: string | null;
   description: string | null;
+  location: string | null;
   scheduledAt: string;
   displayOrder: number;
   published: boolean;
