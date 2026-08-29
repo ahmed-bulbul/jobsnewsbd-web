@@ -81,6 +81,15 @@ function TopicPicker({
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
 
+  // Keep the category field in sync if a topic is already selected (e.g.
+  // editing) or gets selected some other way — so it never shows "সব
+  // ক্যাটাগরি" while a topic from a specific category is actually chosen.
+  useEffect(() => {
+    if (!value) return;
+    const t = allTopics.find((t) => String(t.id) === value);
+    if (t) setCatFilter(String(t.categoryId));
+  }, [value, allTopics]);
+
   const filtered = useMemo(() => {
     return allTopics.filter((t) => {
       const matchCat = !catFilter || String(t.categoryId) === catFilter;
@@ -93,84 +102,102 @@ function TopicPicker({
 
   const selected = allTopics.find((t) => String(t.id) === value);
 
+  // Category comes first: picking a new category that doesn't contain the
+  // currently selected topic clears the topic, so the two fields never fall
+  // out of sync with each other.
+  const handleCategoryChange = (newCatId: string) => {
+    setCatFilter(newCatId);
+    if (selected && String(selected.categoryId) !== newCatId) {
+      onChange('');
+    }
+  };
+
   return (
-    <div>
-      <label className="block text-xs font-semibold text-gray-600 mb-1">বিষয় (Topic) *</label>
+    <div className="space-y-3">
+      {/* Step 1: category — always visible, never hidden inside the topic dropdown */}
+      <div>
+        <label className="block text-xs font-semibold text-gray-600 mb-1">ক্যাটাগরি *</label>
+        <select
+          value={catFilter}
+          onChange={(e) => handleCategoryChange(e.target.value)}
+          className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary bg-white"
+        >
+          <option value="">সব ক্যাটাগরি</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>{c.nameBn}</option>
+          ))}
+        </select>
+      </div>
 
-      {/* Selected display / toggle */}
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className={`w-full border rounded-lg px-3 py-2 text-sm text-left flex items-center justify-between transition-colors ${
-          open ? 'border-primary ring-1 ring-primary' : 'border-warm-border hover:border-gray-400'
-        }`}
-      >
-        {selected ? (
-          <span>
-            <span className="font-medium text-gray-900">{selected.nameBn}</span>
-            <span className="text-warm-muted ml-1.5 text-xs">— {selected.categoryNameBn}</span>
-          </span>
-        ) : (
-          <span className="text-warm-muted">বিষয় বেছে নিন...</span>
-        )}
-        <svg className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
+      {/* Step 2: topic — filtered by the category chosen above */}
+      <div>
+        <label className="block text-xs font-semibold text-gray-600 mb-1">বিষয় (Topic) *</label>
 
-      {open && (
-        <div className="mt-1 border border-warm-border rounded-xl bg-white shadow-lg overflow-hidden z-10">
-          {/* Filters */}
-          <div className="p-2 space-y-2 border-b border-warm-border bg-gray-50">
-            {/* Category filter */}
-            <select
-              value={catFilter}
-              onChange={(e) => setCatFilter(e.target.value)}
-              className="w-full border border-warm-border rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-primary bg-white"
-            >
-              <option value="">সব ক্যাটাগরি</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.nameBn}</option>
-              ))}
-            </select>
-            {/* Search */}
-            <div className="relative">
-              <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                autoFocus
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="বিষয় খুঁজুন..."
-                className="w-full border border-warm-border rounded-lg pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:border-primary"
-              />
+        {/* Selected display / toggle */}
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className={`w-full border rounded-lg px-3 py-2 text-sm text-left flex items-center justify-between transition-colors ${
+            open ? 'border-primary ring-1 ring-primary' : 'border-warm-border hover:border-gray-400'
+          }`}
+        >
+          {selected ? (
+            <span>
+              <span className="font-medium text-gray-900">{selected.nameBn}</span>
+              <span className="text-warm-muted ml-1.5 text-xs">— {selected.categoryNameBn}</span>
+            </span>
+          ) : (
+            <span className="text-warm-muted">বিষয় বেছে নিন...</span>
+          )}
+          <svg className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {open && (
+          <div className="mt-1 border border-warm-border rounded-xl bg-white shadow-lg overflow-hidden z-10">
+            {/* Search only — category is already chosen above */}
+            <div className="p-2 border-b border-warm-border bg-gray-50">
+              <div className="relative">
+                <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  autoFocus
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="বিষয় খুঁজুন..."
+                  className="w-full border border-warm-border rounded-lg pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+
+            {/* Topic list */}
+            <div className="max-h-52 overflow-y-auto">
+              {filtered.length === 0 ? (
+                <p className="text-center text-xs text-warm-muted py-4">
+                  কোনো বিষয় পাওয়া যায়নি{catFilter ? ' — অন্য ক্যাটাগরি বেছে দেখুন' : ''}
+                </p>
+              ) : (
+                filtered.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => { onChange(String(t.id)); setOpen(false); setSearch(''); }}
+                    className={`w-full text-left px-3 py-2.5 text-sm hover:bg-primary-50 transition-colors flex items-center justify-between ${
+                      String(t.id) === value ? 'bg-primary-50 text-primary font-semibold' : 'text-gray-800'
+                    }`}
+                  >
+                    <span>{t.nameBn}</span>
+                    <span className="text-xs text-warm-muted ml-2 shrink-0">{t.categoryNameBn}</span>
+                  </button>
+                ))
+              )}
             </div>
           </div>
-
-          {/* Topic list */}
-          <div className="max-h-52 overflow-y-auto">
-            {filtered.length === 0 ? (
-              <p className="text-center text-xs text-warm-muted py-4">কোনো বিষয় পাওয়া যায়নি</p>
-            ) : (
-              filtered.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => { onChange(String(t.id)); setOpen(false); setSearch(''); }}
-                  className={`w-full text-left px-3 py-2.5 text-sm hover:bg-primary-50 transition-colors flex items-center justify-between ${
-                    String(t.id) === value ? 'bg-primary-50 text-primary font-semibold' : 'text-gray-800'
-                  }`}
-                >
-                  <span>{t.nameBn}</span>
-                  <span className="text-xs text-warm-muted ml-2 shrink-0">{t.categoryNameBn}</span>
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
