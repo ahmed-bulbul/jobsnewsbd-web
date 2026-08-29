@@ -33,7 +33,7 @@ export function GooglePlayBadge({ compact = false }: { compact?: boolean }) {
       </svg>
       <span className="flex flex-col leading-tight text-left">
         {!compact && <span className="text-[9px] uppercase tracking-wide text-gray-300">Get it on</span>}
-        <span className={compact ? 'text-xs font-medium' : 'text-base font-medium -mt-0.5'} style={{ fontFamily: 'sans-serif' }}>
+        <span className={`whitespace-nowrap ${compact ? 'text-xs font-medium' : 'text-base font-medium -mt-0.5'}`} style={{ fontFamily: 'sans-serif' }}>
           Google Play
         </span>
       </span>

@@ -83,8 +83,6 @@ export default async function HomePage() {
 
         <SuccessStories experiences={successStories.content} />
 
-        <AppDownloadBanner />
-
         {/* Categories */}
         <CategoryPills categoryTypes={categoryTypes} categories={categories} />
 
@@ -118,6 +116,8 @@ export default async function HomePage() {
         </section>
 
         <FaqSection />
+
+        <AppDownloadBanner />
 
         {/* Stats bar — closing summary just above the footer */}
         <div className="bg-primary-900 text-white">

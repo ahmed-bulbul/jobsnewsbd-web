@@ -80,7 +80,7 @@ export default function FeaturedJobCard({ post, categoryTypeSlug }: Props) {
   const emoji = categoryTypeEmoji(categoryTypeSlug ?? '');
 
   return (
-    <div className="card w-64 shrink-0 snap-start p-4 flex flex-col gap-3">
+    <div className="card p-4 flex flex-col gap-3 h-full">
       {/* Top row: badge + bookmark */}
       <div className="flex items-center justify-between">
         {isNew ? (
@@ -115,7 +115,7 @@ export default function FeaturedJobCard({ post, categoryTypeSlug }: Props) {
           {title}
         </h3>
 
-        <div className="flex items-center gap-3 text-xs text-warm-muted mt-auto pt-1">
+        <div className="flex items-center gap-3 text-xs text-warm-muted mt-auto pt-1 flex-wrap">
           {post.district && (
             <span className="flex items-center gap-1 truncate">
               <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,6 +123,14 @@ export default function FeaturedJobCard({ post, categoryTypeSlug }: Props) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               {post.district}
+            </span>
+          )}
+          {typeof post.vacancyCount === 'number' && post.vacancyCount > 0 && (
+            <span className="flex items-center gap-1 truncate">
+              <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4" />
+              </svg>
+              {t(`${toBanglaDigits(post.vacancyCount)} পদ`, `${post.vacancyCount} posts`)}
             </span>
           )}
           {days !== Infinity && days > 0 && (

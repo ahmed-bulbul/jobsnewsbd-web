@@ -23,19 +23,16 @@ export default function FeaturedJobsRow({ posts, nameToTypeSlug }: Props) {
         </Link>
       </div>
 
-      {/* Relative wrapper so a right-edge fade can hint that the row keeps
-          going off-screen — otherwise nothing signals it's scrollable. */}
-      <div className="relative">
-        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 -mx-1 px-1">
-          {posts.map((post) => (
-            <FeaturedJobCard
-              key={post.id}
-              post={post}
-              categoryTypeSlug={nameToTypeSlug[post.categoryNameBn ?? '']}
-            />
-          ))}
-        </div>
-        <div className="pointer-events-none absolute top-0 right-0 bottom-2 w-10 sm:w-16 bg-gradient-to-l from-cream to-transparent" />
+      {/* Responsive grid instead of a horizontal-scroll row — every card is
+          visible at a glance on desktop, no swipe/scroll-fade needed. */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        {posts.map((post) => (
+          <FeaturedJobCard
+            key={post.id}
+            post={post}
+            categoryTypeSlug={nameToTypeSlug[post.categoryNameBn ?? '']}
+          />
+        ))}
       </div>
     </section>
   );
