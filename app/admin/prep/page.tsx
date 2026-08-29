@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import RichTextEditor from '@/components/ui/RichTextEditor';
 import {
   getPrepCategories,
   getPrepCategory,
@@ -1332,12 +1333,11 @@ export default function AdminPrepPage() {
               {(contentType === 'POST' || contentType === 'QUIZ') && (
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1">বডি / কন্টেন্ট</label>
-                  <textarea
+                  <RichTextEditor
                     value={contentBody}
-                    onChange={(e) => setContentBody(e.target.value)}
-                    rows={5}
+                    onChange={setContentBody}
+                    token={token}
                     placeholder="আর্টিকেলের বিষয়বস্তু লিখুন..."
-                    className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none"
                   />
                 </div>
               )}

@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
+import DOMPurify from 'isomorphic-dompurify';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useLanguage } from '@/context/LanguageContext';
@@ -37,11 +38,16 @@ function VideoPlayer({ url }: { url: string }) {
   );
 }
 
+// Body is admin-authored rich HTML (from the RichTextEditor). Sanitize again
+// here as defense in depth before rendering — the typography plugin's
+// `prose` classes give it nice default article styling (headings, lists,
+// blockquotes, images) without any extra markup needed.
 function MarkdownBody({ body }: { body: string }) {
+  const clean = DOMPurify.sanitize(body);
   return (
     <div
-      className="prose prose-sm max-w-none text-gray-700 leading-relaxed"
-      dangerouslySetInnerHTML={{ __html: body.replace(/\n/g, '<br/>') }}
+      className="prose prose-sm sm:prose-base max-w-none text-gray-700 prose-headings:text-gray-900 prose-a:text-primary prose-img:rounded-xl"
+      dangerouslySetInnerHTML={{ __html: clean }}
     />
   );
 }
