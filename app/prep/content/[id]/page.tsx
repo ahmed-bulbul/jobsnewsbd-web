@@ -2,13 +2,13 @@
 
 import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
-import DOMPurify from 'isomorphic-dompurify';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
 import { getPrepContent } from '@/lib/api';
 import PdfViewerDynamic from '@/components/ui/PdfViewerDynamic';
+import MarkdownBody from '@/components/prep/MarkdownBodyDynamic';
 import type { PrepContent } from '@/lib/types';
 
 function extractYouTubeId(url: string): string | null {
@@ -35,20 +35,6 @@ function VideoPlayer({ url }: { url: string }) {
         title="YouTube video"
       />
     </div>
-  );
-}
-
-// Body is admin-authored rich HTML (from the RichTextEditor). Sanitize again
-// here as defense in depth before rendering — the typography plugin's
-// `prose` classes give it nice default article styling (headings, lists,
-// blockquotes, images) without any extra markup needed.
-function MarkdownBody({ body }: { body: string }) {
-  const clean = DOMPurify.sanitize(body);
-  return (
-    <div
-      className="prose prose-sm sm:prose-base max-w-none text-gray-700 prose-headings:text-gray-900 prose-a:text-primary prose-img:rounded-xl"
-      dangerouslySetInnerHTML={{ __html: clean }}
-    />
   );
 }
 

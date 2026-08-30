@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import T from '@/components/ui/T';
-import PdfToJpgConverter from '@/components/tools/PdfToJpgConverter';
+import PdfToJpgConverter from '@/components/tools/PdfToJpgConverterDynamic';
 import ToolFaq from '@/components/tools/ToolFaq';
 import type { Metadata } from 'next';
 
