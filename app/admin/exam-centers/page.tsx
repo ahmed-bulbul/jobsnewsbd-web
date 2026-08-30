@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import { jsonrepair } from 'jsonrepair';
 import {
   adminGetExamCenters,
   adminCreateExamCenter,
@@ -15,6 +16,172 @@ import {
 import type { ExamCenterDetail, ExamCenterSummary } from '@/lib/types';
 
 const EMPTY_FORM = { nameBn: '', nameEn: '', area: '', address: '', mapsUrl: '' };
+
+// ── AI bulk import (JSON paste) ─────────────────────────────────────────────
+// Mirrors BulkQuestionBankImport in web/app/admin/question-bank/page.tsx: no
+// dedicated backend bulk endpoint — this loops the existing single-item
+// POST /api/admin/exam-centers create call once per parsed item.
+
+function BulkExamCenterImport({
+  token,
+  onDone,
+}: {
+  token: string;
+  onDone: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [areaHint, setAreaHint] = useState('');
+  const [raw, setRaw] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [error, setError] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [parseErrorDetail, setParseErrorDetail] = useState('');
+
+  const promptTemplate = (area: string) => `তুমি একজন ডেটা এক্সট্র্যাক্ট করার বিশেষজ্ঞ। এলাকা: ${area ? `"${area}"` : '[এলাকার নাম এখানে লিখুন, যেমন: যাত্রাবাড়ী]'}
+
+আমি এর পরের মেসেজে পরীক্ষা কেন্দ্রের (স্কুল/কলেজ) একটি তালিকা দেব — টেক্সট, ছবি, অথবা কোনো ওয়েবসাইট/লিস্ট থেকে কপি করা কনটেন্ট আকারে। প্রতিটি প্রতিষ্ঠানকে একটি পরীক্ষা কেন্দ্র হিসেবে ধরে নিচের ফরম্যাটে একটি JSON অ্যারে দাও — অন্য কোনো লেখা, ভূমিকা, ব্যাখ্যা বা \`\`\` কোড ফেন্স ছাড়া:
+
+[
+  { "nameBn": "বাংলা নাম (আবশ্যক)", "nameEn": "English name (থাকলে দাও, না থাকলে null)", "area": "এলাকা/থানা (আবশ্যক)", "address": "সম্পূর্ণ ঠিকানা (আবশ্যক)", "mapsUrl": "Google Maps লিংক (থাকলে দাও, না থাকলে null)" }
+]
+
+নিয়ম:
+- "nameBn", "area", "address" — এই তিনটি ফিল্ড কখনো খালি রাখা যাবে না; প্রতিষ্ঠানের নাম বাংলায় না পেলে ইংরেজি নামটাই "nameBn"-এ বসাও।
+- "nameEn" ও "mapsUrl" ঐচ্ছিক — নিশ্চিত না হলে null দাও, অনুমান করে বানিয়ে দিও না।
+- "address" যতটা সম্ভব বিস্তারিত দাও (রোড/এলাকা/থানা/জেলা) — শুধু এলাকার নাম পুনরাবৃত্তি কোরো না, যদি আলাদা তথ্য থাকে।
+- একই প্রতিষ্ঠান দুইবার তালিকায় থাকলে একবারই দাও।
+
+⚠️ বৈধ JSON বাধ্যতামূলক (এটি সবচেয়ে গুরুত্বপূর্ণ নিয়ম):
+- প্রতিটি স্ট্রিং ভ্যালুতে ডাবল-কোট (") থাকলে \\" দিয়ে এস্কেপ করো, নতুন লাইন থাকলে \\n দিয়ে।
+- আউটপুট দেওয়ার আগে নিজে মানসিকভাবে যাচাই করো যে পুরো আউটপুটটি JSON.parse() দিয়ে সরাসরি পার্স করা যাবে — কোনো ট্রেইলিং কমা বা আনক্লোজড কোট থাকা যাবে না।
+- আউটপুট শুধু JSON অ্যারে — কোনো ভূমিকা, উপসংহার বা কোড ব্লক মার্কার নয়।`;
+
+  const copyPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(promptTemplate(areaHint));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* clipboard unavailable — ignore */ }
+  };
+
+  // Same straight-parse → jsonrepair-fallback approach as the Question Bank
+  // bulk importer, since AI JSON output isn't guaranteed strictly valid.
+  const parseItems = (): Array<Record<string, unknown>> | null => {
+    setParseErrorDetail('');
+    const cleaned = raw.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+    try {
+      const data = JSON.parse(cleaned);
+      return Array.isArray(data) ? data : null;
+    } catch (e1) {
+      try {
+        const repaired = jsonrepair(cleaned);
+        const data = JSON.parse(repaired);
+        return Array.isArray(data) ? data : null;
+      } catch {
+        setParseErrorDetail(e1 instanceof Error ? e1.message : String(e1));
+        return null;
+      }
+    }
+  };
+
+  const submitAll = async () => {
+    setError('');
+    const items = parseItems();
+    if (!items || items.length === 0) {
+      setError(
+        `বৈধ JSON অ্যারে পাওয়া যায়নি — অটো-ফিক্সও ব্যর্থ হয়েছে।` +
+        (parseErrorDetail ? ` (টেকনিক্যাল ত্রুটি: ${parseErrorDetail})` : '')
+      );
+      return;
+    }
+
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i] as Record<string, unknown>;
+      const missing = ['nameBn', 'area', 'address']
+        .filter((k) => typeof it[k] !== 'string' || !(it[k] as string).trim());
+      if (missing.length > 0) {
+        setError(`কেন্দ্র ${i + 1}: এই ফিল্ডগুলো নেই বা খালি — ${missing.join(', ')}`);
+        return;
+      }
+    }
+
+    setBusy(true);
+    setProgress({ done: 0, total: items.length });
+    let successCount = 0;
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i] as Record<string, unknown>;
+      const body = {
+        nameBn: String(it.nameBn).trim(),
+        nameEn: it.nameEn ? String(it.nameEn).trim() : '',
+        area: String(it.area).trim(),
+        address: String(it.address).trim(),
+        mapsUrl: it.mapsUrl ? String(it.mapsUrl).trim() : '',
+      };
+      try {
+        await adminCreateExamCenter(token, body);
+        successCount++;
+        setProgress({ done: i + 1, total: items.length });
+      } catch {
+        setBusy(false);
+        setError(`কেন্দ্র ${i + 1} সংরক্ষণ ব্যর্থ হয়েছে — এর আগের ${successCount}টি ঠিকভাবে যোগ হয়েছে, বাকিগুলো আবার চেষ্টা করুন।`);
+        if (successCount > 0) onDone();
+        return;
+      }
+    }
+    setBusy(false);
+    setProgress(null);
+    setRaw('');
+    onDone();
+  };
+
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)}
+        className="w-full border-2 border-dashed border-indigo-200 bg-indigo-50/60 rounded-xl py-2.5 text-sm text-indigo-700 font-semibold hover:bg-indigo-50 transition-colors mb-4">
+        ✨ AI দিয়ে বাল্ক এক্সাম সেন্টার যোগ করুন
+      </button>
+    );
+  }
+
+  return (
+    <div className="bg-indigo-50/40 border border-indigo-100 rounded-2xl p-4 space-y-3 mb-4">
+      <div className="flex items-center justify-between">
+        <h3 className="font-bold text-gray-800 text-sm">✨ AI দিয়ে বাল্ক এক্সাম সেন্টার যোগ করুন</h3>
+        <button onClick={() => { setOpen(false); setRaw(''); setError(''); }} className="text-xs text-gray-500 hover:text-gray-700">বন্ধ করুন</button>
+      </div>
+
+      <p className="text-xs text-gray-500 leading-relaxed">
+        ১) এলাকা লিখে প্রম্পট কপি করুন → ২) যেকোনো AI চ্যাটে (ChatGPT/Claude/Gemini) পেস্ট করে কেন্দ্রের তালিকা (টেক্সট/ছবি) যোগ করুন → ৩) AI-এর JSON আউটপুট নিচে পেস্ট করে একবারে সব কেন্দ্র যোগ করুন।
+      </p>
+
+      <div className="flex gap-2">
+        <input type="text" value={areaHint} onChange={(e) => setAreaHint(e.target.value)}
+          placeholder="এলাকা (যেমন: যাত্রাবাড়ী)"
+          className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500" />
+        <button type="button" onClick={copyPrompt}
+          className="shrink-0 px-3 py-2 text-xs font-semibold border border-indigo-300 text-indigo-700 rounded-lg hover:bg-indigo-50">
+          {copied ? '✓ কপি হয়েছে' : '📋 প্রম্পট কপি করুন'}
+        </button>
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-gray-600 mb-1">AI-এর JSON আউটপুট এখানে পেস্ট করুন</label>
+        <textarea value={raw} onChange={(e) => setRaw(e.target.value)} rows={8}
+          placeholder='[{"nameBn": "...", "nameEn": "...", "area": "...", "address": "...", "mapsUrl": null}]'
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 resize-y" />
+      </div>
+
+      {error && <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</p>}
+      {progress && <p className="text-xs text-indigo-700 font-medium">{progress.done}/{progress.total} কেন্দ্র যোগ হয়েছে...</p>}
+
+      <button onClick={submitAll} disabled={busy || !raw.trim()}
+        className="w-full bg-indigo-600 text-white rounded-xl py-2 text-sm font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50">
+        {busy ? 'যোগ হচ্ছে...' : 'সব কেন্দ্র এক ক্লিকে যোগ করুন'}
+      </button>
+    </div>
+  );
+}
 
 export default function AdminExamCentersPage() {
   const router = useRouter();
@@ -125,6 +292,8 @@ export default function AdminExamCentersPage() {
             + Add Center
           </button>
         </div>
+
+        <BulkExamCenterImport token={token} onDone={() => load(token)} />
 
         {/* Centers table */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
