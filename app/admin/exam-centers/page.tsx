@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import Link from 'next/link';
 import { jsonrepair } from 'jsonrepair';
 import {
   adminGetExamCenters,
@@ -11,9 +10,12 @@ import {
   adminUpdateExamCenter,
   adminDeleteExamCenter,
   adminUploadExamCenterPhoto,
-  adminDeleteCenterTip,
 } from '@/lib/api';
-import type { ExamCenterDetail, ExamCenterSummary } from '@/lib/types';
+import AdminShell from '@/components/admin/AdminShell';
+import PageHeader from '@/components/admin/PageHeader';
+import Table, { type TableColumn } from '@/components/admin/Table';
+import Modal from '@/components/admin/Modal';
+import type { ExamCenterSummary } from '@/lib/types';
 
 const EMPTY_FORM = { nameBn: '', nameEn: '', area: '', address: '', mapsUrl: '' };
 
@@ -186,6 +188,7 @@ function BulkExamCenterImport({
 export default function AdminExamCentersPage() {
   const router = useRouter();
   const [token, setToken] = useState('');
+  const [adminName, setAdminName] = useState('');
   const [centers, setCenters] = useState<ExamCenterSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState('');
@@ -207,8 +210,10 @@ export default function AdminExamCentersPage() {
 
   useEffect(() => {
     const t = localStorage.getItem('admin_token');
+    const n = localStorage.getItem('admin_name');
     if (!t) { router.push('/admin/login'); return; }
     setToken(t);
+    setAdminName(n ?? 'Admin');
     load(t).finally(() => setLoading(false));
   }, [router, load]);
 
@@ -225,28 +230,28 @@ export default function AdminExamCentersPage() {
     try {
       if (editing) {
         await adminUpdateExamCenter(token, editing.id, form);
-        flash(`Updated: ${form.nameBn}`);
+        flash(`হালনাগাদ হয়েছে: ${form.nameBn}`);
       } else {
         await adminCreateExamCenter(token, form);
-        flash(`Created: ${form.nameBn}`);
+        flash(`যোগ হয়েছে: ${form.nameBn}`);
       }
       await load(token);
       setShowForm(false);
     } catch {
-      flash('Error saving center');
+      flash('সংরক্ষণে সমস্যা হয়েছে');
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (c: ExamCenterSummary) => {
-    if (!confirm(`Delete "${c.nameBn}"? This removes all tips and votes.`)) return;
+    if (!confirm(`"${c.nameBn}" মুছে ফেলবেন? এর সব টিপস ও ভোটও মুছে যাবে।`)) return;
     try {
       await adminDeleteExamCenter(token, c.id);
       setCenters((prev) => prev.filter((x) => x.id !== c.id));
-      flash('Deleted');
+      flash('মুছে ফেলা হয়েছে');
     } catch {
-      flash('Error deleting');
+      flash('মুছতে সমস্যা হয়েছে');
     }
   };
 
@@ -258,155 +263,120 @@ export default function AdminExamCentersPage() {
       await adminUploadExamCenterPhoto(token, photoTarget.id, file);
       await load(token);
       setPhotoTarget(null);
-      flash('Photo uploaded');
+      flash('ছবি আপলোড হয়েছে');
     } catch {
-      flash('Photo upload failed');
+      flash('ছবি আপলোড ব্যর্থ হয়েছে');
     } finally {
       setUploading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full" />
-      </div>
-    );
-  }
+  const columns: TableColumn<ExamCenterSummary>[] = [
+    {
+      key: 'photo',
+      header: 'ছবি',
+      render: (c) => (
+        <div className="w-12 h-12 rounded-lg overflow-hidden bg-cream flex items-center justify-center shrink-0">
+          {c.photoUrl
+            ? <Image src={c.photoUrl} alt={c.nameBn} width={48} height={48} className="object-cover w-full h-full" />
+            : <span className="text-warm-muted text-lg">🏫</span>}
+        </div>
+      ),
+    },
+    {
+      key: 'name',
+      header: 'নাম',
+      render: (c) => (
+        <>
+          <p className="font-medium text-gray-900">{c.nameBn}</p>
+          <p className="text-xs text-warm-muted">{c.nameEn}</p>
+        </>
+      ),
+    },
+    { key: 'area', header: 'এলাকা', render: (c) => <span className="text-gray-700">{c.area}</span> },
+    { key: 'tips', header: 'টিপস', render: (c) => <span className="text-gray-700">{c.tipCount}</span> },
+    {
+      key: 'votes',
+      header: 'মোবাইল ভোট',
+      render: (c) => (
+        <span>
+          <span className="text-emerald-700">✅ {c.mobileAllowed}</span>
+          {' / '}
+          <span className="text-red-600">❌ {c.mobileNotAllowed}</span>
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'কার্যক্রম',
+      align: 'right',
+      render: (c) => (
+        <div className="flex items-center gap-2 justify-end">
+          <button onClick={() => setPhotoTarget(c)} className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">ছবি</button>
+          <button onClick={() => openEdit(c)} className="text-xs px-2 py-1 bg-primary-50 text-primary-700 rounded-lg hover:bg-primary-100 transition-colors">সম্পাদনা</button>
+          <button onClick={() => handleDelete(c)} className="text-xs px-2 py-1 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors">মুছুন</button>
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      {msg && (
-        <div className="fixed top-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-xs bg-indigo-600 text-white px-4 py-2 rounded-lg shadow z-50 text-sm">{msg}</div>
-      )}
+    <AdminShell title="পরীক্ষা কেন্দ্র" subtitle={`${centers.length}টি কেন্দ্র`} adminName={adminName} token={token}>
+      <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-6xl mx-auto">
+        {loading ? (
+          <p className="text-sm text-warm-muted py-12 text-center">লোড হচ্ছে...</p>
+        ) : (
+          <>
+            {msg && (
+              <div className="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-3 text-sm font-medium animate-fade-up">
+                ✅ {msg}
+              </div>
+            )}
 
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-          <div>
-            <Link href="/admin/dashboard" className="text-sm text-indigo-600 hover:underline mb-1 inline-block">← Dashboard</Link>
-            <h1 className="text-2xl font-bold text-gray-900">Exam Centers</h1>
-            <p className="text-sm text-gray-500">{centers.length} centers</p>
-          </div>
-          <button onClick={openCreate} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors self-start sm:self-auto">
-            + Add Center
-          </button>
-        </div>
+            <PageHeader
+              title="পরীক্ষা কেন্দ্রের তালিকা"
+              actions={<button onClick={openCreate} className="btn-primary">+ কেন্দ্র যোগ করুন</button>}
+            />
 
-        <BulkExamCenterImport token={token} onDone={() => load(token)} />
+            <BulkExamCenterImport token={token} onDone={() => load(token)} />
 
-        {/* Centers table */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
-          {centers.length === 0 ? (
-            <div className="text-center py-16 text-gray-400">No exam centers yet.</div>
-          ) : (
-            <table className="w-full min-w-[640px] text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left px-4 py-3 text-gray-500 font-medium">Photo</th>
-                  <th className="text-left px-4 py-3 text-gray-500 font-medium">Name</th>
-                  <th className="text-left px-4 py-3 text-gray-500 font-medium">Area</th>
-                  <th className="text-left px-4 py-3 text-gray-500 font-medium">Tips</th>
-                  <th className="text-left px-4 py-3 text-gray-500 font-medium">Mobile Votes</th>
-                  <th className="text-right px-4 py-3 text-gray-500 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {centers.map((c) => (
-                  <tr key={c.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
-                        {c.photoUrl
-                          ? <Image src={c.photoUrl} alt={c.nameBn} width={48} height={48} className="object-cover w-full h-full" />
-                          : <span className="text-gray-400 text-lg">🏫</span>}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-gray-900">{c.nameBn}</p>
-                      <p className="text-xs text-gray-500">{c.nameEn}</p>
-                    </td>
-                    <td className="px-4 py-3 text-gray-700">{c.area}</td>
-                    <td className="px-4 py-3 text-gray-700">{c.tipCount}</td>
-                    <td className="px-4 py-3">
-                      <span className="text-emerald-700">✅ {c.mobileAllowed}</span>
-                      {' / '}
-                      <span className="text-red-600">❌ {c.mobileNotAllowed}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2 justify-end">
-                        <button
-                          onClick={() => setPhotoTarget(c)}
-                          className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition-colors"
-                        >
-                          Photo
-                        </button>
-                        <button
-                          onClick={() => openEdit(c)}
-                          className="text-xs px-2 py-1 bg-indigo-50 text-indigo-700 rounded hover:bg-indigo-100 transition-colors"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(c)}
-                          className="text-xs px-2 py-1 bg-red-50 text-red-600 rounded hover:bg-red-100 transition-colors"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+            <Table columns={columns} data={centers} rowKey={(c) => c.id} emptyMessage="কোনো পরীক্ষা কেন্দ্র নেই" />
+          </>
+        )}
       </div>
 
-      {/* Create/Edit modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-5 border-b border-gray-200">
-              <h2 className="font-bold text-gray-900">{editing ? 'Edit Center' : 'Add Center'}</h2>
-              <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+      <Modal open={showForm} onClose={() => setShowForm(false)} title={editing ? 'কেন্দ্র সম্পাদনা' : 'কেন্দ্র যোগ করুন'} maxWidth="max-w-md">
+        <form onSubmit={handleSave} className="space-y-3">
+          {[
+            { label: 'নাম (বাংলা)', key: 'nameBn', required: true },
+            { label: 'নাম (ইংরেজি)', key: 'nameEn', required: true },
+            { label: 'এলাকা', key: 'area', required: true },
+            { label: 'ঠিকানা', key: 'address', required: true },
+            { label: 'Google Maps URL', key: 'mapsUrl', required: false },
+          ].map(({ label, key, required }) => (
+            <div key={key}>
+              <label className="label">{label}</label>
+              <input
+                value={form[key as keyof typeof form]}
+                onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+                required={required}
+                className="input"
+              />
             </div>
-            <form onSubmit={handleSave} className="p-5 space-y-3">
-              {[
-                { label: 'Name (Bengali)', key: 'nameBn', required: true },
-                { label: 'Name (English)', key: 'nameEn', required: true },
-                { label: 'Area', key: 'area', required: true },
-                { label: 'Address', key: 'address', required: true },
-                { label: 'Google Maps URL', key: 'mapsUrl', required: false },
-              ].map(({ label, key, required }) => (
-                <div key={key}>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
-                  <input
-                    value={form[key as keyof typeof form]}
-                    onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
-                    required={required}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-              ))}
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">
-                  Cancel
-                </button>
-                <button type="submit" disabled={saving} className="flex-1 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50">
-                  {saving ? 'Saving...' : editing ? 'Update' : 'Create'}
-                </button>
-              </div>
-            </form>
+          ))}
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={() => setShowForm(false)} className="btn-outline flex-1 justify-center">বাতিল</button>
+            <button type="submit" disabled={saving} className="btn-primary flex-1 justify-center disabled:opacity-50">
+              {saving ? 'সংরক্ষণ হচ্ছে...' : editing ? 'হালনাগাদ করুন' : 'তৈরি করুন'}
+            </button>
           </div>
-        </div>
-      )}
+        </form>
+      </Modal>
 
-      {/* Photo upload modal */}
-      {photoTarget && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h2 className="font-bold text-gray-900 mb-1">Upload Photo</h2>
-            <p className="text-sm text-gray-500 mb-4">{photoTarget.nameBn}</p>
+      <Modal open={!!photoTarget} onClose={() => setPhotoTarget(null)} title="ছবি আপলোড করুন" maxWidth="max-w-sm">
+        {photoTarget && (
+          <>
+            <p className="text-sm text-warm-muted mb-4">{photoTarget.nameBn}</p>
             {photoTarget.photoUrl && (
               <div className="relative h-32 mb-4 rounded-lg overflow-hidden">
                 <Image src={photoTarget.photoUrl} alt={photoTarget.nameBn} fill className="object-cover" />
@@ -417,15 +387,13 @@ export default function AdminExamCentersPage() {
               accept="image/*"
               onChange={handlePhotoUpload}
               disabled={uploading}
-              className="block w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+              className="block w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
             />
-            {uploading && <p className="text-sm text-indigo-600 mt-2">Uploading...</p>}
-            <button onClick={() => setPhotoTarget(null)} className="mt-4 w-full py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50">
-              Close
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+            {uploading && <p className="text-sm text-primary-600 mt-2">আপলোড হচ্ছে...</p>}
+            <button onClick={() => setPhotoTarget(null)} className="btn-outline w-full justify-center mt-4">বন্ধ করুন</button>
+          </>
+        )}
+      </Modal>
+    </AdminShell>
   );
 }

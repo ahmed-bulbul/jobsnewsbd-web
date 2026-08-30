@@ -9,6 +9,9 @@ import {
   adminUploadOrganizationLogo, adminDeleteOrganizationLogo, adminSetOrganizationLogoUrl,
   getCategoryTypes, getCategories, getPostTypes,
 } from '@/lib/api';
+import AdminShell from '@/components/admin/AdminShell';
+import PageHeader from '@/components/admin/PageHeader';
+import Badge from '@/components/admin/Badge';
 import type { CategoryType, Category, PostType, Post } from '@/lib/types';
 
 interface Props { params: Promise<{ id: string }> }
@@ -48,6 +51,7 @@ export default function EditPostPage({ params }: Props) {
   const router = useRouter();
   const [id, setId]               = useState(0);
   const [token, setToken]         = useState('');
+  const [adminName, setAdminName] = useState('');
   const [categoryTypes, setCategoryTypes] = useState<CategoryType[]>([]);
   const [categories, setCategories]       = useState<Category[]>([]);
   const [postTypes, setPostTypes]         = useState<PostType[]>([]);
@@ -80,8 +84,10 @@ export default function EditPostPage({ params }: Props) {
   useEffect(() => {
     params.then(async ({ id: paramId }) => {
       const t = localStorage.getItem('admin_token');
+      const n = localStorage.getItem('admin_name');
       if (!t) { router.push('/admin/login'); return; }
       setToken(t);
+      setAdminName(n ?? 'Admin');
       const numId = Number(paramId);
       setId(numId);
 
@@ -237,29 +243,30 @@ export default function EditPostPage({ params }: Props) {
     }
   };
 
-  if (loading) return (
-    <div className="min-h-screen bg-cream flex items-center justify-center text-primary animate-pulse">
-      লোড হচ্ছে...
-    </div>
-  );
+  if (loading) {
+    return (
+      <AdminShell title="বিজ্ঞপ্তি সম্পাদনা" adminName={adminName} token={token}>
+        <div className="flex items-center justify-center py-24 text-warm-muted">লোড হচ্ছে...</div>
+      </AdminShell>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-cream">
-      <header className="bg-primary-900 text-white px-6 py-4 flex items-center gap-4">
-        <Link href="/admin/dashboard" className="text-primary-300 hover:text-white text-sm">← ড্যাশবোর্ড</Link>
-        <h1 className="font-bold">বিজ্ঞপ্তি সম্পাদনা</h1>
-        {viewCount > 0 && (
-          <span className="ml-auto flex items-center gap-1.5 text-xs bg-violet-500/20 text-violet-200 border border-violet-400/30 px-3 py-1 rounded-full">
-            <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-              <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-            </svg>
-            {viewCount.toLocaleString('bn-BD')} ভিউ
-          </span>
-        )}
-      </header>
+    <AdminShell title="বিজ্ঞপ্তি সম্পাদনা" adminName={adminName} token={token}>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+        <PageHeader
+          title="বিজ্ঞপ্তি সম্পাদনা"
+          actions={viewCount > 0 ? (
+            <Badge tone="violet">
+              <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+              </svg>
+              {viewCount.toLocaleString('bn-BD')} ভিউ
+            </Badge>
+          ) : undefined}
+        />
 
-      <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{error}</div>
         )}
@@ -541,6 +548,6 @@ export default function EditPostPage({ params }: Props) {
           )}
         </div>
       </div>
-    </div>
+    </AdminShell>
   );
 }

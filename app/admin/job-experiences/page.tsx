@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import Pagination from '@/components/ui/Pagination';
-import AdminNotificationBell from '@/components/admin/AdminNotificationBell';
+import AdminShell from '@/components/admin/AdminShell';
+import PageHeader from '@/components/admin/PageHeader';
+import Badge from '@/components/admin/Badge';
 import {
   adminGetJobExperiences,
   adminApproveJobExperience,
@@ -90,38 +91,16 @@ export default function AdminJobExperiencesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-cream">
-      {/* Admin header */}
-      <header className="bg-primary-900 text-white px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-y-3 shadow-lg">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-primary font-bold shrink-0">চ</div>
-          <div>
-            <span className="font-bold">Job Radar</span>
-            <span className="text-primary-300 text-xs ml-2">Admin Panel</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-3 sm:gap-4 flex-wrap w-full sm:w-auto">
-          <span className="text-primary-300 text-sm">👤 {adminName}</span>
-          <Link href="/admin/dashboard" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">← ড্যাশবোর্ড</Link>
-          <Link href="/" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">সাইটে যান →</Link>
-          <AdminNotificationBell token={token} />
-          <button
-            onClick={() => { localStorage.removeItem('admin_token'); router.push('/admin/login'); }}
-            className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
-          >
-            লগআউট
-          </button>
-        </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+    <AdminShell title="চাকরির অভিজ্ঞতা" subtitle="ব্যবহারকারীর পোস্ট মডারেশন" adminName={adminName} token={token}>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {msg && (
           <div className="mb-4 bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm">{msg}</div>
         )}
 
+        <PageHeader title="চাকরির অভিজ্ঞতা পোস্ট মডারেশন" />
+
         <div className="bg-white rounded-2xl border border-warm-border p-5 space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <h1 className="font-bold text-gray-900 text-lg">চাকরির অভিজ্ঞতা পোস্ট মডারেশন</h1>
+          <div className="flex items-center justify-end flex-wrap gap-3">
             <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
               {(['PENDING', 'APPROVED', 'REJECTED'] as const).map((f) => (
                 <button
@@ -144,18 +123,11 @@ export default function AdminJobExperiencesPage() {
               {items.map((item) => (
                 <div key={item.id} className="border border-warm-border rounded-xl p-4 space-y-2">
                   <div className="flex items-start gap-3 flex-wrap">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                      item.outcome === 'SELECTED' ? 'bg-green-100 text-green-700' :
-                      item.outcome === 'REJECTED' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700'
-                    }`}>
+                    <Badge tone={item.outcome === 'SELECTED' ? 'success' : item.outcome === 'REJECTED' ? 'danger' : 'warning'}>
                       {OUTCOME_LABEL[item.outcome] ?? item.outcome}
-                    </span>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                      {STAGE_LABEL[item.stageReached] ?? item.stageReached}
-                    </span>
-                    {item.isAnonymous && (
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700">বেনামী পোস্ট</span>
-                    )}
+                    </Badge>
+                    <Badge tone="neutral">{STAGE_LABEL[item.stageReached] ?? item.stageReached}</Badge>
+                    {item.isAnonymous && <Badge tone="violet">বেনামী পোস্ট</Badge>}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-900 truncate">{item.title}</p>
                       <p className="text-xs text-warm-muted">
@@ -224,7 +196,7 @@ export default function AdminJobExperiencesPage() {
 
           <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
         </div>
-      </main>
-    </div>
+      </div>
+    </AdminShell>
   );
 }

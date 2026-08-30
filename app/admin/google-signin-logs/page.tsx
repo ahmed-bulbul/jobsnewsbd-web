@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import Pagination from '@/components/ui/Pagination';
-import AdminNotificationBell from '@/components/admin/AdminNotificationBell';
+import AdminShell from '@/components/admin/AdminShell';
+import PageHeader from '@/components/admin/PageHeader';
+import Table, { type TableColumn } from '@/components/admin/Table';
+import Badge from '@/components/admin/Badge';
 import { adminGetGoogleSignInLogs } from '@/lib/api';
 import type { GoogleSignInLog } from '@/lib/types';
 
@@ -59,38 +61,56 @@ export default function AdminGoogleSignInLogsPage() {
     load(token, filter, p);
   };
 
-  return (
-    <div className="min-h-screen bg-cream">
-      <header className="bg-primary-900 text-white px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-y-3 shadow-lg">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-primary font-bold shrink-0">চ</div>
-          <div>
-            <span className="font-bold">Job Radar</span>
-            <span className="text-primary-300 text-xs ml-2">Admin Panel</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-3 sm:gap-4 flex-wrap w-full sm:w-auto">
-          <span className="text-primary-300 text-sm">👤 {adminName}</span>
-          <Link href="/admin/dashboard" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">← ড্যাশবোর্ড</Link>
-          <AdminNotificationBell token={token} />
+  const columns: TableColumn<GoogleSignInLog>[] = [
+    {
+      key: 'time',
+      header: 'সময়',
+      render: (log) => <span className="whitespace-nowrap">{new Date(log.createdAt).toLocaleString('bn-BD')}</span>,
+    },
+    {
+      key: 'status',
+      header: 'স্ট্যাটাস',
+      render: (log) => <Badge tone={log.success ? 'success' : 'danger'}>{log.success ? 'সফল' : 'ব্যর্থ'}</Badge>,
+    },
+    {
+      key: 'stage',
+      header: 'ধাপ',
+      render: (log) => <Badge tone="neutral">{STAGE_LABEL[log.stage] ?? log.stage}</Badge>,
+    },
+    { key: 'email', header: 'ইমেইল', render: (log) => <span className="whitespace-nowrap">{log.email ?? '—'}</span> },
+    { key: 'appVersion', header: 'অ্যাপ ভার্সন', render: (log) => <span className="whitespace-nowrap">{log.appVersion ?? '—'}</span> },
+    { key: 'os', header: 'OS', render: (log) => <span className="whitespace-nowrap">{log.osVersion ?? '—'}</span> },
+    { key: 'platform', header: 'প্ল্যাটফর্ম', render: (log) => <span className="whitespace-nowrap">{log.platform ?? '—'}</span> },
+    {
+      key: 'error',
+      header: 'এরর',
+      className: 'max-w-xs',
+      render: (log) => {
+        const expanded = expandedId === log.id;
+        const err = log.errorMessage ?? '';
+        const errShort = err.length > 60 ? `${err.slice(0, 60)}…` : err;
+        return log.errorMessage ? (
           <button
-            onClick={() => { localStorage.removeItem('admin_token'); router.push('/admin/login'); }}
-            className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+            onClick={() => setExpandedId(expanded ? null : log.id)}
+            className="text-left text-red-600 hover:underline"
+            title="বিস্তারিত দেখতে ক্লিক করুন"
           >
-            লগআউট
+            {expanded ? err : errShort}
           </button>
-        </div>
-      </header>
+        ) : (
+          <span className="text-warm-muted">—</span>
+        );
+      },
+    },
+  ];
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+  return (
+    <AdminShell title="Google সাইন-ইন লগ" subtitle="মোবাইল অ্যাপের প্রতিটি সাইন-ইন ধাপের রেকর্ড" adminName={adminName} token={token}>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <PageHeader title={`Google Sign-In লগ (${totalElements})`} />
+
         <div className="bg-white rounded-2xl border border-warm-border p-5 space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div>
-              <h1 className="font-bold text-gray-900 text-lg">Google Sign-In লগ ({totalElements})</h1>
-              <p className="text-xs text-warm-muted mt-0.5">
-                মোবাইল অ্যাপে Google সাইন-ইনের প্রতিটি ধাপ (initialize, authenticate, token check, backend exchange) এখানে রেকর্ড হয়।
-              </p>
-            </div>
+          <div className="flex items-center justify-end flex-wrap gap-3">
             <div className="flex gap-1 bg-gray-100 rounded-xl p-1 flex-wrap">
               {(['ALL', 'FAILED', 'SUCCESS'] as const).map((f) => (
                 <button
@@ -106,71 +126,13 @@ export default function AdminGoogleSignInLogsPage() {
 
           {loading ? (
             <p className="text-sm text-warm-muted py-4 text-center">লোড হচ্ছে...</p>
-          ) : items.length === 0 ? (
-            <p className="text-sm text-warm-muted py-4 text-center">কোনো লগ পাওয়া যায়নি</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs text-warm-muted border-b border-warm-border">
-                    <th className="py-2 pr-3 font-semibold">সময়</th>
-                    <th className="py-2 pr-3 font-semibold">স্ট্যাটাস</th>
-                    <th className="py-2 pr-3 font-semibold">ধাপ</th>
-                    <th className="py-2 pr-3 font-semibold">ইমেইল</th>
-                    <th className="py-2 pr-3 font-semibold">অ্যাপ ভার্সন</th>
-                    <th className="py-2 pr-3 font-semibold">OS</th>
-                    <th className="py-2 pr-3 font-semibold">প্ল্যাটফর্ম</th>
-                    <th className="py-2 pr-3 font-semibold">এরর</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-warm-border">
-                  {items.map((log) => {
-                    const expanded = expandedId === log.id;
-                    const err = log.errorMessage ?? '';
-                    const errShort = err.length > 60 ? `${err.slice(0, 60)}…` : err;
-                    return (
-                      <tr key={log.id}>
-                        <td className="py-2.5 pr-3 text-xs text-warm-muted whitespace-nowrap">
-                          {new Date(log.createdAt).toLocaleString('bn-BD')}
-                        </td>
-                        <td className="py-2.5 pr-3">
-                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${log.success ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
-                            {log.success ? 'সফল' : 'ব্যর্থ'}
-                          </span>
-                        </td>
-                        <td className="py-2.5 pr-3">
-                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 whitespace-nowrap">
-                            {STAGE_LABEL[log.stage] ?? log.stage}
-                          </span>
-                        </td>
-                        <td className="py-2.5 pr-3 text-gray-600 whitespace-nowrap">{log.email ?? '—'}</td>
-                        <td className="py-2.5 pr-3 text-gray-600 whitespace-nowrap">{log.appVersion ?? '—'}</td>
-                        <td className="py-2.5 pr-3 text-gray-600 whitespace-nowrap">{log.osVersion ?? '—'}</td>
-                        <td className="py-2.5 pr-3 text-gray-600 whitespace-nowrap">{log.platform ?? '—'}</td>
-                        <td className="py-2.5 pr-3 max-w-xs">
-                          {log.errorMessage ? (
-                            <button
-                              onClick={() => setExpandedId(expanded ? null : log.id)}
-                              className="text-left text-red-600 hover:underline"
-                              title="বিস্তারিত দেখতে ক্লিক করুন"
-                            >
-                              {expanded ? err : errShort}
-                            </button>
-                          ) : (
-                            <span className="text-warm-muted">—</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <Table columns={columns} data={items} rowKey={(log) => log.id} emptyMessage="কোনো লগ পাওয়া যায়নি" />
           )}
 
           <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
         </div>
-      </main>
-    </div>
+      </div>
+    </AdminShell>
   );
 }

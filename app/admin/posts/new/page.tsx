@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { adminCreatePost, getCategoryTypes, getCategories, getPostTypes } from '@/lib/api';
+import AdminShell from '@/components/admin/AdminShell';
+import PageHeader from '@/components/admin/PageHeader';
 import type { CategoryType, Category, PostType } from '@/lib/types';
 
 type PostForm = {
@@ -292,6 +294,7 @@ function AiCircularImport({
 export default function NewPostPage() {
   const router = useRouter();
   const [token, setToken]         = useState('');
+  const [adminName, setAdminName] = useState('');
   const [categoryTypes, setCategoryTypes] = useState<CategoryType[]>([]);
   const [categories, setCategories]       = useState<Category[]>([]);
   const [postTypes, setPostTypes]         = useState<PostType[]>([]);
@@ -307,8 +310,10 @@ export default function NewPostPage() {
 
   useEffect(() => {
     const t = localStorage.getItem('admin_token');
+    const n = localStorage.getItem('admin_name');
     if (!t) { router.push('/admin/login'); return; }
     setToken(t);
+    setAdminName(n ?? 'Admin');
     Promise.all([getCategoryTypes(), getCategories(), getPostTypes()]).then(([ct, c, pt]) => {
       setCategoryTypes(ct); setCategories(c); setPostTypes(pt);
     });
@@ -340,13 +345,10 @@ export default function NewPostPage() {
   };
 
   return (
-    <div className="min-h-screen bg-cream">
-      <header className="bg-primary-900 text-white px-6 py-4 flex items-center gap-4">
-        <Link href="/admin/dashboard" className="text-primary-300 hover:text-white text-sm">← ড্যাশবোর্ড</Link>
-        <h1 className="font-bold">নতুন বিজ্ঞপ্তি যুক্ত করুন</h1>
-      </header>
+    <AdminShell title="নতুন বিজ্ঞপ্তি" adminName={adminName} token={token}>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <PageHeader title="নতুন বিজ্ঞপ্তি যুক্ত করুন" />
 
-      <div className="max-w-3xl mx-auto px-4 py-8">
         {error && (
           <div className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{error}</div>
         )}
@@ -468,6 +470,6 @@ export default function NewPostPage() {
           </div>
         </form>
       </div>
-    </div>
+    </AdminShell>
   );
 }

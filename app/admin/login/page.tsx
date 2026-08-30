@@ -32,18 +32,22 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-cream flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
+    <div className="min-h-screen bg-primary-900 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Decorative glow — subtle, matches the sidebar's dark-navy brand surface */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 bg-primary-600/20 rounded-full blur-3xl" />
+      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
+
+      <div className="w-full max-w-sm relative">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4 shadow-lg">
-            <span className="text-white text-3xl font-bold">চ</span>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl mb-4 shadow-lg">
+            <span className="text-primary text-3xl font-bold">চ</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">অ্যাডমিন লগইন</h1>
-          <p className="text-warm-muted text-sm mt-1">Job Radar — Admin Panel</p>
+          <h1 className="text-2xl font-bold text-white">অ্যাডমিন লগইন</h1>
+          <p className="text-primary-300 text-sm mt-1">Job Radar — Admin Panel</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="card p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-2xl p-6 space-y-4">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
               {error}
@@ -59,6 +63,7 @@ export default function AdminLoginPage() {
               required
               placeholder="admin@example.com"
               className="input"
+              autoFocus
             />
           </div>
 
@@ -74,10 +79,12 @@ export default function AdminLoginPage() {
             />
           </div>
 
-          <button type="submit" disabled={loading} className="btn-primary w-full justify-center py-3">
+          <button type="submit" disabled={loading} className="btn-primary w-full justify-center py-3 disabled:opacity-60">
             {loading ? 'লগইন হচ্ছে...' : 'লগইন করুন'}
           </button>
         </form>
+
+        <p className="text-center text-primary-300/70 text-xs mt-6">শুধুমাত্র অনুমোদিত অ্যাডমিনদের জন্য</p>
       </div>
     </div>
   );

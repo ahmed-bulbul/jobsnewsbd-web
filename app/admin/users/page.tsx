@@ -2,9 +2,13 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import Pagination from '@/components/ui/Pagination';
-import AdminNotificationBell from '@/components/admin/AdminNotificationBell';
+import AdminShell from '@/components/admin/AdminShell';
+import PageHeader from '@/components/admin/PageHeader';
+import StatCard from '@/components/admin/StatCard';
+import Table, { type TableColumn } from '@/components/admin/Table';
+import Badge from '@/components/admin/Badge';
+import { UsersIcon } from '@/components/admin/icons';
 import { adminGetUsers, adminGetUserStats, adminToggleUserActive } from '@/lib/api';
 import type { AdminUser, AdminUserStats } from '@/lib/types';
 
@@ -72,49 +76,84 @@ export default function AdminUsersPage() {
     } catch { /* ignore */ } finally { setActingId(null); }
   };
 
-  return (
-    <div className="min-h-screen bg-cream">
-      <header className="bg-primary-900 text-white px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-y-3 shadow-lg">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-primary font-bold shrink-0">চ</div>
-          <div>
-            <span className="font-bold">Job Radar</span>
-            <span className="text-primary-300 text-xs ml-2">Admin Panel</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-3 sm:gap-4 flex-wrap w-full sm:w-auto">
-          <span className="text-primary-300 text-sm">👤 {adminName}</span>
-          <Link href="/admin/dashboard" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">← ড্যাশবোর্ড</Link>
-          <AdminNotificationBell token={token} />
-          <button
-            onClick={() => { localStorage.removeItem('admin_token'); router.push('/admin/login'); }}
-            className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
-          >
-            লগআউট
-          </button>
-        </div>
-      </header>
-
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-        {/* Stat cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { label: 'মোট ব্যবহারকারী', value: stats?.total ?? 0, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
-            { label: 'আজ রেজিস্টার্ড', value: stats?.today ?? 0, color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
-            { label: 'এই সপ্তাহে', value: stats?.thisWeek ?? 0, color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
-            { label: 'এই মাসে', value: stats?.thisMonth ?? 0, color: 'text-violet-700', bg: 'bg-violet-50 border-violet-200' },
-          ].map((s) => (
-            <div key={s.label} className={`card p-5 border ${s.bg}`}>
-              <p className="text-xs text-warm-muted mb-1">{s.label}</p>
-              <p className={`text-2xl font-bold ${s.color}`}>{fmt(s.value)}</p>
+  const columns: TableColumn<AdminUser>[] = [
+    {
+      key: 'name',
+      header: 'নাম',
+      render: (u) => (
+        <div className="flex items-center gap-2">
+          {u.profilePhotoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={u.profilePhotoUrl} alt="" className="w-7 h-7 rounded-full object-cover" />
+          ) : (
+            <div className="w-7 h-7 rounded-full bg-primary-50 text-primary flex items-center justify-center text-xs font-bold shrink-0">
+              {(u.name || u.email)[0]?.toUpperCase()}
             </div>
-          ))}
+          )}
+          <span className="font-medium text-gray-900">{u.name || '—'}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'contact',
+      header: 'ইমেইল / ফোন',
+      render: (u) => (
+        <>
+          <p className="text-gray-600">{u.email}</p>
+          {u.phone && <p className="text-xs text-warm-muted">{u.phone}</p>}
+        </>
+      ),
+    },
+    {
+      key: 'role',
+      header: 'রোল',
+      render: (u) => <Badge tone={u.role === 'ADMIN' ? 'violet' : 'neutral'}>{u.role === 'ADMIN' ? 'অ্যাডমিন' : 'ইউজার'}</Badge>,
+    },
+    {
+      key: 'status',
+      header: 'স্ট্যাটাস',
+      render: (u) => <Badge tone={u.active ? 'success' : 'danger'}>{u.active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</Badge>,
+    },
+    {
+      key: 'joined',
+      header: 'যোগদান',
+      render: (u) => (
+        <span className="text-xs text-warm-muted whitespace-nowrap">
+          {new Date(u.createdAt).toLocaleDateString('bn-BD', { year: 'numeric', month: 'short', day: 'numeric' })}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'অ্যাকশন',
+      align: 'right',
+      render: (u) =>
+        u.role !== 'ADMIN' ? (
+          <button
+            onClick={() => handleToggleActive(u)}
+            disabled={actingId === u.id}
+            className={`text-xs font-semibold rounded-lg px-2.5 py-1 disabled:opacity-50 ${u.active ? 'border border-red-300 text-red-600 hover:bg-red-50' : 'bg-green-600 text-white hover:bg-green-700'}`}
+          >
+            {actingId === u.id ? '...' : u.active ? 'নিষ্ক্রিয় করুন' : 'সক্রিয় করুন'}
+          </button>
+        ) : null,
+    },
+  ];
+
+  return (
+    <AdminShell title="ব্যবহারকারী" subtitle="সব নিবন্ধিত ব্যবহারকারীর তালিকা ও স্ট্যাটাস" adminName={adminName} token={token}>
+      <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-6xl mx-auto space-y-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard label="মোট ব্যবহারকারী" value={stats?.total ?? 0} color="blue" icon={UsersIcon} />
+          <StatCard label="আজ রেজিস্টার্ড" value={stats?.today ?? 0} color="emerald" icon={UsersIcon} />
+          <StatCard label="এই সপ্তাহে" value={stats?.thisWeek ?? 0} color="amber" icon={UsersIcon} />
+          <StatCard label="এই মাসে" value={stats?.thisMonth ?? 0} color="violet" icon={UsersIcon} />
         </div>
 
-        <div className="bg-white rounded-2xl border border-warm-border p-5 space-y-4">
+        <div className="card p-5 space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
-            <h1 className="font-bold text-gray-900 text-lg">ব্যবহারকারী তালিকা ({fmt(totalElements)})</h1>
-            <div className="flex gap-1 bg-gray-100 rounded-xl p-1 flex-wrap">
+            <PageHeader title={`ব্যবহারকারী তালিকা (${fmt(totalElements)})`} />
+            <div className="flex gap-1 bg-gray-100 rounded-xl p-1 flex-wrap -mt-6">
               {(['ALL', 'USER', 'ADMIN'] as const).map((r) => (
                 <button
                   key={r}
@@ -133,84 +172,20 @@ export default function AdminUsersPage() {
               value={qInput}
               onChange={(e) => setQInput(e.target.value)}
               placeholder="নাম, ইমেইল বা ফোন নম্বর দিয়ে খুঁজুন..."
-              className="flex-1 border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
+              className="input flex-1"
             />
-            <button type="submit" className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors">
-              খুঁজুন
-            </button>
+            <button type="submit" className="btn-primary shrink-0">খুঁজুন</button>
           </form>
 
           {loading ? (
             <p className="text-sm text-warm-muted py-4 text-center">লোড হচ্ছে...</p>
-          ) : items.length === 0 ? (
-            <p className="text-sm text-warm-muted py-4 text-center">কোনো ব্যবহারকারী পাওয়া যায়নি</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs text-warm-muted border-b border-warm-border">
-                    <th className="py-2 pr-3 font-semibold">নাম</th>
-                    <th className="py-2 pr-3 font-semibold">ইমেইল / ফোন</th>
-                    <th className="py-2 pr-3 font-semibold">রোল</th>
-                    <th className="py-2 pr-3 font-semibold">স্ট্যাটাস</th>
-                    <th className="py-2 pr-3 font-semibold">যোগদান</th>
-                    <th className="py-2 pr-3 font-semibold text-right">অ্যাকশন</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-warm-border">
-                  {items.map((u) => (
-                    <tr key={u.id}>
-                      <td className="py-2.5 pr-3">
-                        <div className="flex items-center gap-2">
-                          {u.profilePhotoUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={u.profilePhotoUrl} alt="" className="w-7 h-7 rounded-full object-cover" />
-                          ) : (
-                            <div className="w-7 h-7 rounded-full bg-primary-50 text-primary flex items-center justify-center text-xs font-bold shrink-0">
-                              {(u.name || u.email)[0]?.toUpperCase()}
-                            </div>
-                          )}
-                          <span className="font-medium text-gray-900">{u.name || '—'}</span>
-                        </div>
-                      </td>
-                      <td className="py-2.5 pr-3 text-gray-600">
-                        <p>{u.email}</p>
-                        {u.phone && <p className="text-xs text-warm-muted">{u.phone}</p>}
-                      </td>
-                      <td className="py-2.5 pr-3">
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${u.role === 'ADMIN' ? 'bg-violet-100 text-violet-700' : 'bg-gray-100 text-gray-600'}`}>
-                          {u.role === 'ADMIN' ? 'অ্যাডমিন' : 'ইউজার'}
-                        </span>
-                      </td>
-                      <td className="py-2.5 pr-3">
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${u.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
-                          {u.active ? 'সক্রিয়' : 'নিষ্ক্রিয়'}
-                        </span>
-                      </td>
-                      <td className="py-2.5 pr-3 text-xs text-warm-muted whitespace-nowrap">
-                        {new Date(u.createdAt).toLocaleDateString('bn-BD', { year: 'numeric', month: 'short', day: 'numeric' })}
-                      </td>
-                      <td className="py-2.5 pr-3 text-right">
-                        {u.role !== 'ADMIN' && (
-                          <button
-                            onClick={() => handleToggleActive(u)}
-                            disabled={actingId === u.id}
-                            className={`text-xs font-semibold rounded-lg px-2.5 py-1 disabled:opacity-50 ${u.active ? 'border border-red-300 text-red-600 hover:bg-red-50' : 'bg-green-600 text-white hover:bg-green-700'}`}
-                          >
-                            {actingId === u.id ? '...' : u.active ? 'নিষ্ক্রিয় করুন' : 'সক্রিয় করুন'}
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Table columns={columns} data={items} rowKey={(u) => u.id} emptyMessage="কোনো ব্যবহারকারী পাওয়া যায়নি" />
           )}
 
           <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
         </div>
-      </main>
-    </div>
+      </div>
+    </AdminShell>
   );
 }

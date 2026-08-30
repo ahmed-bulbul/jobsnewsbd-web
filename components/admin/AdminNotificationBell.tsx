@@ -43,7 +43,16 @@ function timeAgo(iso: string): string {
   return `${days} দিন আগে`;
 }
 
-export default function AdminNotificationBell({ token }: { token: string }) {
+export default function AdminNotificationBell({
+  token,
+  iconClassName = 'text-primary-300 hover:text-white',
+}: {
+  token: string;
+  /** Icon color classes — default suits a dark header; pass light-surface
+   *  classes (e.g. "text-warm-muted hover:text-ink") when placed on a
+   *  white topbar. */
+  iconClassName?: string;
+}) {
   const [summary, setSummary] = useState<AdminNotificationSummary | null>(null);
   const [open, setOpen] = useState(false);
   const [actingKey, setActingKey] = useState<string | null>(null);
@@ -109,7 +118,7 @@ export default function AdminNotificationBell({ token }: { token: string }) {
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="relative text-primary-300 hover:text-white transition-colors"
+        className={`relative transition-colors ${iconClassName}`}
         aria-label="Notifications"
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

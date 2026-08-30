@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { jsonrepair } from 'jsonrepair';
 import {
   adminGetQuestionBankCategories,
@@ -14,6 +13,9 @@ import {
   adminUpdateQuestionBankQuestion,
   adminDeleteQuestionBankQuestion,
 } from '@/lib/api';
+import AdminShell from '@/components/admin/AdminShell';
+import PageHeader from '@/components/admin/PageHeader';
+import Tabs from '@/components/admin/Tabs';
 import type { QuestionBankCategory, QuestionBankQuestion, QuestionBankType, QuestionDifficulty } from '@/lib/types';
 
 type Tab = 'categories' | 'questions';
@@ -268,6 +270,7 @@ function BulkQuestionBankImport({
 export default function AdminQuestionBankPage() {
   const router = useRouter();
   const [token, setToken] = useState('');
+  const [adminName, setAdminName] = useState('');
   const [tab, setTab] = useState<Tab>('categories');
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(true);
@@ -317,8 +320,10 @@ export default function AdminQuestionBankPage() {
 
   useEffect(() => {
     const t = localStorage.getItem('admin_token');
+    const n = localStorage.getItem('admin_name');
     if (!t) { router.push('/admin/login'); return; }
     setToken(t);
+    setAdminName(n ?? 'Admin');
     loadCategories(t).finally(() => setLoading(false));
   }, [router, loadCategories]);
 
@@ -429,27 +434,31 @@ export default function AdminQuestionBankPage() {
     } catch { flash('মুছতে ব্যর্থ'); }
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-warm-muted">লোড হচ্ছে...</div>;
+  if (loading) {
+    return (
+      <AdminShell title="প্রশ্ন ব্যাংক" adminName={adminName} token={token}>
+        <div className="flex items-center justify-center py-24 text-warm-muted">লোড হচ্ছে...</div>
+      </AdminShell>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-warm-border px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/admin/dashboard" className="text-warm-muted hover:text-primary text-sm">← ড্যাশবোর্ড</Link>
-          <span className="text-warm-muted">/</span>
-          <span className="font-bold text-gray-900">প্রশ্ন ব্যাংক</span>
-        </div>
-        {msg && <span className="text-sm font-medium text-primary bg-primary-50 px-3 py-1 rounded-full">{msg}</span>}
-      </div>
+    <AdminShell title="প্রশ্ন ব্যাংক" subtitle="ক্যাটাগরি ও প্রশ্ন ব্যবস্থাপনা" adminName={adminName} token={token}>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {msg && (
+          <div className="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-3 text-sm font-medium animate-fade-up">
+            ✅ {msg}
+          </div>
+        )}
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        <div className="flex gap-1 bg-white border border-warm-border rounded-xl p-1 mb-6 w-fit">
-          {(['categories', 'questions'] as Tab[]).map((t) => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${tab === t ? 'bg-primary text-white shadow-sm' : 'text-gray-600 hover:text-primary'}`}>
-              {t === 'categories' ? 'ক্যাটাগরি' : 'প্রশ্ন'}
-            </button>
-          ))}
+        <PageHeader title="প্রশ্ন ব্যাংক" />
+
+        <div className="mb-6">
+          <Tabs
+            tabs={[{ id: 'categories', label: 'ক্যাটাগরি' }, { id: 'questions', label: 'প্রশ্ন' }]}
+            active={tab}
+            onChange={(id) => setTab(id as Tab)}
+          />
         </div>
 
         {/* ── Categories ─────────────────────────────────────────────────── */}
@@ -687,6 +696,6 @@ export default function AdminQuestionBankPage() {
           </div>
         )}
       </div>
-    </div>
+    </AdminShell>
   );
 }

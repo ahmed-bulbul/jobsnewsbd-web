@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import Pagination from '@/components/ui/Pagination';
-import AdminNotificationBell from '@/components/admin/AdminNotificationBell';
+import AdminShell from '@/components/admin/AdminShell';
+import PageHeader from '@/components/admin/PageHeader';
 import { adminCreateNotice, adminGetNotices } from '@/lib/api';
 import type { Notice } from '@/lib/types';
 
@@ -70,29 +70,10 @@ export default function AdminNoticesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-cream">
-      <header className="bg-primary-900 text-white px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-y-3 shadow-lg">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-primary font-bold shrink-0">চ</div>
-          <div>
-            <span className="font-bold">Job Radar</span>
-            <span className="text-primary-300 text-xs ml-2">Admin Panel</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-3 sm:gap-4 flex-wrap w-full sm:w-auto">
-          <span className="text-primary-300 text-sm">👤 {adminName}</span>
-          <Link href="/admin/dashboard" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">← ড্যাশবোর্ড</Link>
-          <AdminNotificationBell token={token} />
-          <button
-            onClick={() => { localStorage.removeItem('admin_token'); router.push('/admin/login'); }}
-            className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
-          >
-            লগআউট
-          </button>
-        </div>
-      </header>
+    <AdminShell title="নোটিশ" subtitle="সব ব্যবহারকারীকে push notification পাঠান" adminName={adminName} token={token}>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+        <PageHeader title="নোটিশ" />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
         <div className="bg-white rounded-2xl border border-warm-border p-5 space-y-4">
           <div>
             <h1 className="font-bold text-gray-900 text-lg">নতুন নোটিশ পাঠান</h1>
@@ -168,7 +149,7 @@ export default function AdminNoticesPage() {
 
           <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
         </div>
-      </main>
-    </div>
+      </div>
+    </AdminShell>
   );
 }

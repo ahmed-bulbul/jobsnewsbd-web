@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import Pagination from '@/components/ui/Pagination';
-import AdminNotificationBell from '@/components/admin/AdminNotificationBell';
+import AdminShell from '@/components/admin/AdminShell';
+import PageHeader from '@/components/admin/PageHeader';
+import Badge from '@/components/admin/Badge';
 import { adminGetFeedback, adminMarkFeedbackRead } from '@/lib/api';
 import type { AdminFeedback, FeedbackStatus } from '@/lib/types';
 
@@ -70,32 +71,12 @@ export default function AdminFeedbackPage() {
   };
 
   return (
-    <div className="min-h-screen bg-cream">
-      <header className="bg-primary-900 text-white px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-y-3 shadow-lg">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-primary font-bold shrink-0">চ</div>
-          <div>
-            <span className="font-bold">Job Radar</span>
-            <span className="text-primary-300 text-xs ml-2">Admin Panel</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-3 sm:gap-4 flex-wrap w-full sm:w-auto">
-          <span className="text-primary-300 text-sm">👤 {adminName}</span>
-          <Link href="/admin/dashboard" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">← ড্যাশবোর্ড</Link>
-          <AdminNotificationBell token={token} />
-          <button
-            onClick={() => { localStorage.removeItem('admin_token'); router.push('/admin/login'); }}
-            className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
-          >
-            লগআউট
-          </button>
-        </div>
-      </header>
+    <AdminShell title="মতামত" subtitle="ব্যবহারকারীর মতামত পর্যালোচনা" adminName={adminName} token={token}>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <PageHeader title={`ব্যবহারকারীর মতামত (${totalElements})`} />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
         <div className="bg-white rounded-2xl border border-warm-border p-5 space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <h1 className="font-bold text-gray-900 text-lg">ব্যবহারকারীর মতামত ({totalElements})</h1>
+          <div className="flex items-center justify-end flex-wrap gap-3">
             <div className="flex gap-1 bg-gray-100 rounded-xl p-1 flex-wrap">
               {(['ALL', 'NEW', 'READ'] as const).map((f) => (
                 <button
@@ -124,12 +105,7 @@ export default function AdminFeedbackPage() {
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {f.rating && <span className="text-sm text-yellow-500">{stars(f.rating)}</span>}
-                      <span
-                        className="text-xs font-bold px-2 py-0.5 rounded-full"
-                        style={{ background: STATUS_META[f.status].bg, color: STATUS_META[f.status].color }}
-                      >
-                        {STATUS_META[f.status].label}
-                      </span>
+                      <Badge tone={f.status === 'READ' ? 'success' : 'warning'}>{STATUS_META[f.status].label}</Badge>
                       <span className="text-xs text-warm-muted">{new Date(f.createdAt).toLocaleString('bn-BD')}</span>
                     </div>
                   </div>
@@ -154,7 +130,7 @@ export default function AdminFeedbackPage() {
 
           <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
         </div>
-      </main>
-    </div>
+      </div>
+    </AdminShell>
   );
 }

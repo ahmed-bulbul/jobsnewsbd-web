@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import Image from 'next/image';
 import Pagination from '@/components/ui/Pagination';
-import AdminNotificationBell from '@/components/admin/AdminNotificationBell';
+import AdminShell from '@/components/admin/AdminShell';
+import PageHeader from '@/components/admin/PageHeader';
 import {
   getRecommendedBooks,
   adminCreateRecommendedBook,
@@ -129,47 +129,22 @@ export default function AdminRecommendedBooksPage() {
   };
 
   return (
-    <div className="min-h-screen bg-cream">
+    <AdminShell title="প্রস্তাবিত বই" subtitle="বই ক্যাটালগ ব্যবস্থাপনা" adminName={adminName} token={token}>
       <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleCoverChange} />
 
-      {/* Admin header */}
-      <header className="bg-primary-900 text-white px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-y-3 shadow-lg">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-primary font-bold shrink-0">চ</div>
-          <div>
-            <span className="font-bold">Job Radar</span>
-            <span className="text-primary-300 text-xs ml-2">Admin Panel</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-3 sm:gap-4 flex-wrap w-full sm:w-auto">
-          <span className="text-primary-300 text-sm">👤 {adminName}</span>
-          <Link href="/admin/dashboard" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">← ড্যাশবোর্ড</Link>
-          <Link href="/" className="text-xs text-primary-300 hover:text-white whitespace-nowrap">সাইটে যান →</Link>
-          <AdminNotificationBell token={token} />
-          <button
-            onClick={() => { localStorage.removeItem('admin_token'); router.push('/admin/login'); }}
-            className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
-          >
-            লগআউট
-          </button>
-        </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {msg && (
           <div className="mb-4 bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm">{msg}</div>
         )}
 
-        <div className="bg-white rounded-2xl border border-warm-border p-5 space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <h1 className="font-bold text-gray-900 text-lg">প্রস্তাবিত বই ক্যাটালগ</h1>
-            {editingId === null && (
-              <button onClick={startCreate} className="bg-primary text-white rounded-lg px-4 py-2 text-xs font-semibold hover:bg-primary-700 transition-colors">
-                + নতুন বই যোগ করুন
-              </button>
-            )}
-          </div>
+        <PageHeader
+          title="প্রস্তাবিত বই ক্যাটালগ"
+          actions={editingId === null ? (
+            <button onClick={startCreate} className="btn-primary text-xs">+ নতুন বই যোগ করুন</button>
+          ) : undefined}
+        />
 
+        <div className="bg-white rounded-2xl border border-warm-border p-5 space-y-4">
           {editingId !== null && (
             <div className="border border-warm-border rounded-xl p-4 space-y-3 bg-gray-50">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -256,7 +231,7 @@ export default function AdminRecommendedBooksPage() {
 
           <Pagination page={page} totalPages={totalPages} onPageChange={handlePageChange} />
         </div>
-      </main>
-    </div>
+      </div>
+    </AdminShell>
   );
 }

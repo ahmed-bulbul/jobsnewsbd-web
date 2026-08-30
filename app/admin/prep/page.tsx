@@ -2,8 +2,10 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import RichTextEditor from '@/components/ui/RichTextEditor';
+import AdminShell from '@/components/admin/AdminShell';
+import PageHeader from '@/components/admin/PageHeader';
+import Tabs from '@/components/admin/Tabs';
 import {
   getPrepCategories,
   getPrepCategory,
@@ -538,6 +540,7 @@ function StudyResourcePrompt({ defaultTopic }: { defaultTopic: string }) {
 export default function AdminPrepPage() {
   const router = useRouter();
   const [token, setToken] = useState('');
+  const [adminName, setAdminName] = useState('');
   const [tab, setTab] = useState<Tab>('categories');
   const [msg, setMsg] = useState('');
 
@@ -661,8 +664,10 @@ export default function AdminPrepPage() {
 
   useEffect(() => {
     const t = localStorage.getItem('admin_token');
+    const n = localStorage.getItem('admin_name');
     if (!t) { router.push('/admin/login'); return; }
     setToken(t);
+    setAdminName(n ?? 'Admin');
     loadCategories()
       .then((cats) => loadAllTopics(cats))
       .finally(() => setLoading(false));
@@ -1047,35 +1052,38 @@ export default function AdminPrepPage() {
     } catch { flash('মুছতে ব্যর্থ'); }
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-warm-muted">লোড হচ্ছে...</div>;
+  if (loading) {
+    return (
+      <AdminShell title="চাকরির প্রস্তুতি" adminName={adminName} token={token}>
+        <div className="flex items-center justify-center py-24 text-warm-muted">লোড হচ্ছে...</div>
+      </AdminShell>
+    );
+  }
+
+  const tabLabel = (t: Tab) =>
+    t === 'categories' ? 'ক্যাটাগরি' : t === 'topics' ? 'বিষয়' : t === 'content' ? 'কন্টেন্ট' :
+    t === 'exam' ? '📝 পরীক্ষা' : t === 'routine' ? '🗓 রুটিন' : '💳 পেমেন্ট';
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top bar */}
-      <div className="bg-white border-b border-warm-border px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/admin/dashboard" className="text-warm-muted hover:text-primary text-sm">← ড্যাশবোর্ড</Link>
-          <span className="text-warm-muted">/</span>
-          <span className="font-bold text-gray-900">চাকরির প্রস্তুতি</span>
-        </div>
-        {msg && <span className="text-sm font-medium text-primary bg-primary-50 px-3 py-1 rounded-full">{msg}</span>}
-      </div>
+    <AdminShell title="চাকরির প্রস্তুতি" subtitle="ক্যাটাগরি, বিষয়, কন্টেন্ট, পরীক্ষা ও পেমেন্ট ব্যবস্থাপনা" adminName={adminName} token={token}>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {msg && (
+          <div className="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-3 text-sm font-medium animate-fade-up">
+            ✅ {msg}
+          </div>
+        )}
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        {/* Tabs */}
-        <div className="flex gap-1 bg-white border border-warm-border rounded-xl p-1 mb-6 w-fit flex-wrap">
-          {(['categories', 'topics', 'content', 'exam', 'routine', 'payment'] as Tab[]).map((t) => (
-            <button
-              key={t}
-              onClick={() => {
-                setTab(t);
-                if (t === 'payment') loadEnrollmentRequests(token, requestsFilter);
-              }}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${tab === t ? 'bg-primary text-white shadow-sm' : 'text-gray-600 hover:text-primary'}`}
-            >
-              {t === 'categories' ? 'ক্যাটাগরি' : t === 'topics' ? 'বিষয়' : t === 'content' ? 'কন্টেন্ট' : t === 'exam' ? '📝 পরীক্ষা' : t === 'routine' ? '🗓 রুটিন' : '💳 পেমেন্ট'}
-            </button>
-          ))}
+        <PageHeader title="চাকরির প্রস্তুতি" />
+
+        <div className="mb-6">
+          <Tabs
+            tabs={(['categories', 'topics', 'content', 'exam', 'routine', 'payment'] as Tab[]).map((t) => ({ id: t, label: tabLabel(t) }))}
+            active={tab}
+            onChange={(id) => {
+              setTab(id as Tab);
+              if (id === 'payment') loadEnrollmentRequests(token, requestsFilter);
+            }}
+          />
         </div>
 
         {/* ── Categories ─────────────────────────────────────────────────── */}
@@ -1925,6 +1933,6 @@ export default function AdminPrepPage() {
           </div>
         )}
       </div>
-    </div>
+    </AdminShell>
   );
 }
