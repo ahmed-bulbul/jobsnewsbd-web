@@ -13,7 +13,7 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0">
-                <Image src="/logo-mark.svg" alt="Job Radar" width={36} height={36} className="w-full h-full" />
+                <Image src="/logo-mark.png" alt="Job Radar" width={36} height={36} className="w-full h-full object-cover" />
               </div>
               <div className="leading-tight">
                 <span className="block font-bold text-white text-base">জব রাডার</span>

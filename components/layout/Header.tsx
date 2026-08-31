@@ -58,7 +58,7 @@ export default function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group min-w-0 shrink">
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg overflow-hidden shadow-sm shrink-0">
-              <Image src="/logo-mark.svg" alt="Job Radar" width={36} height={36} className="w-full h-full" />
+              <Image src="/logo-mark.png" alt="Job Radar" width={36} height={36} className="w-full h-full object-cover" />
             </div>
             <div className="leading-tight min-w-0">
               <span className="block font-bold text-primary text-sm sm:text-lg whitespace-nowrap">জব রাডার</span>
