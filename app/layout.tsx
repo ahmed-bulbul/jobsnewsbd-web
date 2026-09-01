@@ -62,7 +62,10 @@ const jsonLd = {
       '@type': 'Organization',
       name: 'Job Radar',
       url: siteUrl,
-      sameAs: ['https://www.facebook.com/profile.php?id=61592111810490'],
+      sameAs: [
+        'https://www.facebook.com/profile.php?id=61592111810490',
+        'https://www.youtube.com/@JobRadarBangladesh',
+      ],
       contactPoint: {
         '@type': 'ContactPoint',
         email: 'support@jobradarbd.com',

@@ -53,6 +53,16 @@ export default function ContactPage() {
                 </a>
               </div>
             </div>
+
+            <div className="flex items-start gap-4 bg-gray-50 rounded-xl px-4 py-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-lg shrink-0">▶️</div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">{t('ইউটিউব চ্যানেল', 'YouTube Channel')}</p>
+                <a href="https://www.youtube.com/@JobRadarBangladesh" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold hover:underline text-sm">
+                  {t('Job Radar — ইউটিউবে দেখুন', 'Job Radar on YouTube')}
+                </a>
+              </div>
+            </div>
           </div>
 
           <p className="text-xs text-warm-muted mt-8">

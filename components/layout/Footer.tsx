@@ -26,15 +26,26 @@ export default function Footer() {
                 'All government and private job circulars in Bangladesh in one place.',
               )}
             </p>
-            <a
-              href="https://www.facebook.com/profile.php?id=61592111810490"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Facebook"
-              className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-            >
-              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white"><path d="M13.5 21v-8.5h2.85l.43-3.3h-3.28V7.05c0-.96.27-1.61 1.64-1.61h1.75V2.5C16.6 2.4 15.6 2.3 14.44 2.3c-2.42 0-4.08 1.48-4.08 4.19v2.71H7.5v3.3h2.86V21h3.14z"/></svg>
-            </a>
+            <div className="flex items-center gap-2">
+              <a
+                href="https://www.facebook.com/profile.php?id=61592111810490"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook"
+                className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white"><path d="M13.5 21v-8.5h2.85l.43-3.3h-3.28V7.05c0-.96.27-1.61 1.64-1.61h1.75V2.5C16.6 2.4 15.6 2.3 14.44 2.3c-2.42 0-4.08 1.48-4.08 4.19v2.71H7.5v3.3h2.86V21h3.14z"/></svg>
+              </a>
+              <a
+                href="https://www.youtube.com/@JobRadarBangladesh"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="YouTube"
+                className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white"><path d="M23.5 6.2a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.56A3.02 3.02 0 0 0 .5 6.2 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.8 3.02 3.02 0 0 0 2.12 2.14C4.5 20.5 12 20.5 12 20.5s7.5 0 9.38-.56a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.8ZM9.75 15.5v-7l6.27 3.5-6.27 3.5Z"/></svg>
+              </a>
+            </div>
           </div>
 
           <div>
