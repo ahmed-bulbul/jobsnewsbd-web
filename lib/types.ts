@@ -211,6 +211,23 @@ export interface PrepCategory {
   facebookGroupUrl: string | null;
   facebookPageUrl: string | null;
   whatsappGroupUrl: string | null;
+  topicCount?: number;
+  groupId: number | null;
+  groupNameBn: string | null;
+}
+
+// Parent grouping over PrepCategory (e.g. IT / BCS / General) — see
+// PrepCategoryGroup on the backend.
+export interface PrepCategoryGroup {
+  id: number;
+  nameBn: string;
+  nameEn: string | null;
+  slug: string;
+  icon: string | null;
+  colorHex: string | null;
+  displayOrder: number;
+  categoryCount: number;
+  createdAt: string;
 }
 
 export interface PrepTopic {

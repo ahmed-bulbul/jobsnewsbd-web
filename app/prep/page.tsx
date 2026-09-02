@@ -6,8 +6,8 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useLanguage } from '@/context/LanguageContext';
 import { useAuth } from '@/context/AuthContext';
-import { getPrepCategories } from '@/lib/api';
-import type { PrepCategory } from '@/lib/types';
+import { getPrepCategories, getPrepCategoryGroups } from '@/lib/api';
+import type { PrepCategory, PrepCategoryGroup } from '@/lib/types';
 
 const FALLBACK_COLORS: Record<string, string> = {
   bcs:         '#1D4ED8',
@@ -99,15 +99,27 @@ export default function PrepPage() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const [categories, setCategories] = useState<PrepCategory[]>([]);
+  const [groups, setGroups] = useState<PrepCategoryGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    getPrepCategories(user?.token ?? undefined)
-      .then(setCategories)
+    Promise.all([
+      getPrepCategories(user?.token ?? undefined),
+      getPrepCategoryGroups().catch(() => []), // grouping is a display nicety — a failed fetch shouldn't block the category grid itself
+    ])
+      .then(([cats, gs]) => { setCategories(cats); setGroups(gs); })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [user]);
+
+  // Parent-group sections (in group displayOrder), plus an "other" bucket
+  // for categories with no group — same shape as the admin page's grouping.
+  const sections = [
+    ...groups.map((g) => ({ key: `g-${g.id}`, label: g.nameBn, items: categories.filter((c) => c.groupId === g.id) })),
+    { key: 'ungrouped', label: t('অন্যান্য', 'Other'), items: categories.filter((c) => c.groupId == null) },
+  ].filter((s) => s.items.length > 0);
+  const isGrouped = groups.length > 0 && sections.length > 1;
 
   return (
     <div className="min-h-screen bg-warm-bg flex flex-col">
@@ -127,12 +139,24 @@ export default function PrepPage() {
           <div className="text-center py-20 text-warm-muted">
             {t('লোড করতে ব্যর্থ হয়েছে', 'Failed to load')}
           </div>
+        ) : loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} />)}
+          </div>
+        ) : isGrouped ? (
+          <div className="space-y-8">
+            {sections.map((section) => (
+              <div key={section.key}>
+                <h2 className="text-sm font-bold text-warm-muted uppercase tracking-wide mb-3">{section.label}</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {section.items.map((cat) => <CategoryCard key={cat.id} cat={cat} />)}
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {loading
-              ? Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} />)
-              : categories.map((cat) => <CategoryCard key={cat.id} cat={cat} />)
-            }
+            {categories.map((cat) => <CategoryCard key={cat.id} cat={cat} />)}
           </div>
         )}
       </main>

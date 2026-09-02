@@ -12,6 +12,10 @@ import {
   adminCreatePrepCategory,
   adminUpdatePrepCategory,
   adminDeletePrepCategory,
+  adminGetPrepCategoryGroups,
+  adminCreatePrepCategoryGroup,
+  adminUpdatePrepCategoryGroup,
+  adminDeletePrepCategoryGroup,
   adminCreatePrepTopic,
   adminUpdatePrepTopic,
   adminDeletePrepTopic,
@@ -43,7 +47,7 @@ import {
   adminUpdateRoutineEntry,
   adminDeleteRoutineEntry,
 } from '@/lib/api';
-import type { AdminExamAttempt, EnrollmentRequest, ExamQuestion, ExamRoutineEntry, ExamSet, PaymentConfig, PrepCategory, PrepCategoryDetail, PrepContent, PrepTopic } from '@/lib/types';
+import type { AdminExamAttempt, EnrollmentRequest, ExamQuestion, ExamRoutineEntry, ExamSet, PaymentConfig, PrepCategory, PrepCategoryDetail, PrepCategoryGroup, PrepContent, PrepTopic } from '@/lib/types';
 
 type Tab = 'categories' | 'topics' | 'content' | 'exam' | 'routine' | 'payment';
 
@@ -566,6 +570,18 @@ export default function AdminPrepPage() {
   const [catFacebookGroupUrl, setCatFacebookGroupUrl] = useState('');
   const [catFacebookPageUrl, setCatFacebookPageUrl] = useState('');
   const [catWhatsappGroupUrl, setCatWhatsappGroupUrl] = useState('');
+  const [catGroupId, setCatGroupId] = useState('');
+
+  // Parent category groups (IT / BCS / General)
+  const [groups, setGroups] = useState<PrepCategoryGroup[]>([]);
+  const [groupPanelOpen, setGroupPanelOpen] = useState(false);
+  const [groupEditId, setGroupEditId] = useState(0);
+  const [groupNameBn, setGroupNameBn] = useState('');
+  const [groupNameEn, setGroupNameEn] = useState('');
+  const [groupSlug, setGroupSlug] = useState('');
+  const [groupIcon, setGroupIcon] = useState('');
+  const [groupColor, setGroupColor] = useState('#1D4ED8');
+  const [groupOrder, setGroupOrder] = useState('0');
 
   // Enrollment management
   const [enrollCatId, setEnrollCatId] = useState<number | null>(null);
@@ -653,6 +669,12 @@ export default function AdminPrepPage() {
     return cats;
   }, []);
 
+  const loadGroups = useCallback(async (t: string) => {
+    const gs = await adminGetPrepCategoryGroups(t);
+    setGroups(gs);
+    return gs;
+  }, []);
+
   // Load ALL topics across every category (for the content topic picker)
   const loadAllTopics = useCallback(async (cats: PrepCategory[]) => {
     const details = await Promise.all(cats.map((c) => getPrepCategory(c.slug)));
@@ -671,8 +693,9 @@ export default function AdminPrepPage() {
     loadCategories()
       .then((cats) => loadAllTopics(cats))
       .finally(() => setLoading(false));
+    loadGroups(t).catch(() => {});
     getPaymentConfig().then(cfg => setPaymentConfig({ bkashNumber: cfg.bkashNumber ?? '', rocketNumber: cfg.rocketNumber ?? '' })).catch(() => {});
-  }, [router, loadCategories, loadAllTopics]);
+  }, [router, loadCategories, loadAllTopics, loadGroups]);
 
   const loadEnrollmentRequests = useCallback(async (t: string, filter: string) => {
     setRequestsLoading(true);
@@ -728,6 +751,7 @@ export default function AdminPrepPage() {
     setCatEnrollmentType('FREE'); setCatPrice(''); setCatCurrency('BDT');
     setCatDescription(''); setCatContactPhone('');
     setCatFacebookGroupUrl(''); setCatFacebookPageUrl(''); setCatWhatsappGroupUrl('');
+    setCatGroupId('');
   };
 
   const editCat = (c: PrepCategory) => {
@@ -742,6 +766,7 @@ export default function AdminPrepPage() {
     setCatFacebookGroupUrl(c.facebookGroupUrl ?? '');
     setCatFacebookPageUrl(c.facebookPageUrl ?? '');
     setCatWhatsappGroupUrl(c.whatsappGroupUrl ?? '');
+    setCatGroupId(c.groupId != null ? String(c.groupId) : '');
   };
 
   const saveCat = async () => {
@@ -756,6 +781,7 @@ export default function AdminPrepPage() {
       facebookGroupUrl: catFacebookGroupUrl || null,
       facebookPageUrl: catFacebookPageUrl || null,
       whatsappGroupUrl: catWhatsappGroupUrl || null,
+      groupId: catGroupId ? Number(catGroupId) : null,
     };
     try {
       if (catId) await adminUpdatePrepCategory(token, catId, body);
@@ -765,6 +791,42 @@ export default function AdminPrepPage() {
       resetCatForm();
       flash(catId ? 'আপডেট হয়েছে' : 'তৈরি হয়েছে');
     } catch { flash('ত্রুটি হয়েছে'); }
+  };
+
+  // ── Parent category group actions ─────────────────────────────────────────
+
+  const resetGroupForm = () => {
+    setGroupEditId(0); setGroupNameBn(''); setGroupNameEn('');
+    setGroupSlug(''); setGroupIcon(''); setGroupColor('#1D4ED8'); setGroupOrder('0');
+  };
+
+  const editGroup = (g: PrepCategoryGroup) => {
+    setGroupEditId(g.id); setGroupNameBn(g.nameBn); setGroupNameEn(g.nameEn ?? '');
+    setGroupSlug(g.slug); setGroupIcon(g.icon ?? ''); setGroupColor(g.colorHex ?? '#1D4ED8');
+    setGroupOrder(String(g.displayOrder));
+  };
+
+  const saveGroup = async () => {
+    const body = {
+      nameBn: groupNameBn, nameEn: groupNameEn, slug: groupSlug,
+      icon: groupIcon, colorHex: groupColor, displayOrder: Number(groupOrder),
+    };
+    try {
+      if (groupEditId) await adminUpdatePrepCategoryGroup(token, groupEditId, body);
+      else await adminCreatePrepCategoryGroup(token, body);
+      await loadGroups(token);
+      resetGroupForm();
+      flash(groupEditId ? 'প্যারেন্ট ক্যাটাগরি আপডেট হয়েছে' : 'প্যারেন্ট ক্যাটাগরি তৈরি হয়েছে');
+    } catch { flash('ত্রুটি হয়েছে'); }
+  };
+
+  const deleteGroup = async (id: number) => {
+    if (!confirm('মুছে ফেলবেন?')) return;
+    try {
+      await adminDeletePrepCategoryGroup(token, id);
+      await loadGroups(token);
+      flash('মুছে ফেলা হয়েছে');
+    } catch { flash('মুছতে ব্যর্থ — এতে এখনো ক্যাটাগরি যুক্ত থাকতে পারে'); }
   };
 
   const handleEnroll = async (categoryId: number, userId: number) => {
@@ -1088,6 +1150,60 @@ export default function AdminPrepPage() {
 
         {/* ── Categories ─────────────────────────────────────────────────── */}
         {tab === 'categories' && (
+          <div className="space-y-6">
+            {/* Parent category groups — IT / BCS / General, etc. Collapsed by
+                default since it's an occasional setup task, not the everyday
+                category-editing workflow. */}
+            <div className="bg-white rounded-2xl border border-warm-border overflow-hidden">
+              <button
+                onClick={() => setGroupPanelOpen((v) => !v)}
+                className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-warm-bg/50 transition-colors"
+              >
+                <div>
+                  <h2 className="font-bold text-gray-900">প্যারেন্ট ক্যাটাগরি</h2>
+                  <p className="text-xs text-warm-muted mt-0.5">যেমন: IT, BCS, General — এর নিচে আলাদা আলাদা ক্যাটাগরি যুক্ত করা যায়</p>
+                </div>
+                <span className="text-warm-muted text-sm">{groupPanelOpen ? '▲ বন্ধ করুন' : `▼ দেখুন (${groups.length})`}</span>
+              </button>
+              {groupPanelOpen && (
+                <div className="border-t border-warm-border p-5 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-gray-900 text-sm">{groupEditId ? 'এডিট করুন' : 'নতুন প্যারেন্ট ক্যাটাগরি'}</h3>
+                    <Field label="নাম (বাংলা) *" value={groupNameBn} onChange={setGroupNameBn} placeholder="IT" />
+                    <Field label="নাম (ইংরেজি)" value={groupNameEn} onChange={setGroupNameEn} />
+                    <Field label="স্লাগ" value={groupSlug} onChange={setGroupSlug} placeholder="auto-generated" />
+                    <Field label="আইকন" value={groupIcon} onChange={setGroupIcon} placeholder="laptop" />
+                    <Field label="রং (#hex)" value={groupColor} onChange={setGroupColor} />
+                    <Field label="ক্রম" value={groupOrder} onChange={setGroupOrder} type="number" />
+                    <div className="flex gap-2 pt-1">
+                      <button onClick={saveGroup} className="flex-1 bg-primary text-white rounded-xl py-2 text-sm font-semibold hover:bg-primary-dark transition-colors">
+                        {groupEditId ? 'আপডেট' : 'তৈরি করুন'}
+                      </button>
+                      {groupEditId > 0 && (
+                        <button onClick={resetGroupForm} className="px-3 text-warm-muted hover:text-gray-700 text-sm border border-warm-border rounded-xl">বাতিল</button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="lg:col-span-2 space-y-2">
+                    {groups.length === 0 && <p className="text-sm text-warm-muted">এখনো কোনো প্যারেন্ট ক্যাটাগরি নেই।</p>}
+                    {groups.map((g) => (
+                      <div key={g.id} className="flex items-center gap-3 border border-warm-border rounded-xl p-3">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold" style={{ background: g.colorHex ?? '#374151' }}>
+                          {g.displayOrder}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-gray-900 text-sm">{g.nameBn}</p>
+                          <p className="text-xs text-warm-muted">{g.slug} · {g.categoryCount} টি ক্যাটাগরি</p>
+                        </div>
+                        <button onClick={() => editGroup(g)} className="text-xs text-blue-600 hover:underline ml-2">এডিট</button>
+                        <button onClick={() => deleteGroup(g.id)} className="text-xs text-red-500 hover:underline ml-2">মুছুন</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="bg-white rounded-2xl border border-warm-border p-5 space-y-3">
               <h2 className="font-bold text-gray-900">{catId ? 'ক্যাটাগরি এডিট করুন' : 'নতুন ক্যাটাগরি'}</h2>
@@ -1097,6 +1213,18 @@ export default function AdminPrepPage() {
               <Field label="আইকন" value={catIcon} onChange={setCatIcon} placeholder="school" />
               <Field label="রং (#hex)" value={catColor} onChange={setCatColor} />
               <Field label="ক্রম" value={catOrder} onChange={setCatOrder} type="number" />
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">প্যারেন্ট ক্যাটাগরি</label>
+                <select
+                  value={catGroupId}
+                  onChange={(e) => setCatGroupId(e.target.value)}
+                  className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
+                >
+                  <option value="">— কোনোটি নয় —</option>
+                  {groups.map((g) => <option key={g.id} value={g.id}>{g.nameBn}</option>)}
+                </select>
+              </div>
 
               {/* Enrollment */}
               <div>
@@ -1148,8 +1276,14 @@ export default function AdminPrepPage() {
               </div>
             </div>
 
-            <div className="lg:col-span-2 space-y-3">
-              {categories.map((c) => (
+            <div className="lg:col-span-2 space-y-5">
+              {[
+                ...groups.map((g) => ({ key: `g-${g.id}`, label: g.nameBn, items: categories.filter((c) => c.groupId === g.id) })),
+                { key: 'ungrouped', label: 'অন্যান্য', items: categories.filter((c) => c.groupId == null) },
+              ].filter((section) => section.items.length > 0).map((section) => (
+              <div key={section.key} className="space-y-3">
+                <h3 className="text-xs font-bold text-warm-muted uppercase tracking-wide px-1">{section.label}</h3>
+                {section.items.map((c) => (
                 <div key={c.id} className="bg-white rounded-xl border border-warm-border overflow-hidden">
                   <div className="p-4 flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold" style={{ background: c.colorHex ?? '#374151' }}>
@@ -1212,8 +1346,11 @@ export default function AdminPrepPage() {
                     </div>
                   )}
                 </div>
+                ))}
+              </div>
               ))}
             </div>
+          </div>
           </div>
         )}
 

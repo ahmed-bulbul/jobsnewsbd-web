@@ -35,6 +35,7 @@ import type {
   PostType,
   PrepCategory,
   PrepCategoryDetail,
+  PrepCategoryGroup,
   PrepContent,
   PrepTopic,
   PrepTopicDetail,
@@ -598,6 +599,23 @@ export const getPrepTopic = (slug: string, token?: string) =>
 
 export const getPrepContent = (id: number, token?: string) =>
   token ? authGet<PrepContent>(`/api/prep/content/${id}`, token) : get<PrepContent>(`/api/prep/content/${id}`);
+
+// Parent category groups (IT / BCS / General) — grouping layer above
+// PrepCategory. Public read endpoint mirrors getPrepCategories' shape.
+export const getPrepCategoryGroups = () =>
+  get<PrepCategoryGroup[]>('/api/prep/category-groups');
+
+export const adminGetPrepCategoryGroups = (token: string) =>
+  authGet<PrepCategoryGroup[]>('/api/admin/prep/category-groups', token);
+
+export const adminCreatePrepCategoryGroup = (token: string, body: unknown) =>
+  authPost<PrepCategoryGroup>('/api/admin/prep/category-groups', body, token);
+
+export const adminUpdatePrepCategoryGroup = (token: string, id: number, body: unknown) =>
+  authPut<PrepCategoryGroup>(`/api/admin/prep/category-groups/${id}`, body, token);
+
+export const adminDeletePrepCategoryGroup = (token: string, id: number) =>
+  authDelete(`/api/admin/prep/category-groups/${id}`, token);
 
 // Admin prep
 export const adminCreatePrepCategory = (token: string, body: unknown) =>
