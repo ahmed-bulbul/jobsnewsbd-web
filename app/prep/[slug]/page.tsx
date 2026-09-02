@@ -255,7 +255,7 @@ function RoutinePanel({ data, color, locked }: { data: PrepCategoryDetail; color
     setDownloading(true);
     try {
       const { downloadExamRoutinePdf } = await import('@/lib/routinePdf');
-      await downloadExamRoutinePdf(t(data.nameBn, data.nameEn ?? data.nameBn), data.routine ?? []);
+      await downloadExamRoutinePdf(t(data.nameBn, data.nameEn ?? data.nameBn), data.routine ?? [], color);
     } catch { /* silent — user can retry */ }
     finally { setDownloading(false); }
   };
