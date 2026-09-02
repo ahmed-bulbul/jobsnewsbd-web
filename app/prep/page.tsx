@@ -83,6 +83,44 @@ function CategoryCard({ cat }: { cat: PrepCategory }) {
   );
 }
 
+// Parent-category card — same visual language as CategoryCard, but represents
+// a whole group (e.g. IT / BCS / General) and drills into that group's
+// categories on click instead of navigating straight to a category.
+function GroupCard({
+  label, nameEn, color, icon, count, onClick,
+}: {
+  label: string; nameEn?: string | null; color: string; icon?: string | null; count: number; onClick: () => void;
+}) {
+  const { t } = useLanguage();
+  return (
+    <button
+      onClick={onClick}
+      className="group bg-white rounded-2xl border border-warm-border hover:border-primary hover:shadow-lg transition-all overflow-hidden flex flex-col text-left"
+    >
+      <div
+        className="h-24 flex items-center justify-center"
+        style={{ background: `linear-gradient(135deg, ${color}22 0%, ${color}44 100%)` }}
+      >
+        <span className="text-4xl font-black select-none" style={{ color }}>
+          {icon || label.charAt(0)}
+        </span>
+      </div>
+      <div className="p-4 flex flex-col gap-1 flex-1">
+        <h3 className="font-bold text-base leading-snug text-gray-900 group-hover:text-primary transition-colors">
+          {label}
+        </h3>
+        {nameEn && <p className="text-xs text-warm-muted">{nameEn}</p>}
+        <div className="mt-auto pt-3 flex items-center gap-1 text-xs font-medium" style={{ color }}>
+          {count} {t('টি ক্যাটাগরি', 'categories')}
+          <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+    </button>
+  );
+}
+
 function Skeleton() {
   return (
     <div className="bg-white rounded-2xl border border-warm-border overflow-hidden animate-pulse">
@@ -102,6 +140,10 @@ export default function PrepPage() {
   const [groups, setGroups] = useState<PrepCategoryGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  // Which parent group's categories are currently drilled into — null shows
+  // the top-level list of parent groups instead. 'ungrouped' is the
+  // synthetic "অন্যান্য" bucket rather than a real PrepCategoryGroup id.
+  const [selectedGroupKey, setSelectedGroupKey] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -116,24 +158,56 @@ export default function PrepPage() {
   // Parent-group sections (in group displayOrder), plus an "other" bucket
   // for categories with no group — same shape as the admin page's grouping.
   const sections = [
-    ...groups.map((g) => ({ key: `g-${g.id}`, label: g.nameBn, items: categories.filter((c) => c.groupId === g.id) })),
-    { key: 'ungrouped', label: t('অন্যান্য', 'Other'), items: categories.filter((c) => c.groupId == null) },
+    ...groups.map((g) => ({
+      key: `g-${g.id}`, label: g.nameBn, nameEn: g.nameEn, color: g.colorHex ?? '#374151', icon: g.icon,
+      items: categories.filter((c) => c.groupId === g.id),
+    })),
+    {
+      key: 'ungrouped', label: t('অন্যান্য', 'Other'), nameEn: null as string | null, color: '#374151', icon: null as string | null,
+      items: categories.filter((c) => c.groupId == null),
+    },
   ].filter((s) => s.items.length > 0);
-  const isGrouped = groups.length > 0 && sections.length > 1;
+  // Show the parent-group drill-down as soon as at least one real parent
+  // group has a category assigned — even if every category ends up under
+  // a single group (e.g. everything is under "IT" so far, nothing
+  // ungrouped yet). Requiring 2+ non-empty sections would hide the parent
+  // category entirely in that case, which defeats the point of grouping.
+  const isGrouped = sections.some((s) => s.key !== 'ungrouped');
+  const selectedSection = sections.find((s) => s.key === selectedGroupKey) ?? null;
 
   return (
     <div className="min-h-screen bg-warm-bg flex flex-col">
       <Header />
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">
-            {t('চাকরির প্রস্তুতি', 'Job Preparation')}
-          </h1>
-          <p className="text-warm-muted mt-1 text-sm">
-            {t('ক্যাটাগরি বেছে নিন এবং প্রস্তুতি শুরু করুন', 'Choose a category and start preparing')}
-          </p>
-        </div>
+        {isGrouped && selectedSection ? (
+          <div className="mb-8">
+            <button
+              onClick={() => setSelectedGroupKey(null)}
+              className="flex items-center gap-1 text-sm font-medium text-warm-muted hover:text-primary transition-colors mb-3"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+              {t('সব প্যারেন্ট ক্যাটাগরি', 'All parent categories')}
+            </button>
+            <h1 className="text-2xl font-bold text-gray-900">{selectedSection.label}</h1>
+            {selectedSection.nameEn && (
+              <p className="text-warm-muted mt-1 text-sm">{selectedSection.nameEn}</p>
+            )}
+          </div>
+        ) : (
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-gray-900">
+              {t('চাকরির প্রস্তুতি', 'Job Preparation')}
+            </h1>
+            <p className="text-warm-muted mt-1 text-sm">
+              {isGrouped
+                ? t('একটি প্যারেন্ট ক্যাটাগরি বেছে নিন', 'Choose a parent category')
+                : t('ক্যাটাগরি বেছে নিন এবং প্রস্তুতি শুরু করুন', 'Choose a category and start preparing')}
+            </p>
+          </div>
+        )}
 
         {error ? (
           <div className="text-center py-20 text-warm-muted">
@@ -143,15 +217,24 @@ export default function PrepPage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} />)}
           </div>
+        ) : isGrouped && selectedSection ? (
+          // Step 2: categories within the chosen parent group.
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {selectedSection.items.map((cat) => <CategoryCard key={cat.id} cat={cat} />)}
+          </div>
         ) : isGrouped ? (
-          <div className="space-y-8">
+          // Step 1: parent groups only — drill into one to see its categories.
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {sections.map((section) => (
-              <div key={section.key}>
-                <h2 className="text-sm font-bold text-warm-muted uppercase tracking-wide mb-3">{section.label}</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {section.items.map((cat) => <CategoryCard key={cat.id} cat={cat} />)}
-                </div>
-              </div>
+              <GroupCard
+                key={section.key}
+                label={section.label}
+                nameEn={section.nameEn}
+                color={section.color}
+                icon={section.icon}
+                count={section.items.length}
+                onClick={() => setSelectedGroupKey(section.key)}
+              />
             ))}
           </div>
         ) : (
