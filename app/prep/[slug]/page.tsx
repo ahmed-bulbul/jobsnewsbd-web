@@ -11,8 +11,9 @@ import {
   getPaymentConfig,
   getMyEnrollmentRequest,
   submitEnrollmentRequest,
+  getPrepSyllabus,
 } from '@/lib/api';
-import type { PrepCategoryDetail, PrepTopic, PaymentConfig, EnrollmentRequest, PaymentMethod } from '@/lib/types';
+import type { PrepCategoryDetail, PrepTopic, PaymentConfig, EnrollmentRequest, PaymentMethod, PrepSyllabusSection } from '@/lib/types';
 
 // ── Curriculum card ───────────────────────────────────────────────────────────
 
@@ -240,6 +241,74 @@ function RejectedCard({ req, onRetry }: { req: EnrollmentRequest; onRetry: () =>
 
 // ── Exam routine panel ────────────────────────────────────────────────────────
 
+function SyllabusPanel({ sections, color }: { sections: PrepSyllabusSection[]; color: string }) {
+  const { t } = useLanguage();
+  const [openId, setOpenId] = useState<number | null>(null);
+
+  if (sections.length === 0) return null;
+
+  return (
+    <div className="rounded-2xl border border-warm-border bg-white p-5">
+      <h2 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+        </svg>
+        {t('সিলেবাস', 'Syllabus')}
+      </h2>
+      <div className="space-y-2">
+        {sections.map((s) => {
+          const isOpen = openId === s.id;
+          const totalMarks = s.items.reduce((sum, it) => sum + (it.marks ?? 0), 0);
+          return (
+            <div key={s.id} className="rounded-xl border border-warm-border overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setOpenId(isOpen ? null : s.id)}
+                className="w-full flex items-center justify-between gap-3 p-3.5 text-left hover:bg-warm-bg/50 transition-colors"
+              >
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm text-gray-900">{t(s.titleBn, s.titleEn ?? s.titleBn)}</p>
+                  <p className="text-xs text-warm-muted mt-0.5">
+                    {s.items.length} {t('টি বিষয়', 'topics')}
+                    {totalMarks > 0 && ` • ${t('মোট নম্বর', 'total marks')} ${totalMarks}`}
+                  </p>
+                </div>
+                <svg
+                  className={`w-4 h-4 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                  style={{ color }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {isOpen && (
+                <div className="border-t border-warm-border px-3.5 py-3 space-y-3 bg-warm-bg/30">
+                  {s.items.map((item) => (
+                    <div key={item.id} className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm text-gray-900">{t(item.textBn, item.textEn ?? item.textBn)}</p>
+                        {(item.detailsBn || item.detailsEn) && (
+                          <p className="text-xs text-warm-muted mt-0.5 leading-relaxed whitespace-pre-line">
+                            {t(item.detailsBn ?? item.detailsEn ?? '', item.detailsEn ?? item.detailsBn ?? '')}
+                          </p>
+                        )}
+                      </div>
+                      {item.marks != null && (
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full shrink-0" style={{ background: `${color}18`, color }}>
+                          {item.marks} {t('নম্বর', 'marks')}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function RoutinePanel({ data, color, locked }: { data: PrepCategoryDetail; color: string; locked: boolean }) {
   const { t } = useLanguage();
   const [downloading, setDownloading] = useState(false);
@@ -424,6 +493,7 @@ export default function PrepCategoryPage({ params }: { params: Promise<{ slug: s
   const [paymentConfig, setPaymentConfig] = useState<PaymentConfig | null>(null);
   const [myRequest, setMyRequest] = useState<EnrollmentRequest | null | undefined>(undefined); // undefined = not loaded
   const [showModal, setShowModal] = useState(false);
+  const [syllabus, setSyllabus] = useState<PrepSyllabusSection[]>([]);
 
   useEffect(() => {
     getPrepCategory(slug, user?.token ?? undefined)
@@ -431,6 +501,7 @@ export default function PrepCategoryPage({ params }: { params: Promise<{ slug: s
       .catch(() => setError(true))
       .finally(() => setLoading(false));
     getPaymentConfig().then(setPaymentConfig).catch(() => {});
+    getPrepSyllabus(slug).then(setSyllabus).catch(() => setSyllabus([]));
   }, [slug, user]);
 
   // load existing request once we know user + data
@@ -614,6 +685,9 @@ export default function PrepCategoryPage({ params }: { params: Promise<{ slug: s
                 )}
               </div>
             </div>
+
+            {/* ── Syllabus ── */}
+            <SyllabusPanel sections={syllabus} color={color} />
 
             {/* ── Exam routine ── */}
             <RoutinePanel data={data} color={color} locked={isLocked} />

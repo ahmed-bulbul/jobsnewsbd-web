@@ -597,6 +597,12 @@ export const getPrepCategory = (slug: string, token?: string) =>
 export const getPrepTopic = (slug: string, token?: string) =>
   token ? authGet<PrepTopicDetail>(`/api/prep/topics/${slug}`, token) : get<PrepTopicDetail>(`/api/prep/topics/${slug}`);
 
+// A category's syllabus — ordered sections, each with an ordered list of
+// topic items. Empty array (not an error) for a category with no syllabus
+// added yet.
+export const getPrepSyllabus = (slug: string) =>
+  get<import('./types').PrepSyllabusSection[]>(`/api/prep/categories/${slug}/syllabus`);
+
 export const getPrepContent = (id: number, token?: string) =>
   token ? authGet<PrepContent>(`/api/prep/content/${id}`, token) : get<PrepContent>(`/api/prep/content/${id}`);
 
