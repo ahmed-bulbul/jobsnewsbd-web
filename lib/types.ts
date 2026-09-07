@@ -265,6 +265,26 @@ export interface ExamRoutineEntry {
   published: boolean;
 }
 
+// A category's syllabus — ordered sections, each with an ordered list of
+// topic items (optionally weighted by marks and a detailed description).
+export interface PrepSyllabusSection {
+  id: number;
+  titleBn: string;
+  titleEn: string | null;
+  displayOrder: number;
+  items: PrepSyllabusItem[];
+}
+
+export interface PrepSyllabusItem {
+  id: number;
+  textBn: string;
+  textEn: string | null;
+  detailsBn: string | null;
+  detailsEn: string | null;
+  marks: number | null;
+  displayOrder: number;
+}
+
 export interface PrepContent {
   id: number;
   topicId: number;

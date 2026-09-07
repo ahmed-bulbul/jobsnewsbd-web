@@ -774,6 +774,31 @@ export const adminUpdateRoutineEntry = (token: string, id: number, body: unknown
 export const adminDeleteRoutineEntry = (token: string, id: number) =>
   authDelete(`/api/admin/prep/routine/${id}`, token);
 
+// ── Admin Syllabus (sections + items, scoped to a category) ───────────────────
+
+export const adminGetSyllabus = (token: string, categoryId: number) =>
+  authGet<import('./types').PrepSyllabusSection[]>(`/api/admin/prep/categories/${categoryId}/syllabus`, token);
+
+export const adminCreateSyllabusSection = (token: string, body: unknown) =>
+  authPost<import('./types').PrepSyllabusSection>('/api/admin/prep/syllabus-sections', body, token);
+
+export const adminUpdateSyllabusSection = (token: string, id: number, body: unknown) =>
+  authPut<import('./types').PrepSyllabusSection>(`/api/admin/prep/syllabus-sections/${id}`, body, token);
+
+export const adminDeleteSyllabusSection = (token: string, id: number) =>
+  authDelete(`/api/admin/prep/syllabus-sections/${id}`, token);
+
+// Item create/update endpoints return no body — reload the section list
+// after calling these rather than using the response.
+export const adminCreateSyllabusItem = (token: string, body: unknown) =>
+  authPost<void>('/api/admin/prep/syllabus-items', body, token);
+
+export const adminUpdateSyllabusItem = (token: string, id: number, body: unknown) =>
+  authPut<void>(`/api/admin/prep/syllabus-items/${id}`, body, token);
+
+export const adminDeleteSyllabusItem = (token: string, id: number) =>
+  authDelete(`/api/admin/prep/syllabus-items/${id}`, token);
+
 // ── Question Bank (public) ────────────────────────────────────────────────────
 
 export const getQuestionBankCategories = () =>

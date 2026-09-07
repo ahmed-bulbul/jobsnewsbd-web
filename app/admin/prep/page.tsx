@@ -46,10 +46,17 @@ import {
   adminCreateRoutineEntry,
   adminUpdateRoutineEntry,
   adminDeleteRoutineEntry,
+  adminGetSyllabus,
+  adminCreateSyllabusSection,
+  adminUpdateSyllabusSection,
+  adminDeleteSyllabusSection,
+  adminCreateSyllabusItem,
+  adminUpdateSyllabusItem,
+  adminDeleteSyllabusItem,
 } from '@/lib/api';
-import type { AdminExamAttempt, EnrollmentRequest, ExamQuestion, ExamRoutineEntry, ExamSet, PaymentConfig, PrepCategory, PrepCategoryDetail, PrepCategoryGroup, PrepContent, PrepTopic } from '@/lib/types';
+import type { AdminExamAttempt, EnrollmentRequest, ExamQuestion, ExamRoutineEntry, ExamSet, PaymentConfig, PrepCategory, PrepCategoryDetail, PrepCategoryGroup, PrepContent, PrepSyllabusItem, PrepSyllabusSection, PrepTopic } from '@/lib/types';
 
-type Tab = 'categories' | 'topics' | 'content' | 'exam' | 'routine' | 'payment';
+type Tab = 'categories' | 'topics' | 'content' | 'exam' | 'routine' | 'syllabus' | 'payment';
 
 // Flat topic record enriched with its category name
 interface FlatTopic extends PrepTopic { categoryNameBn: string }
@@ -661,6 +668,25 @@ export default function AdminPrepPage() {
   const [routineOrder, setRoutineOrder] = useState('0');
   const [routinePublished, setRoutinePublished] = useState(true);
 
+  // Syllabus state
+  const [syllabusCatId, setSyllabusCatId] = useState('');
+  const [syllabusSections, setSyllabusSections] = useState<PrepSyllabusSection[]>([]);
+  const [syllabusLoading, setSyllabusLoading] = useState(false);
+  const [openSectionId, setOpenSectionId] = useState<number | null>(null);
+  // Section form (add/edit)
+  const [editingSection, setEditingSection] = useState<PrepSyllabusSection | null>(null);
+  const [sectionTitleBn, setSectionTitleBn] = useState('');
+  const [sectionTitleEn, setSectionTitleEn] = useState('');
+  const [sectionOrder, setSectionOrder] = useState('0');
+  // Item form (add/edit) — scoped to whichever section is open
+  const [editingItem, setEditingItem] = useState<PrepSyllabusItem | null>(null);
+  const [itemTextBn, setItemTextBn] = useState('');
+  const [itemTextEn, setItemTextEn] = useState('');
+  const [itemDetailsBn, setItemDetailsBn] = useState('');
+  const [itemDetailsEn, setItemDetailsEn] = useState('');
+  const [itemMarks, setItemMarks] = useState('');
+  const [itemOrder, setItemOrder] = useState('0');
+
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(''), 3000); };
 
   const loadCategories = useCallback(async () => {
@@ -1084,6 +1110,93 @@ export default function AdminPrepPage() {
     } catch { flash('মুছতে ব্যর্থ'); }
   };
 
+  // ── Syllabus ──────────────────────────────────────────────────────────────
+
+  const loadSyllabus = async (categoryId: string) => {
+    if (!categoryId) return;
+    setSyllabusLoading(true);
+    try {
+      const sections = await adminGetSyllabus(token, Number(categoryId));
+      setSyllabusSections(sections);
+    } finally { setSyllabusLoading(false); }
+  };
+
+  const resetSectionForm = () => {
+    setEditingSection(null); setSectionTitleBn(''); setSectionTitleEn(''); setSectionOrder('0');
+  };
+
+  const editSection = (s: PrepSyllabusSection) => {
+    setEditingSection(s);
+    setSectionTitleBn(s.titleBn); setSectionTitleEn(s.titleEn ?? ''); setSectionOrder(String(s.displayOrder));
+  };
+
+  const saveSection = async () => {
+    if (!syllabusCatId || !sectionTitleBn) { flash('বিভাগের নাম দিন'); return; }
+    const body = {
+      categoryId: Number(syllabusCatId),
+      titleBn: sectionTitleBn,
+      titleEn: sectionTitleEn || null,
+      displayOrder: Number(sectionOrder),
+    };
+    try {
+      if (editingSection) await adminUpdateSyllabusSection(token, editingSection.id, body);
+      else await adminCreateSyllabusSection(token, body);
+      await loadSyllabus(syllabusCatId);
+      resetSectionForm();
+      flash(editingSection ? 'আপডেট হয়েছে' : 'বিভাগ তৈরি হয়েছে');
+    } catch { flash('ত্রুটি হয়েছে'); }
+  };
+
+  const deleteSection = async (id: number) => {
+    if (!confirm('এই বিভাগ ও এর সব বিষয় মুছে ফেলবেন?')) return;
+    try {
+      await adminDeleteSyllabusSection(token, id);
+      await loadSyllabus(syllabusCatId);
+      flash('মুছে ফেলা হয়েছে');
+    } catch { flash('মুছতে ব্যর্থ'); }
+  };
+
+  const resetItemForm = () => {
+    setEditingItem(null); setItemTextBn(''); setItemTextEn(''); setItemDetailsBn(''); setItemDetailsEn('');
+    setItemMarks(''); setItemOrder('0');
+  };
+
+  const editItem = (item: PrepSyllabusItem) => {
+    setEditingItem(item);
+    setItemTextBn(item.textBn); setItemTextEn(item.textEn ?? '');
+    setItemDetailsBn(item.detailsBn ?? ''); setItemDetailsEn(item.detailsEn ?? '');
+    setItemMarks(item.marks != null ? String(item.marks) : ''); setItemOrder(String(item.displayOrder));
+  };
+
+  const saveItem = async (sectionId: number) => {
+    if (!itemTextBn) { flash('বিষয়ের শিরোনাম দিন'); return; }
+    const body = {
+      sectionId,
+      textBn: itemTextBn,
+      textEn: itemTextEn || null,
+      detailsBn: itemDetailsBn || null,
+      detailsEn: itemDetailsEn || null,
+      marks: itemMarks ? Number(itemMarks) : null,
+      displayOrder: Number(itemOrder),
+    };
+    try {
+      if (editingItem) await adminUpdateSyllabusItem(token, editingItem.id, body);
+      else await adminCreateSyllabusItem(token, body);
+      await loadSyllabus(syllabusCatId);
+      resetItemForm();
+      flash(editingItem ? 'আপডেট হয়েছে' : 'বিষয় যোগ হয়েছে');
+    } catch { flash('ত্রুটি হয়েছে'); }
+  };
+
+  const deleteItem = async (id: number) => {
+    if (!confirm('এই বিষয় মুছে ফেলবেন?')) return;
+    try {
+      await adminDeleteSyllabusItem(token, id);
+      await loadSyllabus(syllabusCatId);
+      flash('মুছে ফেলা হয়েছে');
+    } catch { flash('মুছতে ব্যর্থ'); }
+  };
+
   const editSet = (s: ExamSet) => {
     setEditingSet(s); setSetTitleBn(s.titleBn); setSetDescBn(s.descriptionBn ?? '');
     setSetStartsAt(s.startsAt.slice(0, 16)); setSetEndsAt(s.endsAt.slice(0, 16));
@@ -1124,7 +1237,7 @@ export default function AdminPrepPage() {
 
   const tabLabel = (t: Tab) =>
     t === 'categories' ? 'ক্যাটাগরি' : t === 'topics' ? 'বিষয়' : t === 'content' ? 'কন্টেন্ট' :
-    t === 'exam' ? '📝 পরীক্ষা' : t === 'routine' ? '🗓 রুটিন' : '💳 পেমেন্ট';
+    t === 'exam' ? '📝 পরীক্ষা' : t === 'routine' ? '🗓 রুটিন' : t === 'syllabus' ? '📚 সিলেবাস' : '💳 পেমেন্ট';
 
   return (
     <AdminShell title="চাকরির প্রস্তুতি" subtitle="ক্যাটাগরি, বিষয়, কন্টেন্ট, পরীক্ষা ও পেমেন্ট ব্যবস্থাপনা" adminName={adminName} token={token}>
@@ -1139,7 +1252,7 @@ export default function AdminPrepPage() {
 
         <div className="mb-6">
           <Tabs
-            tabs={(['categories', 'topics', 'content', 'exam', 'routine', 'payment'] as Tab[]).map((t) => ({ id: t, label: tabLabel(t) }))}
+            tabs={(['categories', 'topics', 'content', 'exam', 'routine', 'syllabus', 'payment'] as Tab[]).map((t) => ({ id: t, label: tabLabel(t) }))}
             active={tab}
             onChange={(id) => {
               setTab(id as Tab);
@@ -1933,6 +2046,145 @@ export default function AdminPrepPage() {
                   )}
                 </div>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Syllabus ───────────────────────────────────────────────────── */}
+        {tab === 'syllabus' && (
+          <div className="space-y-6">
+            {/* Step 1: pick category */}
+            <div className="bg-white rounded-2xl border border-warm-border p-5">
+              <label className="block text-xs font-semibold text-gray-600 mb-1">ক্যাটাগরি বেছে নিন</label>
+              <select
+                value={syllabusCatId}
+                onChange={(e) => { setSyllabusCatId(e.target.value); loadSyllabus(e.target.value); resetSectionForm(); resetItemForm(); setOpenSectionId(null); }}
+                className="w-full sm:w-96 border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
+              >
+                <option value="">বেছে নিন</option>
+                {categories.map((c) => <option key={c.id} value={c.id}>{c.nameBn}</option>)}
+              </select>
+            </div>
+
+            {syllabusCatId && (
+              <>
+                {/* New/edit section form */}
+                <div className="bg-white rounded-2xl border border-warm-border p-5 space-y-3 max-w-xl">
+                  <h2 className="font-bold text-gray-900">{editingSection ? 'বিভাগ এডিট করুন' : 'নতুন বিভাগ যোগ করুন'}</h2>
+                  <p className="text-xs text-warm-muted">যেমন: &quot;বাংলাদেশ বিষয়াবলি&quot; বা &quot;ভাষা&quot; — একটি বড় বিষয়ের অংশ, যার নিচে আলাদা আলাদা টপিক থাকবে।</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Field label="শিরোনাম (বাংলা) *" value={sectionTitleBn} onChange={setSectionTitleBn} placeholder="যেমন: বাংলাদেশ বিষয়াবলি" />
+                    <Field label="শিরোনাম (ইংরেজি)" value={sectionTitleEn} onChange={setSectionTitleEn} />
+                  </div>
+                  <Field label="ক্রম" value={sectionOrder} onChange={setSectionOrder} type="number" />
+                  <div className="flex gap-2 pt-1">
+                    <button onClick={saveSection} className="bg-primary text-white rounded-xl px-5 py-2 text-sm font-semibold hover:bg-primary-dark transition-colors">
+                      {editingSection ? 'আপডেট' : 'তৈরি করুন'}
+                    </button>
+                    {editingSection && <button onClick={resetSectionForm} className="px-3 text-warm-muted hover:text-gray-700 text-sm border border-warm-border rounded-xl">বাতিল</button>}
+                  </div>
+                </div>
+
+                {/* Section list */}
+                <div className="space-y-3">
+                  {syllabusLoading ? (
+                    <p className="text-sm text-warm-muted">লোড হচ্ছে...</p>
+                  ) : syllabusSections.length === 0 ? (
+                    <p className="text-sm text-warm-muted">এখনো কোনো সিলেবাস বিভাগ যোগ করা হয়নি</p>
+                  ) : (
+                    syllabusSections.map((s) => {
+                      const totalMarks = s.items.reduce((sum, it) => sum + (it.marks ?? 0), 0);
+                      const isOpen = openSectionId === s.id;
+                      return (
+                        <div key={s.id} className="bg-white rounded-2xl border border-warm-border overflow-hidden">
+                          <button
+                            onClick={() => { setOpenSectionId(isOpen ? null : s.id); resetItemForm(); }}
+                            className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-warm-bg/50 transition-colors"
+                          >
+                            <div>
+                              <span className="font-bold text-gray-900">{s.titleBn}</span>
+                              {s.titleEn && <span className="text-xs text-warm-muted ml-2">{s.titleEn}</span>}
+                              <p className="text-xs text-warm-muted mt-0.5">
+                                {s.items.length} টি বিষয়{totalMarks > 0 && ` • মোট নম্বর ${totalMarks}`}
+                              </p>
+                            </div>
+                            <span className="text-warm-muted text-lg shrink-0">{isOpen ? '▲' : '▼'}</span>
+                          </button>
+
+                          {isOpen && (
+                            <div className="border-t border-warm-border px-5 py-4 space-y-4 bg-warm-bg/30">
+                              <div className="flex gap-2">
+                                <button onClick={() => editSection(s)} className="text-xs text-blue-600 hover:underline">বিভাগ এডিট</button>
+                                <button onClick={() => deleteSection(s.id)} className="text-xs text-red-500 hover:underline">বিভাগ মুছুন</button>
+                              </div>
+
+                              {/* Item list */}
+                              <div className="space-y-2">
+                                {s.items.length === 0 ? (
+                                  <p className="text-xs text-warm-muted">এখনো কোনো বিষয় যোগ করা হয়নি</p>
+                                ) : (
+                                  s.items.map((item) => (
+                                    <div key={item.id} className="bg-white rounded-xl border border-warm-border p-3">
+                                      <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0">
+                                          <span className="font-semibold text-gray-900 text-sm">{item.textBn}</span>
+                                          {item.textEn && <span className="text-xs text-warm-muted ml-2">{item.textEn}</span>}
+                                        </div>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                          {item.marks != null && (
+                                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{item.marks} নম্বর</span>
+                                          )}
+                                          <button onClick={() => editItem(item)} className="text-xs text-blue-600 hover:underline">এডিট</button>
+                                          <button onClick={() => deleteItem(item.id)} className="text-xs text-red-500 hover:underline">মুছুন</button>
+                                        </div>
+                                      </div>
+                                      {(item.detailsBn || item.detailsEn) && (
+                                        <p className="text-xs text-warm-muted mt-1.5 whitespace-pre-line">{item.detailsBn || item.detailsEn}</p>
+                                      )}
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+
+                              {/* Add/edit item form */}
+                              <div className="bg-white rounded-xl border border-warm-border p-4 space-y-3">
+                                <h3 className="text-sm font-bold text-gray-900">
+                                  {editingItem ? 'বিষয় এডিট করুন' : 'নতুন বিষয় যোগ করুন'}
+                                </h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <Field label="শিরোনাম (বাংলা) *" value={itemTextBn} onChange={setItemTextBn} placeholder="যেমন: বাংলাদেশের সংবিধান" />
+                                  <Field label="শিরোনাম (ইংরেজি)" value={itemTextEn} onChange={setItemTextEn} />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-semibold text-gray-600 mb-1">বিস্তারিত বিবরণ (বাংলা)</label>
+                                  <textarea value={itemDetailsBn} onChange={(e) => setItemDetailsBn(e.target.value)} rows={3}
+                                    placeholder="এই টপিকের আওতায় যা যা পড়তে হবে তার তালিকা লিখুন"
+                                    className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none" />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-semibold text-gray-600 mb-1">বিস্তারিত বিবরণ (ইংরেজি, ঐচ্ছিক)</label>
+                                  <textarea value={itemDetailsEn} onChange={(e) => setItemDetailsEn(e.target.value)} rows={3}
+                                    className="w-full border border-warm-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary resize-none" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <Field label="নম্বর (ঐচ্ছিক)" value={itemMarks} onChange={setItemMarks} type="number" />
+                                  <Field label="ক্রম" value={itemOrder} onChange={setItemOrder} type="number" />
+                                </div>
+                                <div className="flex gap-2 pt-1">
+                                  <button onClick={() => saveItem(s.id)} className="bg-primary text-white rounded-xl px-5 py-2 text-sm font-semibold hover:bg-primary-dark transition-colors">
+                                    {editingItem ? 'আপডেট' : 'যোগ করুন'}
+                                  </button>
+                                  {editingItem && <button onClick={resetItemForm} className="px-3 text-warm-muted hover:text-gray-700 text-sm border border-warm-border rounded-xl">বাতিল</button>}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </>
             )}
           </div>
         )}
