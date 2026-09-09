@@ -642,6 +642,7 @@ export default function AdminPrepPage() {
   const [attempts, setAttempts] = useState<AdminExamAttempt[]>([]);
   const [marksLoading, setMarksLoading] = useState(false);
   const [marksDownloading, setMarksDownloading] = useState(false);
+  const [questionPaperDownloadingId, setQuestionPaperDownloadingId] = useState<number | null>(null);
   // Exam set form fields
   const [setTitleBn, setSetTitleBn] = useState('');
   const [setDescBn, setSetDescBn] = useState('');
@@ -1036,6 +1037,19 @@ export default function AdminPrepPage() {
       await downloadExamMarksPdf(examTitle, attempts);
     } catch { flash('PDF তৈরি করা যায়নি'); }
     finally { setMarksDownloading(false); }
+  };
+
+  const handleDownloadQuestionPaper = async (set: ExamSet) => {
+    setQuestionPaperDownloadingId(set.id);
+    try {
+      // Reuse the already-loaded question list if this set's editor panel is
+      // open (avoids a redundant fetch); otherwise fetch fresh.
+      const qs = activeSetId === set.id && questions.length > 0 ? questions : await adminGetQuestions(token, set.id);
+      if (qs.length === 0) { flash('এই সেটে কোনো প্রশ্ন নেই'); return; }
+      const { downloadExamQuestionPaperPdf } = await import('@/lib/examQuestionPaperPdf');
+      await downloadExamQuestionPaperPdf(set, qs);
+    } catch { flash('PDF তৈরি করা যায়নি'); }
+    finally { setQuestionPaperDownloadingId(null); }
   };
 
   const resetSetForm = () => {
@@ -1789,6 +1803,13 @@ export default function AdminPrepPage() {
                           className="text-xs text-amber-600 hover:underline ml-2"
                         >
                           📊 মার্কস {marksSetId === s.id ? '▲' : '→'}
+                        </button>
+                        <button
+                          onClick={() => handleDownloadQuestionPaper(s)}
+                          disabled={questionPaperDownloadingId === s.id}
+                          className="text-xs text-emerald-600 hover:underline ml-2 disabled:opacity-50"
+                        >
+                          {questionPaperDownloadingId === s.id ? 'PDF তৈরি হচ্ছে...' : '🖨️ প্রশ্নপত্র PDF'}
                         </button>
                         <button onClick={() => deleteSet(s.id)} className="text-xs text-red-500 hover:underline ml-2">মুছুন</button>
                       </div>
