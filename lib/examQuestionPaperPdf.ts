@@ -33,13 +33,13 @@ function buildQuestionPaperHtml(examSet: ExamSet, questions: ExamQuestion[], acc
   const questionsHtml = questions.map((q, i) => `
     <div class="qp-question" style="padding:14px 0;border-bottom:1px solid ${PDF_INK.border};">
       <div style="display:flex;gap:10px;align-items:flex-start;">
-        <div style="width:26px;height:26px;border-radius:50%;background:${accent};color:#ffffff;font-size:12px;font-weight:800;flex:none;display:flex;align-items:center;justify-content:center;">${i + 1}</div>
+        <div style="width:26px;height:26px;line-height:26px;text-align:center;border-radius:50%;background:${accent};color:#ffffff;font-size:12px;font-weight:800;flex:none;">${i + 1}</div>
         <div style="flex:1;">
           <div style="font-size:13px;font-weight:700;color:${PDF_INK.dark};line-height:1.55;margin-bottom:9px;">${escapeHtml(q.questionText)}</div>
           <div style="display:flex;flex-wrap:wrap;gap:8px;">
             ${(['A', 'B', 'C', 'D'] as const).map((opt) => `
               <div style="width:calc(50% - 4px);box-sizing:border-box;display:flex;align-items:center;gap:8px;border:1px solid ${PDF_INK.border};border-radius:8px;padding:6px 10px;background:${PDF_INK.zebra};">
-                <span style="width:20px;height:20px;border-radius:6px;background:#ffffff;border:1px solid ${PDF_INK.border};font-size:10.5px;font-weight:800;color:${PDF_INK.muted};display:flex;align-items:center;justify-content:center;flex:none;">${opt}</span>
+                <span style="display:inline-block;width:20px;height:20px;box-sizing:border-box;line-height:18px;text-align:center;border-radius:6px;background:#ffffff;border:1px solid ${PDF_INK.border};font-size:10.5px;font-weight:800;color:${PDF_INK.muted};flex:none;">${opt}</span>
                 <span style="font-size:11.5px;color:${PDF_INK.body};line-height:1.4;">${escapeHtml(optionText(q, opt))}</span>
               </div>`).join('')}
           </div>
@@ -170,7 +170,7 @@ export async function downloadExamQuestionPaperPdf(examSet: ExamSet, questions: 
     // rendered DOM and only break pages between them.
     const containerRect = container.getBoundingClientRect();
     const blocks = Array.from(container.querySelectorAll('.qp-question'));
-    const pxToMm = contentWidthMm / CONTENT_PX_WIDTH;
+    const pxToMm = contentWidthMm / containerRect.width;
     const usableHeightPx = usableHeightMm / pxToMm;
 
     const pageBreaksPx: number[] = [0];
@@ -186,17 +186,38 @@ export async function downloadExamQuestionPaperPdf(examSet: ExamSet, questions: 
     }
 
     const canvas = await html2canvas(container, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
-    const imgHeightMm = (canvas.height * contentWidthMm) / canvas.width;
-    const imgData = canvas.toDataURL('image/png');
+    // Canvas px per CSS px — normally equal to the `scale` option above, but
+    // measured directly so a mismatch there can never cause mis-cropped
+    // slices.
+    const canvasScale = canvas.width / containerRect.width;
     const totalPages = pageBreaksPx.length;
 
     pdf = new jsPDF('p', 'mm', 'a4');
 
+    // Each page gets its own independently-cropped image slice (rather than
+    // the whole screenshot repositioned per page) so pages can never overlap
+    // or duplicate content at their boundary — the previous shifted-image
+    // approach could bleed a sliver of the prior page's content into the
+    // next page's top margin.
     for (let page = 0; page < totalPages; page++) {
       if (page > 0) pdf.addPage();
-      const breakMm = pageBreaksPx[page] * pxToMm;
-      const y = marginMm - breakMm;
-      pdf.addImage(imgData, 'PNG', marginMm, y, contentWidthMm, imgHeightMm);
+      const startPx = pageBreaksPx[page];
+      const endPx = page + 1 < totalPages ? pageBreaksPx[page + 1] : containerRect.height;
+      const sliceHeightPx = Math.max(1, endPx - startPx);
+      const sliceCanvas = document.createElement('canvas');
+      sliceCanvas.width = canvas.width;
+      sliceCanvas.height = Math.max(1, Math.round(sliceHeightPx * canvasScale));
+      const ctx = sliceCanvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(
+          canvas,
+          0, Math.round(startPx * canvasScale), canvas.width, sliceCanvas.height,
+          0, 0, canvas.width, sliceCanvas.height,
+        );
+      }
+      const sliceImgData = sliceCanvas.toDataURL('image/png');
+      const sliceHeightMm = sliceHeightPx * pxToMm;
+      pdf.addImage(sliceImgData, 'PNG', marginMm, marginMm, contentWidthMm, sliceHeightMm);
       drawPdfFooter(pdf, pdfWidthMm, marginMm, page + 1, totalPages);
     }
   } finally {
