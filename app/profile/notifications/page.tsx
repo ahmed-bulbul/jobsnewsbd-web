@@ -18,8 +18,8 @@ const TOPIC_COPY: Record<NotificationPreference['topic'], { titleBn: string; tit
   JOB_CIRCULAR: {
     titleBn: 'চাকরির বিজ্ঞপ্তি',
     titleEn: 'Job Circular Updates',
-    descBn: 'নতুন চাকরির বিজ্ঞপ্তি, ভর্তি পরীক্ষার তারিখ, ফলাফল ও প্রবেশপত্র সংক্রান্ত আপডেট',
-    descEn: 'New circulars, admit cards, exam dates, and results',
+    descBn: 'নতুন চাকরির বিজ্ঞপ্তি, ভর্তি পরীক্ষার তারিখ, ফলাফল ও প্রবেশপত্র সংক্রান্ত আপডেট। ইমেইল পেতে সাবস্ক্রাইব করুন — ডিফল্টভাবে বন্ধ থাকে।',
+    descEn: 'New circulars, admit cards, exam dates, and results. Email is opt-in — subscribe below to start receiving it (off by default).',
     hasEmail: true,
   },
   EXAM_SET: {
