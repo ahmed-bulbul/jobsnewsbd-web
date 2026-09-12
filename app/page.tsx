@@ -1,13 +1,12 @@
 import { getCategoryTypes, getCategories, getPosts, getLiveExams, getUpcomingExams, getJobExperiences } from '@/lib/api';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import HeroSearch from '@/components/home/HeroSearch';
-import CategoryPills from '@/components/home/CategoryPills';
+import HeroSearch, { type TodaySummary } from '@/components/home/HeroSearch';
 import QuickAccessChips, { type QuickAccessItem } from '@/components/home/QuickAccessChips';
-import FeaturedJobsRow from '@/components/home/FeaturedJobsRow';
-import LiveExamsToday from '@/components/home/LiveExamsToday';
+import FeaturedListingsSection from '@/components/home/FeaturedListingsSection';
+import ExamAndStudyRow from '@/components/home/ExamAndStudyRow';
+import ToolsShortcuts from '@/components/home/ToolsShortcuts';
 import ClosingTodayTicker from '@/components/home/ClosingTodayTicker';
-import ExplorePlatform from '@/components/home/ExplorePlatform';
 import SuccessStories from '@/components/home/SuccessStories';
 import AppDownloadBanner from '@/components/home/AppDownloadBanner';
 import FaqSection from '@/components/home/FaqSection';
@@ -18,26 +17,21 @@ export const revalidate = 60;
 
 const emptyPage = <Item,>(size: number) => ({ content: [] as Item[], totalElements: 0, totalPages: 0, page: 0, size, last: true });
 
-function StatIcon({ path }: { path: string }) {
-  return (
-    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={path} />
-    </svg>
-  );
-}
-
 export default async function HomePage() {
-  const [categoryTypes, categories, latestPosts, closingToday, liveExams, upcomingExams, successStories] = await Promise.all([
+  const [categoryTypes, categories, latestPosts, closingToday, newToday, activePosts, liveExams, upcomingExams, successStories] = await Promise.all([
     getCategoryTypes().catch((): CategoryType[] => []),
     getCategories().catch((): Category[] => []),
-    getPosts({ size: 6 }).catch(() => emptyPage<PostSummary>(6)),
+    getPosts({ size: 24 }).catch(() => emptyPage<PostSummary>(24)),
     getPosts({ status: 'ONGOING', deadlineWithinDays: 1, size: 6 }).catch(() => emptyPage<PostSummary>(6)),
+    getPosts({ postedToday: true, size: 1 }).catch(() => emptyPage<PostSummary>(1)),
+    getPosts({ status: 'ONGOING', size: 1 }).catch(() => emptyPage<PostSummary>(1)),
     getLiveExams().catch((): LiveExam[] => []),
     getUpcomingExams().catch((): UpcomingExam[] => []),
     getJobExperiences({ outcome: 'SELECTED', size: 3 }).catch(() => emptyPage<JobExperience>(3)),
   ]);
 
-  // category name → category type slug (for JobCard border color)
+  // category name → category type slug (used for both the featured-listings
+  // tab filter and each compact job card's category badge)
   const nameToTypeSlug: Record<string, string> = {};
   categories.forEach((c) => {
     const ct = categoryTypes.find((t) => t.id === c.categoryTypeId);
@@ -66,25 +60,29 @@ export default async function HomePage() {
     (a, b) => new Date(a.applicationEnd!).getTime() - new Date(b.applicationEnd!).getTime()
   );
 
+  const summary: TodaySummary = {
+    newToday: newToday.totalElements,
+    closingToday: closingToday.totalElements,
+    active: activePosts.totalElements,
+    liveExamCount: liveExams.length,
+  };
+
   return (
     <>
       <Header />
       <ClosingTodayTicker posts={closingTodayPosts} />
       <main>
-        <HeroSearch categoryTypes={categoryTypes} />
+        <HeroSearch categoryTypes={categoryTypes} summary={summary} latestList={latestPosts.content.slice(0, 3)} />
 
         <QuickAccessChips items={quickAccessItems} />
 
-        <FeaturedJobsRow posts={latestPosts.content.slice(0, 6)} nameToTypeSlug={nameToTypeSlug} />
+        <FeaturedListingsSection posts={latestPosts.content} categoryTypes={categoryTypes} nameToTypeSlug={nameToTypeSlug} />
 
-        <LiveExamsToday exams={liveExams} upcoming={upcomingExams} />
+        <ExamAndStudyRow exams={liveExams} upcoming={upcomingExams} />
 
-        <ExplorePlatform />
+        <ToolsShortcuts />
 
         <SuccessStories experiences={successStories.content} />
-
-        {/* Categories */}
-        <CategoryPills categoryTypes={categoryTypes} categories={categories} />
 
         {/* About / intro — real content about the site for visitors and search engines */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
@@ -115,33 +113,9 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <FaqSection />
-
         <AppDownloadBanner />
 
-        {/* Stats bar — closing summary just above the footer */}
-        <div className="bg-primary-900 text-white">
-          <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-6 grid grid-cols-4 divide-x divide-primary-700">
-            {[
-              { bn: 'মোট বিজ্ঞপ্তি', en: 'Total Circulars', value: latestPosts.totalElements, icon: <StatIcon path="M12 2a5 5 0 015 5v2a5 5 0 01-10 0V7a5 5 0 015-5zM4 21a8 8 0 0116 0" /> },
-              { bn: 'বিভাগ',         en: 'Categories',      value: categories.length, icon: <StatIcon path="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /> },
-              { bn: 'ধরন',           en: 'Job Types',       value: categoryTypes.length, icon: <StatIcon path="M4 21V9l8-6 8 6v12M9 21v-6h6v6" /> },
-              { bn: 'আপডেট',         en: 'Updates',         value: '24/7', icon: <StatIcon path="M12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36A5.5 5.5 0 1112.36 3.1 9 9 0 0012 3z" /> },
-            ].map((s) => (
-              <div key={s.bn} className="flex items-center gap-2 sm:gap-3 justify-center px-1 sm:px-4">
-                <span className="hidden xs:flex sm:flex w-8 h-8 sm:w-10 sm:h-10 shrink-0 rounded-full bg-white/10 items-center justify-center text-accent">
-                  {s.icon}
-                </span>
-                <div className="text-center sm:text-left">
-                  <div className="text-lg sm:text-2xl font-bold text-accent">
-                    {typeof s.value === 'number' ? `${s.value}+` : s.value}
-                  </div>
-                  <div className="text-[10px] sm:text-xs text-primary-300 mt-0.5 leading-tight"><T bn={s.bn} en={s.en} /></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <FaqSection />
       </main>
       <Footer />
     </>

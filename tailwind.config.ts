@@ -39,6 +39,19 @@ const config: Config = {
           DEFAULT: '#17212B',
           soft: '#98A2B3',
         },
+        // Deep navy — distinct from the green `primary-900` — used only for
+        // the two dark full-bleed sections (app-download CTA banner and the
+        // footer) per the homepage redesign reference. Sampled from the
+        // provided design mockup.
+        navy: {
+          DEFAULT: '#0A1B3D',
+          50:  '#EBEEF5',
+          100: '#D2D9E8',
+          700: '#0F244C',
+          800: '#0C1F42',
+          900: '#0A1B3D',
+          950: '#071230',
+        },
       },
       fontFamily: {
         bangla: ['var(--font-hind)', 'sans-serif'],

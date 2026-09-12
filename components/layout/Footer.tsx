@@ -7,7 +7,7 @@ import { useLanguage } from '@/context/LanguageContext';
 export default function Footer() {
   const { t } = useLanguage();
   return (
-    <footer className="bg-primary-900 text-primary-100 mt-16">
+    <footer className="bg-navy-900 text-navy-100 mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
@@ -17,10 +17,10 @@ export default function Footer() {
               </div>
               <div className="leading-tight">
                 <span className="block font-bold text-white text-base">জব রাডার</span>
-                <span className="block text-[10px] text-primary-300 -mt-0.5">Job Radar</span>
+                <span className="block text-[10px] text-navy-100 -mt-0.5">Job Radar</span>
               </div>
             </div>
-            <p className="text-sm text-primary-300 leading-relaxed mb-4">
+            <p className="text-sm text-navy-100 leading-relaxed mb-4">
               {t(
                 'বাংলাদেশের সকল সরকারি ও বেসরকারি চাকরির বিজ্ঞপ্তি এক জায়গায়।',
                 'All government and private job circulars in Bangladesh in one place.',
@@ -49,15 +49,35 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="font-semibold text-white mb-4">{t('দ্রুত লিংক', 'Quick Links')}</h4>
+            <h4 className="font-semibold text-white mb-4">{t('চাকরি', 'Jobs')}</h4>
             <ul className="space-y-2 text-sm">
               {[
-                { href: '/',     label: t('হোম', 'Home') },
-                { href: '/jobs', label: t('সব চাকরি', 'All Jobs') },
-                { href: '/study-corner', label: t('স্টাডি কর্নার', 'Study Corner') },
+                { bn: 'সরকারি চাকরি', en: 'Government Jobs' },
+                { bn: 'বেসরকারি চাকরি', en: 'Private Jobs' },
+                { bn: 'ব্যাংক চাকরি', en: 'Bank Jobs' },
+                { bn: 'এনজিও চাকরি', en: 'NGO Jobs' },
+              ].map((c) => (
+                <li key={c.en}>
+                  <Link href="/jobs" className="text-navy-100 hover:text-white transition-colors">
+                    {t(c.bn, c.en)}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-semibold text-white mb-4">{t('প্রস্তুতি', 'Study')}</h4>
+            <ul className="space-y-2 text-sm">
+              {[
+                { href: '/study-corner',                          label: t('স্টাডি কর্নার', 'Study Corner') },
+                { href: '/study-corner/question-bank',             label: t('প্রশ্ন ব্যাংক', 'Question Bank') },
+                { href: '/prep',                                   label: t('পরীক্ষার প্রস্তুতি', 'Exam Prep') },
+                { href: '/study-corner/job-experience',            label: t('চাকরির অভিজ্ঞতা', 'Job Experience') },
+                { href: '/study-corner/book-marketplace',          label: t('বই মার্কেটপ্লেস', 'Book Marketplace') },
               ].map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-primary-300 hover:text-white transition-colors">
+                  <Link href={l.href} className="text-navy-100 hover:text-white transition-colors">
                     {l.label}
                   </Link>
                 </li>
@@ -66,24 +86,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="font-semibold text-white mb-4">{t('চাকরির ধরন', 'Job Categories')}</h4>
-            <ul className="space-y-2 text-sm text-primary-300">
-              {[
-                { bn: 'সরকারি চাকরি', en: 'Government Jobs' },
-                { bn: 'ব্যাংক চাকরি', en: 'Bank Jobs' },
-                { bn: 'এনজিও চাকরি', en: 'NGO Jobs' },
-                { bn: 'বেসরকারি চাকরি', en: 'Private Jobs' },
-              ].map((c) => (
-                <li key={c.en} className="flex items-center gap-2">
-                  <span className="w-1 h-1 rounded-full bg-primary-400 shrink-0" />
-                  {t(c.bn, c.en)}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold text-white mb-4">{t('কোম্পানি', 'Company')}</h4>
+            <h4 className="font-semibold text-white mb-4">{t('প্রতিষ্ঠান', 'Company')}</h4>
             <ul className="space-y-2 text-sm">
               {[
                 { href: '/about',          label: t('আমাদের সম্পর্কে', 'About Us') },
@@ -94,7 +97,7 @@ export default function Footer() {
                 { href: '/account-deletion', label: t('অ্যাকাউন্ট মুছে ফেলুন', 'Delete Account') },
               ].map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-primary-300 hover:text-white transition-colors">
+                  <Link href={l.href} className="text-navy-100 hover:text-white transition-colors">
                     {l.label}
                   </Link>
                 </li>
@@ -103,7 +106,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-primary-700 mt-10 pt-6 text-center text-xs text-primary-400">
+        <div className="border-t border-navy-700 mt-10 pt-6 text-center text-xs text-navy-100">
           © {new Date().getFullYear()} Job Radar.{' '}
           {t('সর্বস্বত্ব সংরক্ষিত।', 'All rights reserved.')}
         </div>

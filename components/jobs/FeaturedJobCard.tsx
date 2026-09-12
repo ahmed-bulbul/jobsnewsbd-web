@@ -14,7 +14,7 @@ interface Props {
   categoryTypeSlug?: string;
 }
 
-function BookmarkToggle({ postId }: { postId: number }) {
+export function BookmarkToggle({ postId }: { postId: number }) {
   const { user, openModal } = useAuth();
   const [saved, setSaved] = useState(false);
   const [savedId, setSavedId] = useState<number | null>(null);

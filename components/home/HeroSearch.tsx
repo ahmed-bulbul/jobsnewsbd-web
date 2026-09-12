@@ -2,19 +2,31 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import Image from 'next/image';
+import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
-import GooglePlayCta from '@/components/ui/GooglePlayCta';
-import PhoneMockup from '@/components/ui/PhoneMockup';
-import type { CategoryType } from '@/lib/types';
+import TodaySummaryCard from '@/components/home/TodaySummaryCard';
+import type { CategoryType, PostSummary } from '@/lib/types';
+
+export interface TodaySummary {
+  newToday: number;
+  closingToday: number;
+  active: number;
+  liveExamCount: number;
+}
 
 interface Props {
   categoryTypes?: CategoryType[];
+  summary: TodaySummary;
+  latestList: PostSummary[];
 }
 
-const POPULAR_SEARCHES = ['BPSC', 'Bank', 'Police', 'NBR', 'Teacher', 'Engineer', 'IT', 'Army', 'NGO'];
+const TRUST_BADGES: Array<{ bn: string; en: string }> = [
+  { bn: 'প্রতিটি বিজ্ঞপ্তির সাথে PDF', en: 'Original PDF included' },
+  { bn: 'শেষ তারিখের অ্যালার্ট', en: 'Deadline alerts' },
+  { bn: 'যাচাইকৃত তথ্য', en: 'Verified info' },
+];
 
-export default function HeroSearch({ categoryTypes = [] }: Props) {
+export default function HeroSearch({ categoryTypes = [], summary, latestList }: Props) {
   const { lang, t } = useLanguage();
   const router = useRouter();
   const [q, setQ] = useState('');
@@ -45,24 +57,25 @@ export default function HeroSearch({ categoryTypes = [] }: Props) {
           <div>
             <div className="inline-flex items-center gap-1.5 bg-primary-50 border border-primary-100 rounded-full px-3 py-1 text-xs font-medium text-primary-700 mb-4">
               <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
-              {t('প্রতিদিন আপডেট', 'Updated daily')}
+              {t('প্রতিদিন যাচাই করে আপডেট', 'Verified & updated daily')}
             </div>
 
             <h1 className="max-w-xl text-4xl sm:text-5xl font-bold leading-[1.17] tracking-tight text-ink">
               {lang === 'bn' ? (
                 <>
-                  জব রাডার<br />
-                  ক্যারিয়ার গড়ুন <span className="text-primary">স্মার্ট ও নির্ভুল পথে</span>
+                  বাংলাদেশের সরকারি চাকরির বিজ্ঞপ্তি<br />
+                  ও প্রস্তুতি — <span className="text-primary">এক জায়গায়</span>
                 </>
               ) : (
                 <>
-                  Your dream job is <span className="text-primary">already on our radar.</span>
+                  Bangladesh govt job circulars<br />
+                  <span className="text-primary">& prep, all in one place.</span>
                 </>
               )}
             </h1>
             <p className="mt-4 text-sm sm:text-base text-warm-muted max-w-lg leading-relaxed">
               {t(
-                'সরকারি, বেসরকারি, ব্যাংক ও অন্যান্য প্রতিষ্ঠানের সর্বশেষ নিয়োগ বিজ্ঞপ্তি, সেরা প্রস্তুতি এবং ক্যাটাগরিভিত্তিক জব আপডেট — সবই পাচ্ছেন এক প্ল্যাটফর্মে। চোখ রাখুন জব রাডারে, থাকুন এক ধাপ এগিয়ে।',
+                'সরকারি, বেসরকারি, ব্যাংক ও অন্যান্য প্রতিষ্ঠানের সর্বশেষ নিয়োগ বিজ্ঞপ্তি, সেরা প্রস্তুতি এবং ক্যাটাগরিভিত্তিক জব আপডেট — সবই পাচ্ছেন এক প্ল্যাটফর্মে।',
                 'Government, private, bank circulars, exam prep, and real-time updates — all simplified in one single dashboard.'
               )}
             </p>
@@ -96,64 +109,41 @@ export default function HeroSearch({ categoryTypes = [] }: Props) {
                 </select>
               )}
               <button type="submit" className="btn-primary rounded-xl justify-center whitespace-nowrap">
-                {t('খুঁজুন', 'Search')}
+                {t('চাকরি খুঁজুন', 'Search Jobs')}
               </button>
             </form>
 
-            {/* Popular searches */}
-            <div className="flex items-center gap-1.5 flex-wrap mt-4">
-              <span className="text-xs text-warm-muted mr-0.5">{t('জনপ্রিয় অনুসন্ধান:', 'Popular:')}</span>
-              {POPULAR_SEARCHES.map((term) => (
-                <button
-                  key={term}
-                  type="button"
-                  onClick={() => goSearch(term)}
-                  className="px-2.5 py-1 rounded-full border border-warm-border text-gray-600 hover:border-primary hover:text-primary hover:bg-primary-50 text-xs transition-colors"
-                >
-                  {term}
-                </button>
+            {/* Category quick-filter chips */}
+            {categoryTypes.length > 0 && (
+              <div className="flex items-center gap-1.5 flex-wrap mt-4">
+                {categoryTypes.map((ct) => (
+                  <Link
+                    key={ct.id}
+                    href={`/jobs?categoryTypeId=${ct.id}`}
+                    className="px-3 py-1.5 rounded-full border border-warm-border text-xs font-medium text-gray-600 hover:border-primary hover:text-primary hover:bg-primary-50 transition-colors"
+                  >
+                    {t(ct.nameBn, ct.nameEn ?? ct.nameBn)}
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            {/* Trust badges */}
+            <div className="flex flex-wrap gap-x-5 gap-y-1.5 mt-4">
+              {TRUST_BADGES.map((badge) => (
+                <span key={badge.en} className="flex items-center gap-1.5 text-xs text-warm-muted">
+                  <svg className="w-3.5 h-3.5 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {t(badge.bn, badge.en)}
+                </span>
               ))}
             </div>
           </div>
 
-          {/* Right: app-download panel — phone mockups, QR code, Google Play badge */}
-          <div className="hidden lg:flex items-center justify-center lg:-mr-4">
-            <div className="flex items-center gap-6">
-              <div className="max-w-[240px]">
-                <h2 className="font-bold text-2xl leading-tight mb-2.5">
-                  <span className="block text-ink">{t('Job Radar', 'Job Radar')}</span>
-                  <span className="block text-primary">{t('অ্যাপ ডাউনলোড করুন', 'Download the app')}</span>
-                </h2>
-                <p className="text-sm text-warm-muted mb-5 leading-relaxed">
-                  {t(
-                    'চাকরির খবর, প্রস্তুতি, নোটিশ এবং সবকিছু এক অ্যাপে — যেখানেই থাকুন, বেখেয়াল থাকুন।',
-                    'Job news, exam prep, notices and everything else in one app.'
-                  )}
-                </p>
-                <div className="flex items-center gap-3.5">
-                  <div className="bg-white rounded-xl p-2 shadow-[0_2px_12px_rgba(16,24,32,0.08)] border border-warm-border/70 shrink-0">
-                    <Image
-                      src="/qr-google-play.png"
-                      alt={t('Google Play QR কোড', 'Google Play QR code')}
-                      width={64}
-                      height={64}
-                      className="rounded-md block"
-                    />
-                  </div>
-                  <div className="flex flex-col items-start gap-2">
-                    <span className="text-[11px] text-warm-muted leading-snug">
-                      {t('স্ক্যান করুন, অথবা —', 'Scan, or —')}
-                    </span>
-                    <GooglePlayCta compact />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center">
-                <PhoneMockup size="lg" />
-                <PhoneMockup size="lg" stacked />
-              </div>
-            </div>
+          {/* Right: Today's Summary sidebar card */}
+          <div className="lg:flex items-center justify-center">
+            <TodaySummaryCard summary={summary} latestList={latestList} />
           </div>
         </div>
       </div>

@@ -28,12 +28,12 @@ export default function QuickAccessChips({ items }: Props) {
   return (
     <section className="bg-white border-b border-warm-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {items.map((c) => (
             <Link
               key={c.href}
               href={c.href}
-              className="flex items-center gap-3 p-3 rounded-2xl border border-warm-border hover:border-primary-300 hover:shadow-card transition-all"
+              className="flex items-center gap-3 p-3 rounded-2xl border border-warm-border bg-white hover:border-primary-300 hover:shadow-card transition-all"
             >
               <span className={`w-11 h-11 shrink-0 rounded-xl flex items-center justify-center text-lg ${c.color}`}>
                 {c.icon}
