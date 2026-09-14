@@ -20,11 +20,23 @@ export default function Footer() {
                 <span className="block text-[10px] text-navy-100 -mt-0.5">Job Radar</span>
               </div>
             </div>
-            <p className="text-sm text-navy-100 leading-relaxed mb-4">
+            <p className="text-sm text-navy-100 leading-relaxed mb-3">
               {t(
                 'বাংলাদেশের সকল সরকারি ও বেসরকারি চাকরির বিজ্ঞপ্তি এক জায়গায়।',
                 'All government and private job circulars in Bangladesh in one place.',
               )}
+            </p>
+            {/* Easy-to-see, no-click-required disclaimer — sits directly in
+                the footer rather than only behind the /disclaimer link, per
+                Google Play's Misleading Claims policy requirement that an
+                app publishing government information clearly state it does
+                not represent a government entity. */}
+            <p className="text-xs text-navy-100/70 leading-relaxed mb-4">
+              {t(
+                'জব রাডার কোনো সরকারি প্রতিষ্ঠান নয় এবং সরকারের সাথে আনুষ্ঠানিকভাবে সম্পৃক্ত নয়। বিস্তারিত দেখুন আমাদের ',
+                'Job Radar is not a government entity and is not officially affiliated with the government. See our ',
+              )}
+              <Link href="/disclaimer" className="underline hover:text-white">{t('ডিসক্লেইমার পাতায়', 'Disclaimer page')}</Link>।
             </p>
             <div className="flex items-center gap-2">
               <a

@@ -320,7 +320,10 @@ export default function EditPostPage({ params }: Props) {
             </div>
             <div>
               <label className="label">সোর্স লিংক</label>
-              <input value={form.sourceUrl} onChange={(e) => set('sourceUrl', e.target.value)} type="url" className="input" />
+              <input value={form.sourceUrl} onChange={(e) => set('sourceUrl', e.target.value)} type="url" className="input" placeholder="https://... (মূল বিজ্ঞপ্তি/আবেদনের অফিসিয়াল লিংক)" />
+              {!form.sourceUrl && (
+                <p className="text-xs text-amber-700 mt-1">⚠ এই পোস্টে কোনো সোর্স লিংক নেই — সম্ভব হলে যোগ করুন (প্লে স্টোর নীতিমালা অনুযায়ী প্রয়োজনীয়)।</p>
+              )}
             </div>
             <div>
               <label className="label">আবেদন শুরু</label>

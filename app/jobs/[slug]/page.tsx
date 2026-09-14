@@ -321,16 +321,31 @@ export default async function JobDetailPage({ params }: Props) {
                 )}
               </div>
 
-              {/* Apply button */}
+              {/* Apply button — source-domain caption underneath makes it
+                  unmistakable this leads to the original notice/employer
+                  site, not just a generic in-app action (Play Store's
+                  Misleading Claims policy requires a visible, functional
+                  source link for any government information the app shows). */}
               {post.sourceUrl && (
-                <a
-                  href={post.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-primary w-full justify-center py-3 text-base"
-                >
-                  <T bn={applyCta.bn} en={applyCta.en} />
-                </a>
+                <div className="w-full">
+                  <a
+                    href={post.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-primary w-full justify-center py-3 text-base"
+                  >
+                    <T bn={applyCta.bn} en={applyCta.en} />
+                  </a>
+                  {(() => {
+                    let host = '';
+                    try { host = new URL(post.sourceUrl).hostname.replace(/^www\./, ''); } catch {}
+                    return host ? (
+                      <p className="text-xs text-warm-muted dark:text-night-muted text-center mt-1.5">
+                        <T bn={`মূল সূত্র: ${host}`} en={`Original source: ${host}`} />
+                      </p>
+                    ) : null;
+                  })()}
+                </div>
               )}
 
               {/* Save job */}

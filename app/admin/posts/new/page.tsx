@@ -325,6 +325,11 @@ export default function NewPostPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.categoryId) { setError('বিভাগ বেছে নিন'); return; }
+    // Required going forward (Google Play policy: any government
+    // information the app shows must link to its original/official
+    // source) — enforced here too, not just via the input's `required`
+    // attribute, since AiCircularImport can also trigger a submit path.
+    if (!form.sourceUrl.trim()) { setError('সোর্স লিংক আবশ্যক — মূল বিজ্ঞপ্তি/আবেদনের অফিসিয়াল লিংক দিন'); return; }
     setSubmitting(true);
     setError('');
     try {
@@ -420,8 +425,9 @@ export default function NewPostPage() {
               <input value={form.vacancyCount} onChange={(e) => set('vacancyCount', e.target.value)} type="number" min="0" className="input" placeholder="যেমন: ৫০" />
             </div>
             <div>
-              <label className="label">সোর্স লিংক</label>
-              <input value={form.sourceUrl} onChange={(e) => set('sourceUrl', e.target.value)} type="url" className="input" placeholder="https://..." />
+              <label className="label">সোর্স লিংক <span className="text-red-600">*</span></label>
+              <input value={form.sourceUrl} onChange={(e) => set('sourceUrl', e.target.value)} type="url" required className="input" placeholder="https://... (মূল বিজ্ঞপ্তি/আবেদনের অফিসিয়াল লিংক)" />
+              <p className="text-xs text-warm-muted mt-1">সরকারি চাকরির ক্ষেত্রে সংশ্লিষ্ট মন্ত্রণালয়/দপ্তরের অফিসিয়াল ওয়েবসাইটের লিংক দিন — এটি আবেদনের বাটন হিসেবেও ব্যবহৃত হবে এবং প্লে স্টোর নীতিমালা অনুযায়ী আবশ্যক।</p>
             </div>
 
             <div>

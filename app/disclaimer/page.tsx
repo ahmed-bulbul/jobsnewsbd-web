@@ -20,7 +20,17 @@ export default function DisclaimerPage() {
 
         <div className="card p-6 sm:p-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-1">{t('ডিসক্লেইমার', 'Disclaimer')}</h1>
-          <p className="text-xs text-warm-muted mb-8">{t('সর্বশেষ হালনাগাদ: ২৫ জুলাই, ২০২৬', 'Last updated: July 25, 2026')}</p>
+          <p className="text-xs text-warm-muted mb-8">{t('সর্বশেষ হালনাগাদ: ১৪ সেপ্টেম্বর, ২০২৬', 'Last updated: September 14, 2026')}</p>
+
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 mb-8">
+            <h2 className="text-base font-bold text-amber-900 mb-1.5">{t('সরকারি সংস্থা নয়', 'Not a Government Entity')}</h2>
+            <p className="text-sm text-amber-900 leading-relaxed">
+              {t(
+                'জব রাডার (Job Radar) কোনো সরকারি প্রতিষ্ঠান নয় এবং বাংলাদেশ সরকার বা এর কোনো মন্ত্রণালয়/দপ্তরের সাথে আনুষ্ঠানিকভাবে সম্পৃক্ত, অনুমোদিত বা অধিভুক্ত নয়। এটি একটি স্বাধীন, বেসরকারি তথ্য-সংকলন প্ল্যাটফর্ম। এখানে প্রকাশিত সরকারি চাকরির বিজ্ঞপ্তিগুলো সংশ্লিষ্ট মন্ত্রণালয়/দপ্তরের নিজস্ব অফিসিয়াল ওয়েবসাইট ও প্রজ্ঞাপন (যেমন bpsc.gov.bd, mopa.gov.bd, bb.org.bd এবং সংশ্লিষ্ট প্রতিষ্ঠানের ওয়েবসাইট) থেকে সংগ্রহ করা হয়। প্রতিটি বিজ্ঞপ্তির বিস্তারিত পাতায় সম্ভব ক্ষেত্রে মূল উৎসের লিংক দেওয়া থাকে — চূড়ান্ত সিদ্ধান্তের আগে অনুগ্রহ করে সেই মূল সরকারি উৎস থেকে তথ্য যাচাই করে নিন।',
+                'Job Radar is not a government entity and is not officially affiliated with, endorsed by, or connected to the Government of Bangladesh or any of its ministries/departments. It is an independent, privately-run information platform. Government job circulars published here are collected from the respective ministry/department\'s own official websites and notices (e.g. bpsc.gov.bd, mopa.gov.bd, bb.org.bd, and the relevant organization\'s website). Where available, each circular\'s detail page links to its original source — please verify with that official government source before making any final decision.'
+              )}
+            </p>
+          </div>
 
           <h2 className="text-lg font-bold text-gray-900 mt-2 mb-2">{t('চাকরির বিজ্ঞপ্তি সংক্রান্ত', 'On Job Circulars')}</h2>
           <p className="text-sm text-gray-700 leading-relaxed mb-4">

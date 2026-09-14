@@ -42,6 +42,16 @@ export default function AboutPage() {
             )}
           </p>
 
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 mb-4">
+            <p className="text-sm text-amber-900 leading-relaxed">
+              {t(
+                'Job Radar কোনো সরকারি প্রতিষ্ঠান নয় এবং বাংলাদেশ সরকারের কোনো মন্ত্রণালয়/দপ্তরের সাথে আনুষ্ঠানিকভাবে সম্পৃক্ত বা অনুমোদিত নয়। এটি একটি স্বতন্ত্র বেসরকারি প্ল্যাটফর্ম যা সরকারি চাকরির বিজ্ঞপ্তি সংশ্লিষ্ট প্রতিষ্ঠানের অফিসিয়াল ওয়েবসাইট ও প্রজ্ঞাপন থেকে সংগ্রহ করে উপস্থাপন করে। বিস্তারিত জানতে দেখুন আমাদের ',
+                'Job Radar is not a government entity and is not officially affiliated with or endorsed by the Government of Bangladesh or any of its ministries/departments. It is an independent, privately-run platform that collects and presents government job circulars from the respective organizations\' official websites and notices. See our '
+              )}
+              <Link href="/disclaimer" className="font-semibold underline">{t('ডিসক্লেইমার পাতা', 'Disclaimer page')}</Link>{t('।', '.')}
+            </p>
+          </div>
+
           <h2 className="text-lg font-bold text-gray-900 mt-8 mb-2">{t('যোগাযোগ', 'Get in Touch')}</h2>
           <p className="text-sm text-gray-700 leading-relaxed">
             {t('কোনো পরামর্শ, প্রশ্ন বা সহযোগিতার প্রস্তাব থাকলে আমাদের সাথে যোগাযোগ করুন: ', 'If you have suggestions, questions, or a partnership proposal, reach out to us at: ')}
