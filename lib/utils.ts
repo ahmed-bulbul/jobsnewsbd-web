@@ -92,6 +92,36 @@ export function statusColors(status: string): string {
   }
 }
 
+// The admin "বিবরণ" (description) field is a plain textarea — admins sometimes
+// type a source citation like "Source: https://taxeszone16dhaka.gov.bd/" directly
+// into it. That text was previously injected via dangerouslySetInnerHTML with no
+// escaping (XSS risk) and no URL detection, so a pasted link just sat there as
+// inert text — not the "clear and accessible" source link Play Store review is
+// looking for. This escapes the raw text first (closing the XSS gap) then wraps
+// any http(s) URL in a real, clickable, new-tab anchor.
+const URL_PATTERN = /https?:\/\/[^\s<>"')]+/g;
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+export function linkifyPlainText(text: string): string {
+  const escaped = escapeHtml(text);
+  return escaped.replace(URL_PATTERN, (url) => {
+    // Trim common trailing punctuation that isn't part of the URL (e.g. a period
+    // ending the sentence, or a closing paren from "(https://example.com)").
+    const trailingMatch = url.match(/[.,;:!?]+$/);
+    const trailing = trailingMatch ? trailingMatch[0] : '';
+    const clean = trailing ? url.slice(0, -trailing.length) : url;
+    return `<a href="${clean}" target="_blank" rel="noopener noreferrer nofollow" class="text-primary underline break-all">${clean}</a>${trailing}`;
+  });
+}
+
 export function categoryTypeEmoji(slug: string): string {
   switch (slug) {
     case 'government': return '🏛️';
