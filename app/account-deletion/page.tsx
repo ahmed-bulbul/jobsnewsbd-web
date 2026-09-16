@@ -28,8 +28,8 @@ export default function AccountDeletionPage() {
 
           <p className="text-sm text-gray-700 leading-relaxed mb-4">
             {t(
-              'Job Radar BD-তে আপনার অ্যাকাউন্ট এবং সংশ্লিষ্ট ব্যক্তিগত তথ্য মুছে ফেলার সম্পূর্ণ অধিকার আপনার রয়েছে। বর্তমানে এই অনুরোধটি ইমেইলের মাধ্যমে করা যায় — নিচে ধাপগুলো দেওয়া হলো।',
-              'You have full control to request deletion of your Job Radar BD account and associated personal data. This request is currently handled by email — the steps are below.'
+              'Job Radar-এ আপনার অ্যাকাউন্ট এবং সংশ্লিষ্ট ব্যক্তিগত তথ্য মুছে ফেলার সম্পূর্ণ অধিকার আপনার রয়েছে। বর্তমানে এই অনুরোধটি ইমেইলের মাধ্যমে করা যায় — নিচে ধাপগুলো দেওয়া হলো।',
+              'You have full control to request deletion of your Job Radar account and associated personal data. This request is currently handled by email — the steps are below.'
             )}
           </p>
 
@@ -39,8 +39,8 @@ export default function AccountDeletionPage() {
           <ol className="text-sm text-gray-700 leading-relaxed mb-4 list-decimal list-inside space-y-2">
             <li>
               {t(
-                'আপনার Job Radar BD অ্যাকাউন্টে নিবন্ধিত ইমেইল ঠিকানা থেকে ',
-                'Send an email from the address registered on your Job Radar BD account to '
+                'আপনার Job Radar অ্যাকাউন্টে নিবন্ধিত ইমেইল ঠিকানা থেকে ',
+                'Send an email from the address registered on your Job Radar account to '
               )}
               <a href="mailto:support@jobradarbd.com" className="text-primary font-semibold hover:underline">support@jobradarbd.com</a>
               {t(' এ ইমেইল পাঠান।', '.')}
