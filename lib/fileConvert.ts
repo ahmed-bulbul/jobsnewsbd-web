@@ -2,11 +2,71 @@
 // nothing is ever uploaded to the server.
 'use client';
 
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, StandardFonts, rgb, degrees } from 'pdf-lib';
+import type { PDFPage, PDFFont } from 'pdf-lib';
 
 export interface ZipEntry {
   name: string;
   blob: Blob;
+}
+
+// ── Watermarking ─────────────────────────────────────────────────────────
+// Both converters tile the same watermark text diagonally across the whole
+// page/image at low opacity — the classic stock-photo look. Rather than
+// rotating the whole canvas/coordinate system, each tile is placed at an
+// unrotated grid anchor and only that single text draw is rotated, which is
+// simpler to reason about (and is exactly what pdf-lib's per-call `rotate`
+// option is built for). The grid is padded a full step beyond every edge so
+// rotated corner tiles still cover the page's actual corners.
+
+/** Draw a tiled diagonal watermark onto a 2D canvas context (PDF→JPG path). */
+function drawCanvasWatermark(ctx: CanvasRenderingContext2D, width: number, height: number, text: string) {
+  ctx.save();
+  ctx.globalAlpha = 0.12;
+  ctx.fillStyle = '#000000';
+  const fontSize = Math.max(18, Math.round(Math.min(width, height) / 16));
+  ctx.font = `bold ${fontSize}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  const textWidth = ctx.measureText(text).width;
+  const stepX = textWidth + fontSize * 2.5;
+  const stepY = fontSize * 3.5;
+  const angle = -Math.PI / 6; // -30deg
+
+  for (let y = -stepY; y <= height + stepY; y += stepY) {
+    for (let x = -stepX; x <= width + stepX; x += stepX) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.fillText(text, 0, 0);
+      ctx.restore();
+    }
+  }
+  ctx.restore();
+}
+
+/** Draw the same tiled diagonal watermark onto a pdf-lib page (image→PDF path). */
+function drawPdfPageWatermark(page: PDFPage, font: PDFFont, text: string) {
+  const { width, height } = page.getSize();
+  const fontSize = Math.max(14, Math.round(Math.min(width, height) / 14));
+  const textWidth = font.widthOfTextAtSize(text, fontSize);
+  const stepX = textWidth + fontSize * 2.5;
+  const stepY = fontSize * 3.5;
+
+  for (let y = -stepY; y <= height + stepY; y += stepY) {
+    for (let x = -stepX; x <= width + stepX; x += stepX) {
+      page.drawText(text, {
+        x,
+        y,
+        size: fontSize,
+        font,
+        color: rgb(0, 0, 0),
+        opacity: 0.12,
+        rotate: degrees(-30),
+      });
+    }
+  }
 }
 
 /** Trigger a browser download for a Blob. */
@@ -61,8 +121,10 @@ const MARGIN = 24;
  * Convert one or more images (JPG/PNG/WebP/etc.) into a single multi-page PDF,
  * one image per A4 page, centered and scaled to fit.
  */
-export async function imagesToPdf(files: File[]): Promise<Blob> {
+export async function imagesToPdf(files: File[], watermarkText?: string): Promise<Blob> {
   const pdfDoc = await PDFDocument.create();
+  const trimmedWatermark = watermarkText?.trim();
+  const watermarkFont = trimmedWatermark ? await pdfDoc.embedFont(StandardFonts.HelveticaBold) : null;
 
   for (const file of files) {
     const bytes = new Uint8Array(await readAsArrayBuffer(file));
@@ -96,6 +158,10 @@ export async function imagesToPdf(files: File[]): Promise<Blob> {
       width: w,
       height: h,
     });
+
+    if (trimmedWatermark && watermarkFont) {
+      drawPdfPageWatermark(page, watermarkFont, trimmedWatermark);
+    }
   }
 
   const bytes = await pdfDoc.save();
@@ -112,6 +178,7 @@ export async function pdfToImages(
   file: File,
   format: 'jpeg' | 'png' = 'jpeg',
   scale = 2,
+  watermarkText?: string,
 ): Promise<ZipEntry[]> {
   const { pdfjs } = await import('react-pdf');
   pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
@@ -122,6 +189,7 @@ export async function pdfToImages(
   const ext = format === 'jpeg' ? 'jpg' : 'png';
   const mime = format === 'jpeg' ? 'image/jpeg' : 'image/png';
   const baseName = file.name.replace(/\.pdf$/i, '');
+  const trimmedWatermark = watermarkText?.trim();
 
   for (let i = 1; i <= doc.numPages; i++) {
     const page = await doc.getPage(i);
@@ -132,6 +200,10 @@ export async function pdfToImages(
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Canvas not supported');
     await page.render({ canvasContext: ctx, viewport, canvas }).promise;
+
+    if (trimmedWatermark) {
+      drawCanvasWatermark(ctx, canvas.width, canvas.height, trimmedWatermark);
+    }
 
     const blob: Blob = await new Promise((resolve, reject) => {
       canvas.toBlob(

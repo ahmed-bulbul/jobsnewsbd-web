@@ -7,12 +7,16 @@ import Image from 'next/image';
 import {
   adminUpdatePost, adminUploadCircularPdf, adminDeleteCircularPdf, adminSetCircularPdfUrl,
   adminUploadOrganizationLogo, adminDeleteOrganizationLogo, adminSetOrganizationLogoUrl,
+  adminAddPostImage, adminDeletePostImage,
   getCategoryTypes, getCategories, getPostTypes,
 } from '@/lib/api';
 import AdminShell from '@/components/admin/AdminShell';
 import PageHeader from '@/components/admin/PageHeader';
 import Badge from '@/components/admin/Badge';
-import type { CategoryType, Category, PostType, Post } from '@/lib/types';
+import RichTextEditor from '@/components/ui/RichTextEditor';
+import type { CategoryType, Category, PostType, Post, PostImage } from '@/lib/types';
+
+const MAX_CIRCULAR_IMAGES = 5;
 
 interface Props { params: Promise<{ id: string }> }
 
@@ -75,6 +79,11 @@ export default function EditPostPage({ params }: Props) {
   const [logoUrlSaving, setLogoUrlSaving]   = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
+  const [images, setImages]                 = useState<PostImage[]>([]);
+  const [imagesUploading, setImagesUploading] = useState(false);
+  const [imagesMsg, setImagesMsg]           = useState('');
+  const imagesInputRef = useRef<HTMLInputElement>(null);
+
   const [form, setForm] = useState({
     titleBn: '', titleEn: '', organizationName: '', categoryId: '',
     postTypeId: '', district: '', qualification: '', description: '',
@@ -119,6 +128,7 @@ export default function EditPostPage({ params }: Props) {
         });
         setExistingPdfUrl(post.circularPdfUrl ?? null);
         setExistingLogoUrl(post.organizationLogoUrl ?? null);
+        setImages(post.images ?? []);
         setViewCount(post.viewCount ?? 0);
       }
       setLoading(false);
@@ -243,6 +253,45 @@ export default function EditPostPage({ params }: Props) {
     }
   };
 
+  const handleImagesSelected = async (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+    const files = Array.from(fileList);
+    if (images.length + files.length > MAX_CIRCULAR_IMAGES) {
+      setImagesMsg(`সর্বোচ্চ ${MAX_CIRCULAR_IMAGES}টি ছবি যোগ করা যাবে (বর্তমানে ${images.length}টি আছে)।`);
+      if (imagesInputRef.current) imagesInputRef.current.value = '';
+      return;
+    }
+    setImagesUploading(true);
+    setImagesMsg('');
+    try {
+      let updated: Post | null = null;
+      for (const file of files) {
+        updated = await adminAddPostImage(id, file, token);
+      }
+      if (updated) setImages(updated.images ?? []);
+      setImagesMsg('ছবি সফলভাবে আপলোড হয়েছে ✓');
+    } catch (err: unknown) {
+      setImagesMsg((err as Error).message || 'ছবি আপলোড ব্যর্থ হয়েছে');
+    } finally {
+      setImagesUploading(false);
+      if (imagesInputRef.current) imagesInputRef.current.value = '';
+    }
+  };
+
+  const handleImageDelete = async (imageId: number) => {
+    if (!confirm('এই ছবিটি মুছে ফেলবেন?')) return;
+    setImagesUploading(true);
+    try {
+      await adminDeletePostImage(id, imageId, token);
+      setImages((prev) => prev.filter((img) => img.id !== imageId));
+      setImagesMsg('ছবি মুছে ফেলা হয়েছে');
+    } catch {
+      setImagesMsg('ছবি মুছে ফেলা ব্যর্থ হয়েছে');
+    } finally {
+      setImagesUploading(false);
+    }
+  };
+
   if (loading) {
     return (
       <AdminShell title="বিজ্ঞপ্তি সম্পাদনা" adminName={adminName} token={token}>
@@ -335,7 +384,12 @@ export default function EditPostPage({ params }: Props) {
             </div>
             <div className="md:col-span-2">
               <label className="label">বিবরণ</label>
-              <textarea value={form.description} onChange={(e) => set('description', e.target.value)} rows={6} className="input resize-none" />
+              <RichTextEditor
+                value={form.description}
+                onChange={(html) => set('description', html)}
+                token={token}
+                placeholder="বিজ্ঞপ্তির বিস্তারিত বিবরণ লিখুন..."
+              />
             </div>
           </div>
 
@@ -450,6 +504,55 @@ export default function EditPostPage({ params }: Props) {
           {pdfMsg && (
             <p className={`text-sm ${pdfMsg.includes('✓') || pdfMsg.includes('মুছে') ? 'text-green-700' : 'text-red-600'}`}>
               {pdfMsg}
+            </p>
+          )}
+        </div>
+
+        {/* Circular images gallery section */}
+        <div className="card p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="font-bold text-gray-900 text-base">🖼️ বিজ্ঞপ্তির ছবি ({images.length}/{MAX_CIRCULAR_IMAGES})</h2>
+          </div>
+          <p className="text-sm text-warm-muted">PDF এর বদলে (বা পাশাপাশি) বিজ্ঞপ্তির স্ক্যান করা ছবি আপলোড করতে পারেন — একাধিক ছবি একসাথে বাছাই করা যাবে।</p>
+
+          {images.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {images.map((img) => (
+                <div key={img.id} className="relative group rounded-xl overflow-hidden border border-warm-border bg-cream aspect-[3/4]">
+                  <Image src={img.url} alt="Circular" fill className="object-cover" unoptimized />
+                  <button
+                    type="button"
+                    onClick={() => handleImageDelete(img.id)}
+                    disabled={imagesUploading}
+                    className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                    title="মুছে ফেলুন"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {images.length < MAX_CIRCULAR_IMAGES && (
+            <div>
+              <label className="label">ছবি বেছে নিন (একাধিক নির্বাচন করা যাবে)</label>
+              <input
+                ref={imagesInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => handleImagesSelected(e.target.files)}
+                disabled={imagesUploading}
+                className="input"
+              />
+            </div>
+          )}
+
+          {imagesUploading && <p className="text-sm text-warm-muted">আপলোড হচ্ছে...</p>}
+          {imagesMsg && (
+            <p className={`text-sm ${imagesMsg.includes('✓') || imagesMsg.includes('মুছে') ? 'text-green-700' : 'text-red-600'}`}>
+              {imagesMsg}
             </p>
           )}
         </div>

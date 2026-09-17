@@ -7,6 +7,7 @@ import DeadlineCountdown from '@/components/ui/DeadlineCountdown';
 import StatusBadge from '@/components/ui/StatusBadge';
 import CopyLinkButton from '@/components/ui/CopyLinkButton';
 import PdfCircularSection from '@/components/ui/PdfCircularSection';
+import PostImageGallery from '@/components/ui/PostImageGallery';
 import T from '@/components/ui/T';
 import SaveJobButton from '@/components/profile/SaveJobButton';
 import Image from 'next/image';
@@ -43,9 +44,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // existed there anyway (og-default.png lives in the web app's public/ folder).
   // That meant any post with no uploaded circular image got a broken/404 og:image,
   // so social platforms showed no thumbnail at all when the link was shared.
+  // post.images[].url is already an absolute URL (FileStorageService.store()
+  // returns baseUrl + "/uploads/..."), same as organizationLogoUrl elsewhere
+  // — do not re-prefix NEXT_PUBLIC_API_URL here (that previously produced a
+  // broken doubled-domain og:image URL for any post with a circular image).
   const ogImage = post.images?.[0]?.url
-    ? `${process.env.NEXT_PUBLIC_API_URL ?? 'https://api.jobradarbd.com'}${post.images[0].url}`
-    : `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jobradarbd.com'}/og-default.png`;
+    ?? `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://jobradarbd.com'}/og-default.png`;
 
   return {
     title,
@@ -271,19 +275,7 @@ export default async function JobDetailPage({ params }: Props) {
               {post.images.length > 0 && (
                 <div className="card p-6">
                   <h2 className="font-bold text-gray-900 mb-4 text-lg"><T bn="বিজ্ঞপ্তির ছবি" en="Circular Images" /></h2>
-                  <div className="grid grid-cols-1 gap-4">
-                    {post.images.map((img) => (
-                      <div key={img.id} className="relative w-full rounded-xl overflow-hidden border border-warm-border" style={{ minHeight: 300 }}>
-                        <Image
-                          src={`${process.env.NEXT_PUBLIC_API_URL}${img.url}`}
-                          alt="Job circular image"
-                          fill
-                          className="object-contain"
-                          sizes="(max-width: 768px) 100vw, 600px"
-                        />
-                      </div>
-                    ))}
-                  </div>
+                  <PostImageGallery images={post.images} />
                 </div>
               )}
             </div>

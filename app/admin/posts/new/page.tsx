@@ -3,9 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { jsonrepair } from 'jsonrepair';
 import { adminCreatePost, getCategoryTypes, getCategories, getPostTypes } from '@/lib/api';
 import AdminShell from '@/components/admin/AdminShell';
 import PageHeader from '@/components/admin/PageHeader';
+import RichTextEditor from '@/components/ui/RichTextEditor';
 import type { CategoryType, Category, PostType } from '@/lib/types';
 
 type PostForm = {
@@ -116,12 +118,21 @@ function AiCircularImport({
     setNotice('');
 
     const cleaned = raw.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+    // AI output is almost-JSON, not guaranteed-valid JSON — a straight parse
+    // fails on trailing commas, stray quotes, or unescaped characters that
+    // sneak in around Bengali/English mixed text. Try jsonrepair as a
+    // fallback before giving up (same pattern as the Question Bank importer).
     let parsed: unknown;
     try {
       parsed = JSON.parse(cleaned);
-    } catch {
-      setError('বৈধ JSON পাওয়া যায়নি — AI-এর আউটপুট আবার চেক করুন।');
-      return;
+    } catch (e1) {
+      try {
+        parsed = JSON.parse(jsonrepair(cleaned));
+      } catch {
+        const detail = e1 instanceof Error ? e1.message : String(e1);
+        setError(`বৈধ JSON পাওয়া যায়নি — AI-এর আউটপুট আবার চেক করুন। (${detail})`);
+        return;
+      }
     }
 
     // Accept: { ...shared, positions: [...] }, a bare positions array, or a
@@ -262,7 +273,7 @@ function AiCircularImport({
       </div>
 
       <p className="text-xs text-warm-muted leading-relaxed">
-        ১) প্রম্পট কপি করুন → ২) যেকোনো AI চ্যাটে (ChatGPT/Claude/Gemini) পেস্ট করে বিজ্ঞপ্তির টেক্সট বা ছবি/PDF যোগ করুন → ৩) AI-এর JSON আউটপুট নিচে পেস্ট করে একবারে সব পোস্ট তৈরি করুন — একটি পদ হলে একটি পোস্ট, একাধিক পদ হলে প্রতিটির জন্য আলাদা পোস্ট। সবগুলো ড্রাফট/প্রকাশ অবস্থা উপরের "এখনই প্রকাশ করুন" চেকবক্স অনুযায়ী তৈরি হবে। এরপর PDF প্রতিটি পোস্টে আলাদাভাবে সম্পাদনা পৃষ্ঠা থেকে যুক্ত করতে হবে।
+        ১) প্রম্পট কপি করুন → ২) যেকোনো AI চ্যাটে (ChatGPT/Claude/Gemini) পেস্ট করে বিজ্ঞপ্তির টেক্সট বা ছবি/PDF যোগ করুন → ৩) AI-এর JSON আউটপুট নিচে পেস্ট করে একবারে সব পোস্ট তৈরি করুন — একটি পদ হলে একটি পোস্ট, একাধিক পদ হলে প্রতিটির জন্য আলাদা পোস্ট। সবগুলো ড্রাফট/প্রকাশ অবস্থা উপরের "এখনই প্রকাশ করুন" চেকবক্স অনুযায়ী তৈরি হবে। এরপর PDF অথবা বিজ্ঞপ্তির ছবি প্রতিটি পোস্টে আলাদাভাবে সম্পাদনা পৃষ্ঠা থেকে যুক্ত করতে হবে।
       </p>
 
       <button type="button" onClick={copyPrompt}
@@ -441,18 +452,17 @@ export default function NewPostPage() {
 
             <div className="md:col-span-2">
               <label className="label">বিবরণ</label>
-              <textarea
+              <RichTextEditor
                 value={form.description}
-                onChange={(e) => set('description', e.target.value)}
-                rows={6}
-                className="input resize-none"
+                onChange={(html) => set('description', html)}
+                token={token}
                 placeholder="বিস্তারিত বিবরণ লিখুন..."
               />
             </div>
           </div>
 
           <div className="md:col-span-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
-            💡 PDF বিজ্ঞপ্তি আপলোড করতে প্রথমে সংরক্ষণ করুন, তারপর সম্পাদনা পৃষ্ঠা থেকে PDF যুক্ত করুন।
+            💡 PDF বা বিজ্ঞপ্তির ছবি যুক্ত করতে প্রথমে সংরক্ষণ করুন, তারপর সম্পাদনা পৃষ্ঠা থেকে যুক্ত করুন।
           </div>
 
           <div className="flex items-center gap-3 pt-2 border-t border-warm-border">

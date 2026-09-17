@@ -8,6 +8,7 @@ export default function PdfToJpgConverter() {
   const { t } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
   const [format, setFormat] = useState<'jpeg' | 'png'>('jpeg');
+  const [watermark, setWatermark] = useState('');
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
   const [results, setResults] = useState<ZipEntry[] | null>(null);
@@ -46,7 +47,7 @@ export default function PdfToJpgConverter() {
     setProcessing(true);
     setError('');
     try {
-      const entries = await pdfToImages(file, format, 2);
+      const entries = await pdfToImages(file, format, 2, watermark);
       setResults(entries);
       setPreviews(entries.map((entry) => URL.createObjectURL(entry.blob)));
     } catch {
@@ -94,6 +95,23 @@ export default function PdfToJpgConverter() {
               </button>
             ))}
           </div>
+        </div>
+
+        <div className="card p-5">
+          <h2 className="font-semibold text-gray-800 text-sm mb-1">
+            {t('ওয়াটারমার্ক (ঐচ্ছিক)', 'Watermark (optional)')}
+          </h2>
+          <p className="text-xs text-warm-muted mb-3">
+            {t('যেকোনো লেখা দিন — প্রতিটি ছবিতে হালকাভাবে বসানো হবে', 'Type any text — it will be stamped lightly across every image')}
+          </p>
+          <input
+            type="text"
+            value={watermark}
+            onChange={(e) => { setWatermark(e.target.value); setResults(null); }}
+            placeholder={t('যেমন: আপনার নাম বা প্রতিষ্ঠান', 'e.g. your name or organization')}
+            maxLength={60}
+            className="input"
+          />
         </div>
 
         {file && !results && (

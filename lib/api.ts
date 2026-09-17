@@ -373,6 +373,24 @@ export const adminDeleteOrganizationLogo = (postId: number, token: string) =>
 export const adminSetOrganizationLogoUrl = (postId: number, url: string, token: string) =>
   authPut<Post>(`/api/admin/posts/${postId}/logo-url`, { url }, token);
 
+export async function adminAddPostImage(postId: number, file: File, token: string): Promise<Post> {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch(`${BASE}/api/admin/posts/${postId}/images`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(text || `Upload image → ${res.status}`);
+  }
+  return res.json();
+}
+
+export const adminDeletePostImage = (postId: number, imageId: number, token: string) =>
+  authDelete(`/api/admin/posts/${postId}/images/${imageId}`, token);
+
 export const adminGetAnalytics = (token: string) =>
   authGet<{
     totalPublished: number;

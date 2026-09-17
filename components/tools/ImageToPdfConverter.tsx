@@ -13,6 +13,7 @@ interface PickedImage {
 export default function ImageToPdfConverter() {
   const { t } = useLanguage();
   const [images, setImages] = useState<PickedImage[]>([]);
+  const [watermark, setWatermark] = useState('');
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
   const [resultBlob, setResultBlob] = useState<Blob | null>(null);
@@ -65,7 +66,7 @@ export default function ImageToPdfConverter() {
     setProcessing(true);
     setError('');
     try {
-      const blob = await imagesToPdf(images.map((i) => i.file));
+      const blob = await imagesToPdf(images.map((i) => i.file), watermark);
       setResultBlob(blob);
     } catch {
       setError(t('PDF তৈরি করতে সমস্যা হয়েছে। অন্য ছবি দিয়ে চেষ্টা করুন।', 'Could not create the PDF. Please try different images.'));
@@ -91,6 +92,23 @@ export default function ImageToPdfConverter() {
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       {/* Left: actions */}
       <div className="lg:col-span-2 space-y-5 order-2 lg:order-1">
+        <div className="card p-5">
+          <h2 className="font-semibold text-gray-800 text-sm mb-1">
+            {t('ওয়াটারমার্ক (ঐচ্ছিক)', 'Watermark (optional)')}
+          </h2>
+          <p className="text-xs text-warm-muted mb-3">
+            {t('যেকোনো লেখা দিন — PDF-এর প্রতিটি পৃষ্ঠায় হালকাভাবে বসানো হবে', 'Type any text — it will be stamped lightly on every PDF page')}
+          </p>
+          <input
+            type="text"
+            value={watermark}
+            onChange={(e) => { setWatermark(e.target.value); setResultBlob(null); }}
+            placeholder={t('যেমন: আপনার নাম বা প্রতিষ্ঠান', 'e.g. your name or organization')}
+            maxLength={60}
+            className="input"
+          />
+        </div>
+
         {images.length > 0 && (
           <button
             onClick={handleConvert}
