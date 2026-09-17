@@ -4,8 +4,9 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  adminGetPosts, adminDeletePost, adminCreateCategoryType,
-  adminCreateCategory, adminCreatePostType, getCategoryTypes, getCategories, getPostTypes,
+  adminGetPosts, adminDeletePost, adminBulkDeactivatePosts, adminBulkReactivatePosts,
+  adminCreateCategoryType, adminCreateCategory, adminCreatePostType,
+  getCategoryTypes, getCategories, getPostTypes,
 } from '@/lib/api';
 import { formatBanglaDate } from '@/lib/utils';
 import StatusBadge from '@/components/ui/StatusBadge';
@@ -33,6 +34,8 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab]     = useState<'posts' | 'categories' | 'types'>('posts');
   const [loading, setLoading]         = useState(true);
   const [msg, setMsg]                 = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkBusy, setBulkBusy]       = useState(false);
 
   // New category type form
   const [ctNameBn, setCtNameBn] = useState('');
@@ -75,6 +78,7 @@ export default function AdminDashboard() {
   }, [router, loadPosts]);
 
   const handlePostsPageChange = (p: number) => {
+    setSelectedIds(new Set());
     loadPosts(token, p);
   };
 
@@ -83,6 +87,50 @@ export default function AdminDashboard() {
     await adminDeletePost(id, token);
     await loadPosts(token, postsPage);
     flash('বিজ্ঞপ্তি মুছে ফেলা হয়েছে।');
+  };
+
+  const toggleSelectOne = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) =>
+      prev.size === posts.length ? new Set() : new Set(posts.map((p) => p.id))
+    );
+  };
+
+  // Deactivate just clears publishedAt (post drops off the public site, row
+  // and everything on it stays put) — unlike মুছুন/delete above, this is
+  // always reversible via সক্রিয় করুন.
+  const handleBulkDeactivate = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`${selectedIds.size}টি বিজ্ঞপ্তি নিষ্ক্রিয় করবেন? এগুলো পাবলিক সাইট থেকে সরে যাবে, যেকোনো সময় আবার সক্রিয় করা যাবে।`)) return;
+    setBulkBusy(true);
+    try {
+      await adminBulkDeactivatePosts(Array.from(selectedIds), token);
+      setSelectedIds(new Set());
+      await loadPosts(token, postsPage);
+      flash('নির্বাচিত বিজ্ঞপ্তিগুলো নিষ্ক্রিয় করা হয়েছে।');
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
+  const handleBulkReactivate = async () => {
+    if (selectedIds.size === 0) return;
+    setBulkBusy(true);
+    try {
+      await adminBulkReactivatePosts(Array.from(selectedIds), token);
+      setSelectedIds(new Set());
+      await loadPosts(token, postsPage);
+      flash('নির্বাচিত বিজ্ঞপ্তিগুলো সক্রিয় করা হয়েছে।');
+    } finally {
+      setBulkBusy(false);
+    }
   };
 
   const handleCreateCT = async (e: React.FormEvent) => {
@@ -119,6 +167,27 @@ export default function AdminDashboard() {
   ] as const;
 
   const columns: TableColumn<PostSummary>[] = [
+    {
+      key: 'select',
+      header: (
+        <input
+          type="checkbox"
+          checked={posts.length > 0 && selectedIds.size === posts.length}
+          onChange={toggleSelectAll}
+          aria-label="সব নির্বাচন করুন"
+          className="w-4 h-4 rounded border-warm-border accent-primary"
+        />
+      ),
+      render: (post) => (
+        <input
+          type="checkbox"
+          checked={selectedIds.has(post.id)}
+          onChange={() => toggleSelectOne(post.id)}
+          aria-label={`নির্বাচন করুন: ${post.titleBn ?? post.titleEn}`}
+          className="w-4 h-4 rounded border-warm-border accent-primary"
+        />
+      ),
+    },
     {
       key: 'title',
       header: 'শিরোনাম',
@@ -191,6 +260,36 @@ export default function AdminDashboard() {
 
             {activeTab === 'posts' && (
               <div className="space-y-4">
+                {selectedIds.size > 0 && (
+                  <div className="flex items-center justify-between bg-primary-50 border border-primary-200 rounded-xl px-4 py-3">
+                    <span className="text-sm font-medium text-primary-900">{selectedIds.size}টি বিজ্ঞপ্তি নির্বাচিত</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={bulkBusy}
+                        onClick={handleBulkDeactivate}
+                        className="text-xs font-medium px-3 py-1.5 rounded-lg bg-white border border-warm-border hover:bg-cream disabled:opacity-50"
+                      >
+                        নিষ্ক্রিয় করুন
+                      </button>
+                      <button
+                        type="button"
+                        disabled={bulkBusy}
+                        onClick={handleBulkReactivate}
+                        className="text-xs font-medium px-3 py-1.5 rounded-lg bg-white border border-warm-border hover:bg-cream disabled:opacity-50"
+                      >
+                        সক্রিয় করুন
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedIds(new Set())}
+                        className="text-xs text-warm-muted hover:text-gray-700"
+                      >
+                        বাতিল
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <Table columns={columns} data={posts} rowKey={(p) => p.id} emptyMessage="কোনো বিজ্ঞপ্তি নেই" />
                 <Pagination page={postsPage} totalPages={postsTotalPages} onPageChange={handlePostsPageChange} />
               </div>

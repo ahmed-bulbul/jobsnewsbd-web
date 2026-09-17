@@ -2,7 +2,9 @@ import type { ReactNode } from 'react';
 
 export type TableColumn<T> = {
   key: string;
-  header: string;
+  // ReactNode (not just string) so a column can put e.g. a "select all"
+  // checkbox in its header, not just static label text.
+  header: ReactNode;
   align?: 'left' | 'right' | 'center';
   className?: string;
   render: (row: T) => ReactNode;

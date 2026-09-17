@@ -328,6 +328,16 @@ export const adminUpdatePost = (id: number, body: unknown, token: string) =>
 export const adminDeletePost = (id: number, token: string) =>
   authDelete(`/api/admin/posts/${id}`, token);
 
+// Bulk deactivate/reactivate — the posts table's multi-select checkboxes.
+// Deactivate just clears publishedAt (post drops off the public site, row
+// and all its data stay); reactivate sets it again, so it's reversible at
+// any time — unlike adminDeletePost above.
+export const adminBulkDeactivatePosts = (ids: number[], token: string) =>
+  authPost<{ updated: number }>('/api/admin/posts/bulk-deactivate', { ids }, token);
+
+export const adminBulkReactivatePosts = (ids: number[], token: string) =>
+  authPost<{ updated: number }>('/api/admin/posts/bulk-reactivate', { ids }, token);
+
 export const adminCreateCategoryType = (body: unknown, token: string) =>
   authPost<CategoryType>('/api/admin/category-types', body, token);
 
