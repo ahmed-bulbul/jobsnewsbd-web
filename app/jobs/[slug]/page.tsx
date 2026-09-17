@@ -8,13 +8,13 @@ import StatusBadge from '@/components/ui/StatusBadge';
 import CopyLinkButton from '@/components/ui/CopyLinkButton';
 import PdfCircularSection from '@/components/ui/PdfCircularSection';
 import PostImageGallery from '@/components/ui/PostImageGallery';
+import JobDescriptionBodyDynamic from '@/components/jobs/JobDescriptionBodyDynamic';
 import T from '@/components/ui/T';
 import SaveJobButton from '@/components/profile/SaveJobButton';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { buildPostSummary } from '@/lib/postSummary';
-import { linkifyPlainText } from '@/lib/utils';
 
 interface Props { params: Promise<{ slug: string }> }
 
@@ -264,10 +264,7 @@ export default async function JobDetailPage({ params }: Props) {
               {post.description && (
                 <div className="card p-6">
                   <h2 className="font-bold text-gray-900 mb-4 text-lg"><T bn="বিজ্ঞপ্তির বিবরণ" en="Job Description" /></h2>
-                  <div
-                    className="prose prose-sm max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap"
-                    dangerouslySetInnerHTML={{ __html: linkifyPlainText(post.description) }}
-                  />
+                  <JobDescriptionBodyDynamic description={post.description} />
                 </div>
               )}
 

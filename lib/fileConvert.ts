@@ -11,62 +11,64 @@ export interface ZipEntry {
 }
 
 // ── Watermarking ─────────────────────────────────────────────────────────
-// Both converters tile the same watermark text diagonally across the whole
-// page/image at low opacity — the classic stock-photo look. Rather than
-// rotating the whole canvas/coordinate system, each tile is placed at an
-// unrotated grid anchor and only that single text draw is rotated, which is
-// simpler to reason about (and is exactly what pdf-lib's per-call `rotate`
-// option is built for). The grid is padded a full step beyond every edge so
-// rotated corner tiles still cover the page's actual corners.
+// A single diagonal watermark stamp, centered on the page — not tiled. A
+// full-page repeating grid (the original approach) made scanned government
+// notices look like they'd been stamped all over as if claiming ownership
+// of the document, which read badly on an official circular. One centered
+// mark reads as a normal "converted via this tool" watermark instead.
 
-/** Draw a tiled diagonal watermark onto a 2D canvas context (PDF→JPG path). */
+/** Draw one centered diagonal watermark onto a 2D canvas context (PDF→JPG path). */
 function drawCanvasWatermark(ctx: CanvasRenderingContext2D, width: number, height: number, text: string) {
   ctx.save();
-  ctx.globalAlpha = 0.12;
+  ctx.globalAlpha = 0.15;
   ctx.fillStyle = '#000000';
-  const fontSize = Math.max(18, Math.round(Math.min(width, height) / 16));
-  ctx.font = `bold ${fontSize}px sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  const textWidth = ctx.measureText(text).width;
-  const stepX = textWidth + fontSize * 2.5;
-  const stepY = fontSize * 3.5;
-  const angle = -Math.PI / 6; // -30deg
-
-  for (let y = -stepY; y <= height + stepY; y += stepY) {
-    for (let x = -stepX; x <= width + stepX; x += stepX) {
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(angle);
-      ctx.fillText(text, 0, 0);
-      ctx.restore();
-    }
+  let fontSize = Math.max(20, Math.round(Math.min(width, height) / 8));
+  ctx.font = `bold ${fontSize}px sans-serif`;
+  const maxTextWidth = Math.min(width, height) * 0.9;
+  const measured = ctx.measureText(text).width;
+  if (measured > maxTextWidth) {
+    fontSize = Math.max(14, Math.floor(fontSize * (maxTextWidth / measured)));
+    ctx.font = `bold ${fontSize}px sans-serif`;
   }
+
+  ctx.translate(width / 2, height / 2);
+  ctx.rotate(-Math.PI / 6); // -30deg
+  ctx.fillText(text, 0, 0);
   ctx.restore();
 }
 
-/** Draw the same tiled diagonal watermark onto a pdf-lib page (image→PDF path). */
+/** Draw one centered diagonal watermark onto a pdf-lib page (image→PDF path). */
 function drawPdfPageWatermark(page: PDFPage, font: PDFFont, text: string) {
   const { width, height } = page.getSize();
-  const fontSize = Math.max(14, Math.round(Math.min(width, height) / 14));
-  const textWidth = font.widthOfTextAtSize(text, fontSize);
-  const stepX = textWidth + fontSize * 2.5;
-  const stepY = fontSize * 3.5;
-
-  for (let y = -stepY; y <= height + stepY; y += stepY) {
-    for (let x = -stepX; x <= width + stepX; x += stepX) {
-      page.drawText(text, {
-        x,
-        y,
-        size: fontSize,
-        font,
-        color: rgb(0, 0, 0),
-        opacity: 0.12,
-        rotate: degrees(-30),
-      });
-    }
+  let fontSize = Math.max(16, Math.round(Math.min(width, height) / 8));
+  const maxTextWidth = Math.min(width, height) * 0.9;
+  let textWidth = font.widthOfTextAtSize(text, fontSize);
+  if (textWidth > maxTextWidth) {
+    fontSize = Math.max(12, Math.floor(fontSize * (maxTextWidth / textWidth)));
+    textWidth = font.widthOfTextAtSize(text, fontSize);
   }
+  const textHeight = font.heightAtSize(fontSize);
+
+  // drawText's (x, y) is the pre-rotation bottom-left of the text, and it
+  // rotates around that point — so to land the text's own center on the
+  // page's center, offset the anchor by the text's half-size vector
+  // rotated by the same angle (standard 2D rotation transform).
+  const angleRad = (-30 * Math.PI) / 180;
+  const dx = (textWidth / 2) * Math.cos(angleRad) - (textHeight / 2) * Math.sin(angleRad);
+  const dy = (textWidth / 2) * Math.sin(angleRad) + (textHeight / 2) * Math.cos(angleRad);
+
+  page.drawText(text, {
+    x: width / 2 - dx,
+    y: height / 2 - dy,
+    size: fontSize,
+    font,
+    color: rgb(0, 0, 0),
+    opacity: 0.15,
+    rotate: degrees(-30),
+  });
 }
 
 /** Trigger a browser download for a Blob. */

@@ -1,7 +1,10 @@
 'use client';
 
 import { useCallback, useRef } from 'react';
-import { useEditor, EditorContent, type Editor } from '@tiptap/react';
+import {
+  useEditor, EditorContent, type Editor,
+  ReactNodeViewRenderer, NodeViewWrapper, type NodeViewProps,
+} from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import ImageExt from '@tiptap/extension-image';
 import LinkExt from '@tiptap/extension-link';
@@ -15,6 +18,88 @@ interface Props {
   placeholder?: string;
   className?: string;
 }
+
+// Reorders an image node among its siblings (same parent) by one step.
+// Node views only get an absolute position (getPos) + the live editor, so
+// reordering is done as a raw delete-then-reinsert transaction rather than
+// a built-in command — Tiptap has no "move node" primitive.
+function moveSiblingNode(editor: Editor, getPos: () => number | undefined, direction: -1 | 1) {
+  const pos = getPos();
+  if (typeof pos !== 'number') return;
+  const { state, view } = editor;
+  const $pos = state.doc.resolve(pos);
+  const parent = $pos.parent;
+  const index = $pos.index();
+  const targetIndex = index + direction;
+  if (targetIndex < 0 || targetIndex >= parent.childCount) return;
+
+  const thisNode = parent.child(index);
+  const otherNode = parent.child(targetIndex);
+  const thisStart = pos;
+
+  const tr = state.tr;
+  tr.delete(thisStart, thisStart + thisNode.nodeSize);
+  const insertPos = direction < 0 ? thisStart - otherNode.nodeSize : thisStart + otherNode.nodeSize;
+  tr.insert(insertPos, thisNode);
+  view.dispatch(tr);
+  editor.commands.focus();
+}
+
+// Custom node view for inserted images: adds hover controls to remove the
+// image or move it up/down relative to its siblings, since the description
+// often has several circular photos in a row that need reordering after
+// they're placed. Native drag-to-reorder still works too (data-drag-handle
+// below), this just makes it discoverable without relying on drag alone.
+function ManagedImageView({ node, deleteNode, editor, getPos, selected }: NodeViewProps) {
+  return (
+    <NodeViewWrapper
+      className={`relative inline-block group/img my-2 max-w-full ${selected ? 'ring-2 ring-primary rounded-xl' : ''}`}
+      data-drag-handle
+    >
+      <img
+        src={node.attrs.src}
+        alt={node.attrs.alt ?? ''}
+        title={node.attrs.title ?? ''}
+        className="rounded-xl max-w-full h-auto block cursor-grab active:cursor-grabbing"
+      />
+      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover/img:opacity-100 focus-within:opacity-100 transition-opacity">
+        <button
+          type="button"
+          title="উপরে সরান"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => moveSiblingNode(editor, getPos, -1)}
+          className="w-7 h-7 rounded-full bg-black/60 text-white text-sm flex items-center justify-center hover:bg-black/80"
+        >
+          ↑
+        </button>
+        <button
+          type="button"
+          title="নিচে সরান"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => moveSiblingNode(editor, getPos, 1)}
+          className="w-7 h-7 rounded-full bg-black/60 text-white text-sm flex items-center justify-center hover:bg-black/80"
+        >
+          ↓
+        </button>
+        <button
+          type="button"
+          title="মুছে ফেলুন"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => deleteNode()}
+          className="w-7 h-7 rounded-full bg-red-600/90 text-white text-sm flex items-center justify-center hover:bg-red-700"
+        >
+          ×
+        </button>
+      </div>
+    </NodeViewWrapper>
+  );
+}
+
+const ManagedImageExt = ImageExt.extend({
+  addNodeView() {
+    return ReactNodeViewRenderer(ManagedImageView);
+  },
+});
 
 function ToolbarButton({
   onClick,
@@ -54,14 +139,34 @@ function Toolbar({ editor, token }: { editor: Editor | null; token: string }) {
 
   const handleFileChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
+      const files = Array.from(e.target.files ?? []);
       e.target.value = '';
-      if (!file || !editor) return;
-      try {
-        const url = await adminUploadImage(token, file);
-        editor.chain().focus().setImage({ src: url }).run();
-      } catch {
-        alert('ছবি আপলোড ব্যর্থ হয়েছে। আবার চেষ্টা করুন।');
+      if (files.length === 0 || !editor) return;
+      // Upload sequentially (keeps them in picked order) but insert all of
+      // them as ONE insertContent call at the end. Calling setImage() once
+      // per file was replacing the previous image instead of adding after
+      // it — inserting an image turns the selection into a NodeSelection
+      // over that image, so the next setImage() replaced it rather than
+      // inserting alongside it. Batching into a single insertContent call
+      // sidesteps that entirely.
+      const urls: string[] = [];
+      let failed = 0;
+      for (const file of files) {
+        try {
+          urls.push(await adminUploadImage(token, file));
+        } catch {
+          failed++;
+        }
+      }
+      if (urls.length > 0) {
+        editor
+          .chain()
+          .focus()
+          .insertContent(urls.map((src) => ({ type: 'image', attrs: { src } })))
+          .run();
+      }
+      if (failed > 0) {
+        alert(`${failed}টি ছবি আপলোড ব্যর্থ হয়েছে। আবার চেষ্টা করুন।`);
       }
     },
     [editor, token]
@@ -125,7 +230,7 @@ function Toolbar({ editor, token }: { editor: Editor | null; token: string }) {
       <ToolbarButton title="Image" onClick={handleImagePick}>
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M4 8h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
       </ToolbarButton>
-      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+      <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
 
       <span className="w-px h-5 bg-warm-border mx-1" />
 
@@ -149,7 +254,7 @@ export default function RichTextEditor({ value, onChange, token, placeholder, cl
   const editor = useEditor({
     extensions: [
       StarterKit,
-      ImageExt.configure({ HTMLAttributes: { class: 'rounded-xl max-w-full h-auto' } }),
+      ManagedImageExt.configure({ HTMLAttributes: { class: 'rounded-xl max-w-full h-auto' } }),
       LinkExt.configure({ openOnClick: false, HTMLAttributes: { class: 'text-primary underline' } }),
       Placeholder.configure({ placeholder: placeholder ?? 'এখানে লিখুন...' }),
     ],

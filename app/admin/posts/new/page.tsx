@@ -344,7 +344,7 @@ export default function NewPostPage() {
     setSubmitting(true);
     setError('');
     try {
-      await adminCreatePost({
+      const created = await adminCreatePost({
         ...form,
         categoryId:   Number(form.categoryId),
         postTypeId:   form.postTypeId ? Number(form.postTypeId) : null,
@@ -352,7 +352,13 @@ export default function NewPostPage() {
         applicationEnd:   form.applicationEnd   || null,
         vacancyCount: form.vacancyCount ? Number(form.vacancyCount) : null,
       }, token);
-      router.push('/admin/dashboard');
+      // Circular images/PDF can only be attached to a post that already has
+      // an id (PostImage/circular upload endpoints are keyed off postId), so
+      // this "new post" form has no image-attach UI at all — that's why
+      // admins couldn't "place an image" here. Send them straight to the
+      // edit page for the post they just created, where the circular
+      // image gallery and PDF upload cards live.
+      router.push(`/admin/posts/${created.id}/edit`);
     } catch (err: unknown) {
       setError((err as Error).message ?? 'ত্রুটি হয়েছে');
     } finally {
