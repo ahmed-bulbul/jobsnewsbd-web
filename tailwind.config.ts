@@ -1,6 +1,15 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
+  // The site has no dark-mode toggle anywhere in the codebase, and .card /
+  // most components are hardcoded light (bg-white). Tailwind's default
+  // "media" strategy makes every `dark:*` utility auto-activate based on the
+  // visitor's OS/browser color-scheme preference, which was silently
+  // breaking contrast (light text on the still-white .card) for any visitor
+  // with dark mode enabled. Switching to "class" makes `dark:` inert unless
+  // something explicitly adds a `dark` class to <html> — nothing does today,
+  // so this is the safe fix until real dark-mode support is built.
+  darkMode: 'class',
   content: [
     './app/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
