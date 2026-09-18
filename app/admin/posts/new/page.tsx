@@ -13,7 +13,7 @@ import type { CategoryType, Category, PostType } from '@/lib/types';
 type PostForm = {
   titleBn: string; titleEn: string; organizationName: string; categoryId: string;
   postTypeId: string; district: string; qualification: string; description: string;
-  applicationStart: string; applicationEnd: string; sourceUrl: string; vacancyCount: string; publish: boolean;
+  applicationStart: string; applicationEnd: string; sourceUrl: string; officialWebsite: string; vacancyCount: string; publish: boolean;
 };
 
 // ── AI circular import: ONE prompt, ONE paste, ONE click ───────────────────
@@ -234,6 +234,7 @@ function AiCircularImport({
         applicationStart: applicationStart || null,
         applicationEnd: applicationEnd || null,
         sourceUrl: sourceUrl || null,
+        officialWebsite: shared.officialWebsite || null,
         vacancyCount,
         publish: shared.publish,
       };
@@ -316,7 +317,7 @@ export default function NewPostPage() {
   const [form, setForm] = useState<PostForm>({
     titleBn: '', titleEn: '', organizationName: '', categoryId: '',
     postTypeId: '', district: '', qualification: '', description: '',
-    applicationStart: '', applicationEnd: '', sourceUrl: '', vacancyCount: '', publish: false,
+    applicationStart: '', applicationEnd: '', sourceUrl: '', officialWebsite: '', vacancyCount: '', publish: false,
   });
 
   useEffect(() => {
@@ -445,6 +446,11 @@ export default function NewPostPage() {
               <label className="label">সোর্স লিংক <span className="text-red-600">*</span></label>
               <input value={form.sourceUrl} onChange={(e) => set('sourceUrl', e.target.value)} type="url" required className="input" placeholder="https://... (মূল বিজ্ঞপ্তি/আবেদনের অফিসিয়াল লিংক)" />
               <p className="text-xs text-warm-muted mt-1">সরকারি চাকরির ক্ষেত্রে সংশ্লিষ্ট মন্ত্রণালয়/দপ্তরের অফিসিয়াল ওয়েবসাইটের লিংক দিন — এটি আবেদনের বাটন হিসেবেও ব্যবহৃত হবে এবং প্লে স্টোর নীতিমালা অনুযায়ী আবশ্যক।</p>
+            </div>
+            <div>
+              <label className="label">প্রতিষ্ঠানের অফিসিয়াল ওয়েবসাইট (ঐচ্ছিক)</label>
+              <input value={form.officialWebsite} onChange={(e) => set('officialWebsite', e.target.value)} type="url" className="input" placeholder="https://organization.gov.bd" />
+              <p className="text-xs text-warm-muted mt-1">সোর্স লিংক প্রায়ই একটি আবেদন পোর্টাল (যেমন teletalk.com.bd) — প্রতিষ্ঠানের নিজের ওয়েবসাইট নয়। জানা থাকলে এখানে দিন, না জানলে খালি রাখুন।</p>
             </div>
 
             <div>

@@ -66,6 +66,7 @@ export interface Post {
   applicationEnd: string | null;
   status: PostStatus;
   sourceUrl: string | null;
+  officialWebsite: string | null;
   circularPdfUrl: string | null;
   organizationLogoUrl: string | null;
   publishedAt: string;

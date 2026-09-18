@@ -87,7 +87,7 @@ export default function EditPostPage({ params }: Props) {
   const [form, setForm] = useState({
     titleBn: '', titleEn: '', organizationName: '', categoryId: '',
     postTypeId: '', district: '', qualification: '', description: '',
-    applicationStart: '', applicationEnd: '', sourceUrl: '', vacancyCount: '', publish: false,
+    applicationStart: '', applicationEnd: '', sourceUrl: '', officialWebsite: '', vacancyCount: '', publish: false,
   });
 
   useEffect(() => {
@@ -123,6 +123,7 @@ export default function EditPostPage({ params }: Props) {
           applicationStart: fmt(post.applicationStart),
           applicationEnd: fmt(post.applicationEnd),
           sourceUrl: post.sourceUrl ?? '',
+          officialWebsite: post.officialWebsite ?? '',
           vacancyCount: post.vacancyCount != null ? String(post.vacancyCount) : '',
           publish: post.publishedAt != null,
         });
@@ -368,11 +369,16 @@ export default function EditPostPage({ params }: Props) {
               <input value={form.vacancyCount} onChange={(e) => set('vacancyCount', e.target.value)} type="number" min="0" className="input" placeholder="যেমন: ৫০" />
             </div>
             <div>
-              <label className="label">সোর্স লিংক</label>
+              <label className="label">সোর্স লিংক (আবেদন/মূল বিজ্ঞপ্তির লিংক)</label>
               <input value={form.sourceUrl} onChange={(e) => set('sourceUrl', e.target.value)} type="url" className="input" placeholder="https://... (মূল বিজ্ঞপ্তি/আবেদনের অফিসিয়াল লিংক)" />
               {!form.sourceUrl && (
                 <p className="text-xs text-amber-700 mt-1">⚠ এই পোস্টে কোনো সোর্স লিংক নেই — সম্ভব হলে যোগ করুন (প্লে স্টোর নীতিমালা অনুযায়ী প্রয়োজনীয়)।</p>
               )}
+            </div>
+            <div>
+              <label className="label">প্রতিষ্ঠানের অফিসিয়াল ওয়েবসাইট (ঐচ্ছিক)</label>
+              <input value={form.officialWebsite} onChange={(e) => set('officialWebsite', e.target.value)} type="url" className="input" placeholder="https://organization.gov.bd (সোর্স লিংক আলাদা হতে পারে, যেমন teletalk আবেদন পোর্টাল)" />
+              <p className="text-xs text-warm-muted mt-1">সোর্স লিংক প্রায়ই একটি আবেদন পোর্টাল (যেমন teletalk.com.bd) — সেটা প্রতিষ্ঠানের নিজের ওয়েবসাইট নয়। জানা থাকলে এখানে প্রতিষ্ঠানের আসল ওয়েবসাইট দিন; না জানলে খালি রাখুন।</p>
             </div>
             <div>
               <label className="label">আবেদন শুরু</label>

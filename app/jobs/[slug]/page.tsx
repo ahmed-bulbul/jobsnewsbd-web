@@ -8,6 +8,7 @@ import StatusBadge from '@/components/ui/StatusBadge';
 import CopyLinkButton from '@/components/ui/CopyLinkButton';
 import PdfCircularSection from '@/components/ui/PdfCircularSection';
 import PostImageGallery from '@/components/ui/PostImageGallery';
+import SourceInfoCard from '@/components/ui/SourceInfoCard';
 import JobDescriptionBodyDynamic from '@/components/jobs/JobDescriptionBodyDynamic';
 import T from '@/components/ui/T';
 import SaveJobButton from '@/components/profile/SaveJobButton';
@@ -311,31 +312,16 @@ export default async function JobDetailPage({ params }: Props) {
                 )}
               </div>
 
-              {/* Apply button — source-domain caption underneath makes it
-                  unmistakable this leads to the original notice/employer
-                  site, not just a generic in-app action (Play Store's
-                  Misleading Claims policy requires a visible, functional
-                  source link for any government information the app shows). */}
+              {/* Apply button */}
               {post.sourceUrl && (
-                <div className="w-full">
-                  <a
-                    href={post.sourceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-primary w-full justify-center py-3 text-base"
-                  >
-                    <T bn={applyCta.bn} en={applyCta.en} />
-                  </a>
-                  {(() => {
-                    let host = '';
-                    try { host = new URL(post.sourceUrl).hostname.replace(/^www\./, ''); } catch {}
-                    return host ? (
-                      <p className="text-xs text-warm-muted dark:text-night-muted text-center mt-1.5">
-                        <T bn={`মূল সূত্র: ${host}`} en={`Original source: ${host}`} />
-                      </p>
-                    ) : null;
-                  })()}
-                </div>
+                <a
+                  href={post.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-primary w-full justify-center py-3 text-base"
+                >
+                  <T bn={applyCta.bn} en={applyCta.en} />
+                </a>
               )}
 
               {/* Save job */}
@@ -343,6 +329,19 @@ export default async function JobDetailPage({ params }: Props) {
 
               {/* Share */}
               <CopyLinkButton />
+
+              {/* Source of Information — structured card (org, official
+                  website, original notice) makes the government/organization
+                  source unmistakable, independent of whatever the admin
+                  happened to type into the free-text description. Required
+                  by Play Store's Misleading Claims "Missing Source Link"
+                  policy item — see play-store-listing-fix.md. */}
+              <SourceInfoCard
+                organizationName={post.organizationName}
+                sourceUrl={post.sourceUrl}
+                officialWebsite={post.officialWebsite}
+                circularPdfUrl={post.circularPdfUrl}
+              />
             </div>
           </div>
         </div>
