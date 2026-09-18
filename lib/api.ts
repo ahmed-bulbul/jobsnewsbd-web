@@ -298,6 +298,18 @@ export const getPosts = ({ categoryId, categoryTypeId, postTypeId, status, q, de
 export const getPostBySlug = (slug: string) =>
   get<Post>(`/api/posts/${slug}`);
 
+// Fire-and-forget view-count increment. Backend returns 204/no body, so this
+// deliberately skips res.json() (authPost/get would throw trying to parse an
+// empty response) and never throws — a failed view-count ping must never
+// break the job detail page. Mirrors mobile's jobsRepositoryProvider.recordView.
+export async function recordPostView(slug: string): Promise<void> {
+  try {
+    await fetch(`${BASE}/api/posts/${slug}/view`, { method: 'POST' });
+  } catch {
+    /* best-effort only */
+  }
+}
+
 // ── Auth ────────────────────────────────────────────────────────────────────
 
 export const userRegister = (name: string, email: string, phone: string, password: string) =>
